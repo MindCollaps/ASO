@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <title>Group info</title>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Copyright -->
+    <meta name="author" content="Noah Elijah Till"/>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+          crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+            crossorigin="anonymous"></script>
+    <!-- Google Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <!-- Vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="manager" class="container">
+    <button class="btn btn-danger" onclick="window.location.href = '/manager'">Back</button>
+    <div class="row">
+        <div class="col">
+            <h1>Group Info</h1>
+            <h2>Group Name: {{.Name}}</h2>
+            <h2>Group ID: {{.ID}}</h2>
+            <h2>Created: {{.Date}}</h2>
+            <h2>Expires: {{.DateExpires}}</h2>
+            <h2>Group Members:</h2>
+            <div class="column">
+                {{if .Members}}
+                    {{range .Members}}
+                        <div class="row">
+                            <div class="col">
+                                <h3>{{.Name}}</h3>
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-secondary" @click="infoUser('{{.ID}}')">i</button>
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')">Remove from Group</button>
+                            </div>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <h3>No Members</h3>
+                {{end}}
+            </div>
+            <button class="btn btn-danger" @click="deleteGroup()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let manager = new Vue({
+        el: '#manager',
+        methods: {
+            removeFromGroup: async function (id) {
+                let data = {
+                    user: id,
+                    group: '{{.ID}}'
+                }
+                fetch('/manager/group/user/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data),
+                }).then(response => {
+                    if (response.status === 200) {
+                        window.location.reload();
+                    }
+                })
+            },
+            infoUser: async function(id){
+                window.location.href = '/manager/user/' + id;
+            },
+            deleteGroup: async function () {
+                //confirm delete
+                if (!confirm("Are you sure you want to delete this group?")) {
+                    return
+                }
+                //delete group
+                let res = await fetch("/manager/group/" + {{.ID}}, {
+                    method: "DELETE"
+                })
+                if (res.status === 200) {
+                    //reload page
+                    document.location.reload()
+                } else {
+                    //error
+                    alert("Error deleting group")
+                }
+            },
+        },
+    });
+</script>
+</body>
+</html>
