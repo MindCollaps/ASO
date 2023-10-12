@@ -45,7 +45,8 @@
                                 <button class="btn btn-secondary" @click="infoUser('{{.ID}}')">i</button>
                             </div>
                             <div class="col">
-                                <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')">Remove from Group</button>
+                                <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')">Remove from Group
+                                </button>
                             </div>
                         </div>
                     {{end}}
@@ -54,6 +55,7 @@
                 {{end}}
             </div>
             <button class="btn btn-danger" @click="deleteGroup()">Delete</button>
+            <button class="btn btn-danger" @click="removeGitUsers()">Remove Users from Repo</button>
         </div>
     </div>
 </div>
@@ -79,7 +81,7 @@
                     }
                 })
             },
-            infoUser: async function(id){
+            infoUser: async function (id) {
                 window.location.href = '/manager/user/' + id;
             },
             deleteGroup: async function () {
@@ -99,6 +101,23 @@
                     alert("Error deleting group")
                 }
             },
+            removeGitUsers: async function () {
+                //confirm delete
+                if (!confirm("Are you sure you want to remove all users from the git repo?")) {
+                    return
+                }
+                //delete group
+                let res = await fetch("/manager/group/" + {{.ID}} +"/remove", {
+                    method: "DELETE"
+                })
+                if (res.status === 200) {
+                    //reload page
+                    document.location.reload()
+                } else {
+                    //error
+                    alert("Error removing users from git repo")
+                }
+            }
         },
     });
 </script>

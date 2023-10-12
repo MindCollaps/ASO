@@ -24,53 +24,73 @@
 </head>
 <body>
 
-<div id="manager" class="container">
-    <div class="container">
-        <h1>User Group Management</h1>
-        <div class="d-flex justify-content-center align-items-center flex-column gap-4">
-            {{if .Groups}}
-                {{range .Groups}}
-                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                        <h1>{{.Name}}</h1>
-                        <h3>Created: {{.Date}}</h3>
-                        <h3>Expires: {{.DateExpires}}</h3>
-                        <h3>Users: {{.Users}}</h3>
-                        <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')">i</button>
-                        <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')">Delete
-                        </button>
-                    </div>
+<div id="manager" class="container p-3">
+    <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+        <div class="container col">
+            <h1>User Group Management</h1>
+            <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+                {{if .Groups}}
+                    {{range .Groups}}
+                        <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
+                            <h1>{{.Name}}</h1>
+                            <h3>Created: {{.Date}}</h3>
+                            <h3>Expires: {{.DateExpires}}</h3>
+                            <h3>Users: {{.Users}}</h3>
+                            <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')">i</button>
+                            <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')">Delete
+                            </button>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <h3>No Groups</h3>
                 {{end}}
-            {{else}}
-                <h3>No Groups</h3>
-            {{end}}
-        </div>
-        <button class="btn btn-primary mb-3 mt-4" @click="createGroup()">Create Group</button>
-    </div>
-    <div class="container">
-        <h1>User Management</h1>
-        <button class="btn btn-primary mb-3 mt-4" @click="createGitUser()">Create Git User Token</button>
-
-        {{if .Users}}
-        {{else}}
-            <h3>No Users</h3>
-        {{end}}
-
-        {{range .Users}}
-            <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                <h1>{{.Username}}</h1>
-                <h3>Created: {{.Date}}</h3>
-                <h3>Expires: {{.DateExpires}}</h3>
-                <h3>Group: {{.Users}}</h3>
-
-                <h3>{{.GroupName}}</h3>
-                <h3>Created: {{.Date}}</h3>
-                <h3>Expires: {{.DateExpires}}</h3>
-                <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.GroupId}}')">I</button>
-                <button class="btn btn-danger mb-3 mt-4" @click="removeFromGroup('{{.GroupId}}', '{{.ID}}')">Remove from
-                    group
-                </button>
             </div>
-        {{end}}
+            <button class="btn btn-primary mb-3 mt-4" @click="createGroup()">Create Group</button>
+        </div>
+        <div class="container col">
+            <h1>User Management</h1>
+            <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+                {{if .Users}}
+                    {{range .Users}}
+                        <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
+                            <h1>{{.GitHubUsername}}</h1>
+                            <h3>Created: {{.DateCreated}}</h3>
+                            <h3>Expires: {{.DateExpires}}</h3>
+                            <h3>Group: {{.UserGroup.Name}}</h3>
+                            <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')">i</button>
+                            <button class="btn btn-danger mb-3 mt-4"
+                                    @click="removeFromGroup('{{.UserGroup.ID}}', '{{.ID}}')">Remove from Group
+                            </button>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <h3>No Users</h3>
+                {{end}}
+            </div>
+            <button class="btn btn-primary mb-3 mt-4" @click="createGitUser()">Create Git User</button>
+        </div>
+        <div class="container col">
+            <h1>Token Management</h1>
+            <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+                {{if .Tokens}}
+                    {{range .Tokens}}
+                        <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
+                            <h1>{{.Name}}</h1>
+                            <h3>Created: {{.DateCreated}}</h3>
+                            <h3>Expires: {{.DateExpires}}</h3>
+                            <h3>Token: {{.Token}}</h3>
+                            <h3>Group: {{.UserGroup.Name}}</h3>
+                            <button class="btn btn-secondary mb-3 mt-4" @click="infoToken('{{.ID}}')">i</button>
+                            <button class="btn btn-secondary mb-3 mt-4" @click="qrToken('{{.Token}}')">QR</button>
+                            <button class="btn btn-danger mb-3 mt-4" @click="deleteToken('{{.ID}}')">Delete</button>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <h3>No Tokens</h3>
+                {{end}}
+            </div>
+            <button class="btn btn-primary mb-3 mt-4" @click="createGitUserTk()">Create Git User Token</button>
+        </div>
     </div>
 </div>
 
@@ -132,6 +152,35 @@
             createGitUser: async function () {
                 //redirect to create git user page
                 document.location.href = "/manager/gitusr/create"
+            },
+            createGitUserTk: async function () {
+                //redirect to create git user token page
+                document.location.href = "/manager/token/create"
+            },
+            infoToken: async function (id) {
+                //redirect to info token page
+                document.location.href = "/manager/token/" + id
+            },
+            deleteToken: async function (id) {
+                //confirm delete
+                if (!confirm("Are you sure you want to delete this token?")) {
+                    return
+                }
+                //delete token
+                let res = await fetch("/manager/token/" + id, {
+                    method: "DELETE"
+                })
+                if (res.status === 200) {
+                    //reload page
+                    document.location.reload()
+                } else {
+                    //error
+                    alert("Error deleting token")
+                }
+            },
+            qrToken: async function (id) {
+                //redirect to qr token page
+                document.location.href = "/token/" + id
             }
         }
     })

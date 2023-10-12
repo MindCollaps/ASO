@@ -92,21 +92,21 @@ func InitRouter() {
 				database.MongoDB.Collection("token").InsertOne(c, dbTk, options.InsertOne())
 
 				c.Redirect(http.StatusTemporaryRedirect, "/reg")
+				return
 			} else {
 				register = true
 			}
-
-			if register {
-				//check for auth cookie
-				auth, err := c.Cookie("auth")
-				if auth != "" && err == nil {
-					//redirect to the reg page
-					c.Redirect(http.StatusTemporaryRedirect, "/manager")
-					return
-				} else {
-					template := template.Must(template.ParseFiles("main/public/homepage/index.gohtml"))
-					template.Execute(c.Writer, nil)
-				}
+		}
+		if register {
+			//check for auth cookie
+			auth, err := c.Cookie("auth")
+			if auth != "" && err == nil {
+				//redirect to the reg page
+				c.Redirect(http.StatusTemporaryRedirect, "/manager")
+				return
+			} else {
+				template := template.Must(template.ParseFiles("main/public/homepage/index.gohtml"))
+				template.Execute(c.Writer, nil)
 			}
 		}
 	})
