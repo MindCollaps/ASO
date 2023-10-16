@@ -34,13 +34,20 @@
         <h1>Register</h1>
         <div class="container">
             <div class="form-floating mb-3">
+                <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="Noah Till">
+                <label for="floatingInput">Username</label>
+                <div id="helper" class="form-text">A name to easily identify you in the system</div>
+            </div>
+            <div class="form-floating mb-3">
                 <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="MindCollaps">
                 <label for="floatingInput">GitHub Username</label>
+                <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
             </div>
             <div class="form-floating mb-3">
                 <input v-model="email" type="email" class="form-control" id="floatingInput"
                        placeholder="example@example.example">
                 <label for="floatingInput">GitHub E-Mail</label>
+                <div id="helper" class="form-text">In case your profile can't be found by your username, we try to find it by your email.</div>
             </div>
             <div class="mb-3 d-flex justify-content-center">
                 <button @click="submit()" class="btn btn-primary align-center">Submit</button>
@@ -57,7 +64,8 @@
     var main = new Vue({
         el: '#token-manager',
         data: {
-            name: "",
+            username: "",
+            gitUsername: "",
             email: "",
             token: "",
             done: false
@@ -73,7 +81,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        username: this.name,
+                        username: this.username,
+                        gitUsername: this.gitUsername,
                         email: this.email,
                         token: this.token
                     })

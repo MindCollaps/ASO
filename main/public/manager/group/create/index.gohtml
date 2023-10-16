@@ -31,10 +31,27 @@
             <input v-model="name" type="text" class="form-control" id="floatingInput"
                    placeholder="Studentengruppe 1">
             <label for="floatingInput">Name</label>
+            <div id="emailHelp" class="form-text">A name to identify the group in the system</div>
         </div>
-        <div class="mb-3 form-floating">
+        <div class="mb-3 form-check">
+            <input type="checkbox" v-model="notify" class="form-check-input" id="getnotified">
+            <label class="form-check-label" for="getnotified">Notify</label>
+            <div id="emailHelp" class="form-text">Whether you'd like to get notified on this groups activity</div>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" v-model="doesExpire" class="form-check-input" id="doesExpire">
+            <label class="form-check-label" for="doesExpire">Expires</label>
+            <div id="emailHelp" class="form-text">Does this group expire and is therefor deleted automatically?</div>
+        </div>
+        <div v-if="doesExpire" class="mb-3 form-floating">
             <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
-            <label for="dateExpires">Expires</label>
+            <label for="dateExpires">Expiry</label>
+            <div id="emailHelp" class="form-text">The date this group expires and is therefor deleted automatically (when Auto Delete is selected)</div>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" v-model="autoDelete" class="form-check-input" id="autoDelete">
+            <label class="form-check-label" for="autoDelete">Auto Delete</label>
+            <div id="emailHelp" class="form-text">Weather this group deletes itself, when the expiry date is reached</div>
         </div>
         <div class="mb-3 d-flex justify-content-center">
             <button @click="submit()" class="btn btn-primary align-center">Submit</button>
@@ -47,7 +64,10 @@
         el: '#manager',
         data: {
             name: "",
-            dateExpires: ""
+            dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            doesExpire: true,
+            notify: true,
+            autoDelete: true
         },
         methods: {
             submit: async function () {
@@ -58,12 +78,16 @@
                     },
                     body: JSON.stringify({
                         name: this.name,
-                        dateExpires: this.dateExpires
+                        dateExpires: this.dateExpires,
+                        doesExpire: this.doesExpire,
+                        notify: this.notify,
+                        autoDelete: this.autoDelete
                     })
                 });
                 //send info if it fails
                 if (response.status !== 200) {
-                    alert("Failed to create group");
+                    let data = await response.json();
+                    alert("Failed to create group " + data.message);
                 } else {
                     alert("Group created");
                     location.href = "/manager";

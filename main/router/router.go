@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var register bool = false
+var register = false
 
 func GenerateRandomString(length int) string {
 	// Define the character set for lowercase and uppercase letters
@@ -42,11 +42,6 @@ func InitRouter() {
 		if !register {
 			//check if the regauth coockie exists
 			regAuth, err := c.Cookie("regauth")
-			if regAuth != "" && err == nil {
-				//redirect to the reg page
-				c.Redirect(http.StatusTemporaryRedirect, "/reg")
-				return
-			}
 
 			cursor, err := database.MongoDB.Collection("user").Find(c, bson.M{}, options.Find())
 			if err != nil {
@@ -72,6 +67,12 @@ func InitRouter() {
 			}
 
 			if len(users) == 0 {
+				if regAuth != "" && err == nil {
+					//redirect to the reg page
+					c.Redirect(http.StatusTemporaryRedirect, "/reg")
+					return
+				}
+
 				// No users found in the database, give permission
 				token := GenerateRandomString(30)
 				jwt, err := crypt.GenerateRegToken(token)

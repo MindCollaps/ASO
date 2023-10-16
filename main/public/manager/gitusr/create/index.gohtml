@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
-    <title>Create Token</title>
+    <title>Create User</title>
     <!-- Meta Tags -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -25,13 +25,18 @@
 <body>
 
 <div id="token-manager" class="container">
-    <h1>Create Login Token</h1>
+    <h1>Create User</h1>
     <button class="btn btn-danger" onclick="window.location.href = '/manager'">Back</button>
     <div class="container">
         <div class="form-floating mb-3">
-            <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="Token Name">
-            <label for="floatingInput">Name</label>
-            <div id="emailHelp" class="form-text">A name to identify the token in the system</div>
+            <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="Username">
+            <label for="floatingInput">Username</label>
+            <div id="helper" class="form-text">A name to identify the user in the system</div>
+        </div>
+        <div class="form-floating mb-3">
+            <input v-model="gitusername" type="text" class="form-control" id="floatingInput" placeholder="Git Username">
+            <label for="floatingInput">Git Username</label>
+            <div id="helper" class="form-text">The Username the users has in GitHub</div>
         </div>
         <div class="mb-3 mt-3">
             <h2>User Group</h2>
@@ -50,26 +55,26 @@
                         </div>
                     {{end}}
                 {{else}}
-                    <p>No User Groups</p>
-                    <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">Create User Group
+                    <p>No Groups</p>
+                    <button class="btn btn-primary" @click="location.href = '/manager/group/create'">Create Group
                     </button>
                 {{end}}
             </div>
         </div>
-        <div class="mb-3 form-floating">
-            <input v-model="count" type="number" class="form-control" id="count">
-            <label for="count">Count</label>
-            <div id="emailHelp" class="form-text">How many times can this token be used</div>
-        </div>
-        <div class="mb-3 form-floating">
-            <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
-            <label for="dateExpires">Expiry</label>
-            <div id="emailHelp" class="form-text">When will this token no longer be usable?</div>
-        </div>
         <div class="mb-3 form-check">
-            <input type="checkbox" v-model="directAdd" class="form-check-input" id="directAdd">
-            <label class="form-check-label" for="directAdd">Direct Add Users</label>
-            <div id="emailHelp" class="form-text">Are users added directly to the repository?</div>
+            <input type="checkbox" v-model="expiregroup" class="form-check-input" id="expiregroup">
+            <label class="form-check-label" for="expiregroup">Expires by Group</label>
+            <div id="emailHelp" class="form-text">Does the expiration date depend on the group</div>
+        </div>
+        <div v-if="!expiregroup" class="mb-3 form-check">
+            <input type="checkbox" v-model="expire" class="form-check-input" id="expire">
+            <label class="form-check-label" for="expire">Expires</label>
+            <div id="helper" class="form-text">Does this user expires at all?</div>
+        </div>
+        <div v-if="!expiregroup && expire" class="mb-3 form-floating">
+            <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
+            <label for="dateExpires">Expires</label>
+            <div id="help" class="form-text">The date when this user gets deleted automatically</div>
         </div>
         <div class="mb-3 d-flex justify-content-center">
             <button @click="submit()" class="btn btn-primary align-center">Submit</button>
@@ -81,35 +86,37 @@
     var main = new Vue({
         el: '#token-manager',
         data: {
-            name: "",
+            username: "",
             userGroup: "",
-            directAdd: true,
+            gitusername: "",
+            expiregroup: true,
+            expire: true,
             dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            count: 0
         },
         methods: {
             submit: async function () {
-                let response = await fetch('/manager/token/create', {
+                let response = await fetch('/manager/gitusr/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        name: this.name,
+                        username: this.username,
+                        gitUsername: this.gitusername,
                         userGroup: this.userGroup,
-                        directAdd: this.directAdd,
+                        expireGroup: this.expiregroup,
+                        expires: this.expire,
                         dateExpires: this.dateExpires,
-                        count: this.count
                     })
                 });
                 // Send info if it fails
                 if (response.status !== 200) {
-                    alert("Failed to create token");
-                } else {
-                    alert("Token created");
-                    //show qr code
                     let data = await response.json();
-                    window.location.href = "/token/" + data.token;
+                    alert("Failed to create user " + data.message);
+                } else {
+                    alert("User created");
+                    //show qr code
+                    document.location.href = "/manager";
                 }
             },
             select: function (id) {

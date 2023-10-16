@@ -32,14 +32,19 @@
             <h2>Group Name: {{.Name}}</h2>
             <h2>Group ID: {{.ID}}</h2>
             <h2>Created: {{.Date}}</h2>
-            <h2>Expires: {{.DateExpires}}</h2>
+            {{if .Expires}}
+                <h2>Expires: {{.DateExpires}}</h2>
+                <h2>Auto Delete: {{.AutoDelete}}</h2>
+            {{else}}
+                <h2>Expires: Never</h2>
+            {{end}}
             <h2>Group Members:</h2>
-            <div class="column">
+            <div class="column gap-3 container">
                 {{if .Members}}
                     {{range .Members}}
-                        <div class="row">
+                        <div class="row col">
                             <div class="col">
-                                <h3>{{.Name}}</h3>
+                                <h4>{{.Username}}</h4>
                             </div>
                             <div class="col">
                                 <button class="btn btn-secondary" @click="infoUser('{{.ID}}')">i</button>
@@ -54,6 +59,8 @@
                     <h3>No Members</h3>
                 {{end}}
             </div>
+            <br>
+            <h1>Management</h1>
             <button class="btn btn-danger" @click="deleteGroup()">Delete</button>
             <button class="btn btn-danger" @click="removeGitUsers()">Remove Users from Repo</button>
         </div>
@@ -82,7 +89,7 @@
                 })
             },
             infoUser: async function (id) {
-                window.location.href = '/manager/user/' + id;
+                window.location.href = '/manager/gitusr/' + id;
             },
             deleteGroup: async function () {
                 //confirm delete
@@ -90,12 +97,12 @@
                     return
                 }
                 //delete group
-                let res = await fetch("/manager/group/" + {{.ID}}, {
+                let res = await fetch("/manager/group/{{.ID}}", {
                     method: "DELETE"
                 })
                 if (res.status === 200) {
                     //reload page
-                    document.location.reload()
+                    document.location.href = "/manager"
                 } else {
                     //error
                     alert("Error deleting group")
@@ -107,7 +114,7 @@
                     return
                 }
                 //delete group
-                let res = await fetch("/manager/group/" + {{.ID}} +"/remove", {
+                let res = await fetch("/manager/group/{{.ID}}/removeAll", {
                     method: "DELETE"
                 })
                 if (res.status === 200) {

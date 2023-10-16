@@ -56,10 +56,14 @@
                             <h1>{{.GitHubUsername}}</h1>
                             <h3>Created: {{.DateCreated}}</h3>
                             <h3>Expires: {{.DateExpires}}</h3>
-                            <h3>Group: {{.UserGroup.Name}}</h3>
+                            {{if .UserGroup}}
+                                <h3>Group: {{.UserGroup.Name}}</h3>
+                            {{else}}
+                                <h3>Group: None</h3>
+                            {{end}}
                             <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')">i</button>
                             <button class="btn btn-danger mb-3 mt-4"
-                                    @click="removeFromGroup('{{.UserGroup.ID}}', '{{.ID}}')">Remove from Group
+                                    @click="deleteUser('{{.ID}}')">Delete
                             </button>
                         </div>
                     {{end}}
@@ -115,6 +119,23 @@
                     alert("Error deleting group")
                 }
             },
+            deleteUser: async function (id) {
+                //confirm delete
+                if (!confirm("Are you sure you want to delete this user?")) {
+                    return
+                }
+                //delete user
+                let res = await fetch("/manager/gitusr/" + id, {
+                    method: "DELETE"
+                })
+                if (res.status === 200) {
+                    //reload page
+                    document.location.reload()
+                } else {
+                    //error
+                    alert("Error deleting user")
+                }
+            },
             removeFromGroup: async function (grp, usr) {
                 if (!confirm("Are you sure you want to remove this user from the group?")) {
                     return
@@ -147,7 +168,7 @@
             },
             infoUser: async function (id) {
                 //redirect to manage users page
-                document.location.href = "/manager/user/" + id
+                document.location.href = "/manager/gitusr/" + id
             },
             createGitUser: async function () {
                 //redirect to create git user page

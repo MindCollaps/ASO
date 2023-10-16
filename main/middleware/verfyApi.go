@@ -76,6 +76,7 @@ func LoginToken() gin.HandlerFunc {
 
 		if err == nil {
 			c.Set("user", dUser)
+			c.Set("userIdPrimitive", dUser.ID)
 		}
 
 		c.Set("userId", jwt["userId"])
