@@ -3,7 +3,6 @@ package main
 import (
 	"ASO/main/crypt"
 	"ASO/main/database"
-	"ASO/main/git"
 	"ASO/main/router"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -35,9 +34,5 @@ func main() {
 		return
 	}
 
-	if !git.InitGit() {
-		log.Println("Failed to connect to github")
-		return
-	}
 	router.InitRouter()
 }

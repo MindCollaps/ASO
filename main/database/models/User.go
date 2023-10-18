@@ -6,7 +6,9 @@ type User struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id"`
 	Username       string             `json:"username" bson:"username"`
 	Password       string             `json:"password" bson:"password"`
+	Email          string             `json:"email" bson:"email"`
 	GitHubToken    string             `json:"githubToken" bson:"githubToken"`
 	GitHubUsername string             `json:"githubUsername" bson:"githubUsername"`
-	GitHubRepo     string             `json:"githubRepo" bson:"githubRepo"`
+	DateCreated    primitive.DateTime `json:"dateCreated" bson:"dateCreated"`
+	IsSuperUser    bool               `json:"isSuperUser" bson:"isSuperUser"`
 }

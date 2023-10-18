@@ -24,11 +24,13 @@
 </head>
 <body>
 
-<div id="manager" class="container">
-    <button class="btn btn-danger" onclick="window.location.href = '/manager'">Back</button>
-    <div class="row">
+<div id="manager" class="container mt-5">
+    <div class="d-flex flex-row align-items-center">
+        <h1 class="flex-grow-1 text-white">Group Info</h1>
+        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=group'">Back</button>
+    </div>
+    <div class="row container bg-body-secondary rounded-3 shadow p-3">
         <div class="col">
-            <h1>Group Info</h1>
             <h2>Group Name: {{.Name}}</h2>
             <h2>Group ID: {{.ID}}</h2>
             <h2>Created: {{.Date}}</h2>

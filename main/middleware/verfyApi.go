@@ -17,6 +17,7 @@ func LoginToken() gin.HandlerFunc {
 		token, err := c.Cookie("auth")
 
 		if err != nil {
+			c.Redirect(302, "/login")
 			c.JSON(401, gin.H{
 				"message": "Unauthorized",
 			})
@@ -24,6 +25,7 @@ func LoginToken() gin.HandlerFunc {
 			return
 		}
 		if token == "" {
+			c.Redirect(302, "/login")
 			c.JSON(401, gin.H{
 				"message": "Unauthorized",
 			})
@@ -33,6 +35,7 @@ func LoginToken() gin.HandlerFunc {
 
 		jwt, err := crypt.ParseJwt(token)
 		if err != nil {
+			c.SetCookie("auth", "", -1, "/", "", false, true)
 			c.JSON(401, gin.H{
 				"message": "Unauthorized",
 			})
@@ -42,6 +45,7 @@ func LoginToken() gin.HandlerFunc {
 
 		id, err := primitive.ObjectIDFromHex(jwt["userId"].(string))
 		if err != nil {
+			c.SetCookie("auth", "", -1, "/", "", false, true)
 			c.JSON(401, gin.H{
 				"message": "Unauthorized",
 			})
@@ -54,6 +58,7 @@ func LoginToken() gin.HandlerFunc {
 		})
 
 		if res.Err() != nil {
+			c.SetCookie("auth", "", -1, "/", "", false, true)
 			c.JSON(401, gin.H{
 				"message": "Unauthorized",
 			})
@@ -64,6 +69,7 @@ func LoginToken() gin.HandlerFunc {
 		//check time
 		if jwt["exp"] != nil {
 			if jwt["exp"].(float64) < jwt["iat"].(float64) {
+				c.SetCookie("auth", "", -1, "/", "", false, true)
 				c.JSON(401, gin.H{
 					"message": "Unauthorized",
 				})
@@ -79,8 +85,24 @@ func LoginToken() gin.HandlerFunc {
 			c.Set("userIdPrimitive", dUser.ID)
 		}
 
-		c.Set("userId", jwt["userId"])
+		c.Set("userId", jwt["userId"].(string))
 		c.Set("loggedIn", true)
 		c.Next()
+	}
+}
+
+func SuperUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		LoginToken()(c)
+		if !c.IsAborted() {
+			if c.MustGet("user").(models.User).IsSuperUser {
+				c.Next()
+			} else {
+				c.JSON(401, gin.H{
+					"message": "Unauthorized",
+				})
+				c.Abort()
+			}
+		}
 	}
 }

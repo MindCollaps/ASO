@@ -26,9 +26,14 @@
 
 <div id="register" class="container">
     <div class="form-floating mb-3">
-        <input v-model="username" type="username" class="form-control" id="floatingInput"
+        <input v-model="username" type="text" class="form-control" id="floatingInput"
                placeholder="ASO">
         <label for="floatingInput">Username</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input v-model="email" type="email" class="form-control" id="floatingInput"
+               placeholder="ASO">
+        <label for="floatingInput">E-Mail</label>
     </div>
     <div class="mb-3 form-floating">
         <input v-model="password1" type="password" class="form-control" id="floatingPassword"
@@ -38,7 +43,7 @@
     <div class="mb-3 form-floating">
         <input v-model="password2" type="password" class="form-control" id="floatingPassword1"
                placeholder="Repeat Password">
-        <label for="floatingPassword1">Password</label>
+        <label for="floatingPassword1">Repeat Password</label>
     </div>
     <div class="mb-3 d-flex justify-content-center">
         <button @click="register()" class="btn btn-primary align-center">Register</button>
@@ -50,6 +55,7 @@
         el: '#register',
         data: {
             username: '',
+            email: '',
             password1: '',
             password2: '',
         },
@@ -68,11 +74,12 @@
                     },
                     body: JSON.stringify({
                         username: this.username,
-                        password: this.password1
+                        password: this.password1,
+                        email: this.email
                     })
                 }).then(response => response.json()).then(response => {
                     if (response.status === 200) {
-                        window.location.href = '/login';
+                        window.location.href = '/manager';
                     } else {
                         alert(response.message || 'An error occurred');
                     }

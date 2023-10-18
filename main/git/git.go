@@ -3,41 +3,15 @@ package git
 import (
 	"context"
 	"github.com/google/go-github/v56/github"
-	"os"
 )
 
-var GitHubClient *github.Client
-var Repo *github.Repository
+// map of github clients
+var GitHubClients map[string]*github.Client
 
-func InitGit() bool {
-	c := context.Background()
-	//get token from .env
-	token := os.Getenv("GITHUB_TOKEN")
-	GitHubClient = github.NewClient(nil).WithAuthToken(token)
+func CheckUser(email string, username string, token string) string {
+	gitClient := GetGithubClient(token)
 
-	ownerName := os.Getenv("GITHUB_REPO_OWNER")
-	repoName := os.Getenv("GITHUB_REPO_NAME")
-	rep, res, err := GitHubClient.Repositories.Get(c, ownerName, repoName)
-
-	Repo = rep
-
-	if err != nil {
-		return false
-	}
-
-	if res.StatusCode != 200 {
-		return false
-	}
-
-	if Repo == nil {
-		return false
-	}
-
-	return true
-}
-
-func CheckUser(email string, username string) string {
-	usr, res, error := GitHubClient.Users.Get(context.Background(), username)
+	usr, res, error := gitClient.Users.Get(context.Background(), username)
 
 	statusUsrName := true
 	if error != nil {
@@ -53,7 +27,7 @@ func CheckUser(email string, username string) string {
 	}
 
 	//try again with email
-	usr, res, error = GitHubClient.Users.Get(context.Background(), email)
+	usr, res, error = gitClient.Users.Get(context.Background(), email)
 
 	statusEmail := true
 
@@ -80,7 +54,7 @@ func CheckUser(email string, username string) string {
 	}
 }
 
-func AddUserToRepo(username string) bool {
+func AddUserToRepo(username string, token string, repoName string) bool {
 	//add user to repo
 	c := context.Background()
 	//make RepoAddColabo options
@@ -88,11 +62,65 @@ func AddUserToRepo(username string) bool {
 		Permission: "pull",
 	}
 
-	_, _, err := GitHubClient.Repositories.AddCollaborator(c, Repo.Owner.GetLogin(), Repo.GetName(), username, opts)
+	gitClient := GetGithubClient(token)
+	Repo, _, err := gitClient.Repositories.Get(c, username, repoName)
+
+	if err != nil {
+		return false
+	}
+
+	_, _, err = gitClient.Repositories.AddCollaborator(c, Repo.Owner.GetLogin(), Repo.GetName(), username, opts)
 
 	if err != nil {
 		return false
 	}
 
 	return true
+}
+
+func RemoveUserFromRepo(owner string, username string, token string, repoName string) bool {
+	//add user to repo
+	c := context.Background()
+
+	gitClient := GetGithubClient(token)
+	Repo, _, err := gitClient.Repositories.Get(c, owner, repoName)
+
+	if err != nil {
+		return false
+	}
+
+	_, err = gitClient.Repositories.RemoveCollaborator(c, owner, Repo.GetName(), username)
+
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func CheckIfRepoExistsAndEditRights(owner string, username string, token string, repo string) bool {
+	c := context.Background()
+	gitClient := GetGithubClient(token)
+	_, _, err := gitClient.Repositories.Get(c, "", repo)
+
+	if err != nil {
+		return false
+	}
+
+	isCol, _, err := gitClient.Repositories.IsCollaborator(c, owner, repo, username)
+
+	return isCol
+}
+
+func GetGithubClient(token string) *github.Client {
+	if GitHubClients == nil {
+		GitHubClients = make(map[string]*github.Client)
+	}
+
+	if GitHubClients[token] == nil {
+		GitHubClients[token] = github.NewClient(nil).WithAuthToken(token)
+		return GitHubClients[token]
+	}
+
+	return GitHubClients[token]
 }

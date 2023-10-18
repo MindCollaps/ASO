@@ -11,5 +11,6 @@ type UserGroup struct {
 	AutoDelete      bool               `json:"autoDelete" bson:"autoDelete"`
 	Notify          bool               `json:"notify" bson:"notify"`
 	NotifiedExpired bool               `json:"notified" bson:"notified"`
+	GitHubRepo      string             `json:"githubRepo" bson:"githubRepo"`
 	Belongs         primitive.ObjectID `json:"belongs" bson:"belongs"`
 }

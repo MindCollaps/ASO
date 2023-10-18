@@ -24,16 +24,18 @@
 </head>
 <body>
 
-<div id="token-manager" class="container">
-    <h1>Create Login Token</h1>
-    <button class="btn btn-danger" onclick="window.location.href = '/manager'">Back</button>
+<div id="token-manager" class="container mt-5">
+    <div class="d-flex flex-row align-items-center">
+        <h1 class="flex-grow-1 text-white">Create Token</h1>
+        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=token'">Back</button>
+    </div>
     <div class="container">
-        <div class="form-floating mb-3">
+        <div class="form-floating mb-4">
             <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="Token Name">
             <label for="floatingInput">Name</label>
             <div id="emailHelp" class="form-text">A name to identify the token in the system</div>
         </div>
-        <div class="mb-3 mt-3">
+        <div class="mb-4 mt-3">
             <h2>User Group</h2>
             <div class="container" id="userGroup">
                 {{if .Groups}}
@@ -56,23 +58,23 @@
                 {{end}}
             </div>
         </div>
-        <div class="mb-3 form-floating">
-            <input v-model="count" type="number" class="form-control" id="count">
-            <label for="count">Count</label>
+        <div class="mb-4 form-floating">
+            <input v-model="times" type="number" class="form-control" id="times">
+            <label for="times">Count</label>
             <div id="emailHelp" class="form-text">How many times can this token be used</div>
         </div>
-        <div class="mb-3 form-floating">
+        <div class="mb-4 form-floating">
             <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
             <label for="dateExpires">Expiry</label>
             <div id="emailHelp" class="form-text">When will this token no longer be usable?</div>
         </div>
-        <div class="mb-3 form-check">
+        <div class="mb-4 form-check">
             <input type="checkbox" v-model="directAdd" class="form-check-input" id="directAdd">
             <label class="form-check-label" for="directAdd">Direct Add Users</label>
             <div id="emailHelp" class="form-text">Are users added directly to the repository?</div>
         </div>
-        <div class="mb-3 d-flex justify-content-center">
-            <button @click="submit()" class="btn btn-primary align-center">Submit</button>
+        <div class="mb-4 d-flex justify-content-center">
+            <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
         </div>
     </div>
 </div>
@@ -85,7 +87,7 @@
             userGroup: "",
             directAdd: true,
             dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            count: 0
+            times: 1
         },
         methods: {
             submit: async function () {
@@ -99,7 +101,7 @@
                         userGroup: this.userGroup,
                         directAdd: this.directAdd,
                         dateExpires: this.dateExpires,
-                        count: this.count
+                        count: this.times.toString()
                     })
                 });
                 // Send info if it fails
@@ -117,7 +119,6 @@
             }
         }
     });
-
 </script>
 </body>
 </html>

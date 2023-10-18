@@ -1,6 +1,7 @@
 package router
 
 import (
+	"ASO/main/crypt"
 	"ASO/main/database"
 	"ASO/main/database/models"
 	"ASO/main/git"
@@ -9,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 	"text/template"
 	"time"
@@ -166,10 +168,46 @@ func fetchAllTokens(c *gin.Context) ([]TokenData, error) {
 	return tokens, nil
 }
 
+func fetchAllUsers(c *gin.Context) ([]UserData, error) {
+	cur, err := database.MongoDB.Collection("user").Find(c, options.Find())
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(c)
+
+	var users []UserData
+	for cur.Next(c) {
+		var user models.User
+		cur.Decode(&user)
+
+		usr := userModalToData(user)
+		users = append(users, usr)
+	}
+
+	return users, nil
+}
+
+func userModalToData(user models.User) UserData {
+	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04:05")
+
+	return UserData{
+		ID:             user.ID.Hex(),
+		Username:       user.Username,
+		Email:          user.Email,
+		GitHubUsername: user.GitHubUsername,
+		DateCreated:    dateCreated,
+		IsSuperUser:    user.IsSuperUser,
+	}
+
+}
+
 type ManagerRouteData struct {
-	Users  []GitUserData
-	Groups []UserGroupData
-	Tokens []TokenData
+	GUsers    []GitUserData
+	Users     []UserData
+	Groups    []UserGroupData
+	Tokens    []TokenData
+	SuperUser bool
+	User      UserData
 }
 
 type ManagerCreateTkData struct {
@@ -207,6 +245,7 @@ type UserGroupData struct {
 	Expires     bool          `json:"expires" bson:"expires"`
 	AutoDelete  bool          `json:"autoDelete" bson:"autoDelete"`
 	Notify      bool          `json:"notify" bson:"notify"`
+	GitHubRepo  string        `json:"githubRepo" bson:"githubRepo"`
 }
 
 type TokenData struct {
@@ -224,14 +263,23 @@ type TokenData struct {
 	CreatedBy   string        `json:"createdBy" bson:"createdBy"`
 }
 
+type UserData struct {
+	ID             string `json:"id" bson:"_id"`
+	Username       string `json:"username" bson:"username"`
+	Email          string `json:"email" bson:"email"`
+	GitHubUsername string `json:"githubUsername" bson:"githubUsername"`
+	DateCreated    string `json:"dateCreated" bson:"dateCreated"`
+	IsSuperUser    bool   `json:"isSuperUser" bson:"isSuperUser"`
+}
+
 func initManagerRouter(router *gin.Engine) {
 	router.GET("/manager", middleware.LoginToken(), func(c *gin.Context) {
 		//display manager site
 
-		users, err := fetchAllGitUsers(c)
+		gitUsers, err := fetchAllGitUsers(c)
 		if err != nil {
 			c.JSON(500, gin.H{
-				"message": "Internal server error when fetching git users",
+				"message": "Internal server error when fetching git gitUsers",
 			})
 			return
 		}
@@ -244,11 +292,11 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		//for each group count how many users are assigned to that group
+		//for each group count how many gitUsers are assigned to that group
 		for grp := range groups {
 			count := 0
-			for usr := range users {
-				if users[usr].UserGroup.ID == groups[grp].ID {
+			for usr := range gitUsers {
+				if gitUsers[usr].UserGroup.ID == groups[grp].ID {
 					count++
 				}
 			}
@@ -263,10 +311,23 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
+		isSuperUser := c.MustGet("user").(models.User).IsSuperUser
+
+		users, err := fetchAllUsers(c)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when fetching gitUsers",
+			})
+			return
+		}
+
 		data := ManagerRouteData{
-			Groups: groups,
-			Users:  users,
-			Tokens: tokens,
+			Groups:    groups,
+			GUsers:    gitUsers,
+			Tokens:    tokens,
+			SuperUser: isSuperUser,
+			Users:     users,
+			User:      userModalToData(c.MustGet("user").(models.User)),
 		}
 
 		template := template.Must(template.ParseFiles("main/public/manager/index.gohtml"))
@@ -445,6 +506,7 @@ func initManagerRouter(router *gin.Engine) {
 			Notify      bool   `json:"notify" bson:"notify"`
 			Expires     bool   `json:"doesExpire" bson:"doesExpire"`
 			AutoDelete  bool   `json:"autoDelete" bson:"autoDelete"`
+			GitRepo     string `json:"gitRepo" bson:"gitRepo"`
 		}
 		//get from body
 		err := c.BindJSON(&requestBody)
@@ -457,7 +519,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05", requestBody.DateExpires)
 
 		if requestBody.Expires {
 			if err != nil || dateExpiresTime.Before(time.Now()) {
@@ -581,18 +643,18 @@ func initManagerRouter(router *gin.Engine) {
 
 		//create token
 		_, err = database.MongoDB.Collection("token").InsertOne(c, models.Token{
-			ID:          primitive.NewObjectID(),
-			Name:        requestBody.Name,
-			Count:       count,
-			Token:       token,
-			UserGroup:   userGroup.ID,
-			DateCreated: primitive.NewDateTimeFromTime(time.Now()),
-			DateExpires: primitive.NewDateTimeFromTime(dateExpiresTime),
-			CreatedBy:   c.MustGet("userIdPrimitive").(primitive.ObjectID),
-			IsReg:       false,
-			DirectAdd:   requestBody.DirectAdd,
-			Used:        0,
-			Belongs:     c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			ID:                      primitive.NewObjectID(),
+			Name:                    requestBody.Name,
+			Count:                   count,
+			Token:                   token,
+			UserGroup:               userGroup.ID,
+			DateCreated:             primitive.NewDateTimeFromTime(time.Now()),
+			DateExpires:             primitive.NewDateTimeFromTime(dateExpiresTime),
+			CreatedBy:               c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			IsUserRegistrationToken: false,
+			DirectAdd:               requestBody.DirectAdd,
+			Used:                    0,
+			Belongs:                 c.MustGet("userIdPrimitive").(primitive.ObjectID),
 		})
 
 		if err != nil {
@@ -701,8 +763,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		var tk models.Token
 		err := database.MongoDB.Collection("token").FindOne(c, bson.M{
-			"token":   token,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			"token": token,
 		}).Decode(&tk)
 
 		failed := false
@@ -711,18 +772,22 @@ func initManagerRouter(router *gin.Engine) {
 		if err != nil {
 			failed = true
 			message = "Token not found"
-		}
-
-		//check if token is expired
-		if tk.DateExpires.Time().Before(time.Now()) {
+		} else if tk.DateExpires.Time().Before(time.Now()) {
 			failed = true
 			message = "Token is already expired"
-		}
-
-		//check if token is used
-		if tk.Used >= tk.Count {
+		} else if tk.Used >= tk.Count {
 			failed = true
 			message = "Tokens usage limit reached"
+		} else if tk.IsUserRegistrationToken {
+			jwt, err := crypt.GenerateRegToken(token)
+			if err != nil {
+				failed = true
+				message = "Internal server error when generating jwt"
+			} else {
+				c.SetCookie("regauth", jwt, 3600, "/", "", false, true)
+				c.Redirect(302, "/reg")
+				return
+			}
 		}
 
 		template := template.Must(template.ParseFiles("main/public/tk/index.gohtml"))
@@ -753,13 +818,19 @@ func initManagerRouter(router *gin.Engine) {
 
 		var tk models.Token
 		err = database.MongoDB.Collection("token").FindOne(c, bson.M{
-			"token":   requestBody.Token,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			"token": requestBody.Token,
 		}).Decode(&tk)
 
 		if err != nil {
 			c.JSON(404, gin.H{
 				"message": "Token not found",
+			})
+			return
+		}
+
+		if tk.IsUserRegistrationToken {
+			c.JSON(400, gin.H{
+				"message": "Token is a user registration token",
 			})
 			return
 		}
@@ -782,12 +853,9 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		fmt.Println("checking")
-
 		var user models.GitHubUser
 		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
 			"githubUsername": requestBody.GitHubUsername,
-			"belongs":        c.MustGet("userIdPrimitive").(primitive.ObjectID),
 		}).Decode(&user)
 
 		if err == nil {
@@ -800,8 +868,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		//check if gitusr exists by email
 		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
-			"email":   requestBody.Email,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			"email": requestBody.Email,
 		}).Decode(&user)
 
 		if err == nil {
@@ -815,8 +882,7 @@ func initManagerRouter(router *gin.Engine) {
 		//get userGroup
 		var userGroup models.UserGroup
 		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     tk.UserGroup,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			"_id": tk.UserGroup,
 		}).Decode(&userGroup)
 
 		if err != nil {
@@ -827,7 +893,21 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		tbu := git.CheckUser(requestBody.Email, requestBody.GitHubUsername)
+		//get creator
+		var creator models.User
+		err = database.MongoDB.Collection("user").FindOne(c, bson.M{
+			"_id": tk.CreatedBy,
+		}).Decode(&creator)
+
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Creator not found",
+			})
+			fmt.Println("Creator not found")
+			return
+		}
+
+		tbu := git.CheckUser(requestBody.Email, requestBody.GitHubUsername, creator.GitHubToken)
 		if tbu == "" {
 			c.JSON(400, gin.H{
 				"message": "User can not be found on github",
@@ -837,7 +917,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		if tk.DirectAdd {
-			if !git.AddUserToRepo(tbu) {
+			if !git.AddUserToRepo(tbu, creator.GitHubToken, userGroup.GitHubRepo) {
 				c.JSON(500, gin.H{
 					"message": "Internal server error when adding gitusr to repo",
 				})
@@ -885,6 +965,22 @@ func initManagerRouter(router *gin.Engine) {
 			})
 			fmt.Println("Internal server error when creating gitusr")
 			return
+		}
+
+		//update token
+		if tk.Used >= tk.Count {
+			//delete
+			_, err = database.MongoDB.Collection("token").DeleteOne(c, bson.M{
+				"_id": tk.ID,
+			})
+		} else {
+			_, err = database.MongoDB.Collection("token").UpdateOne(c, bson.M{
+				"_id": tk.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"used": tk.Used + 1,
+				},
+			})
 		}
 
 		c.JSON(200, gin.H{
@@ -1052,6 +1148,143 @@ func initManagerRouter(router *gin.Engine) {
 
 		c.JSON(200, gin.H{
 			"message": "Gitusr deleted",
+		})
+	})
+
+	router.GET("/manager/user/:id", middleware.SuperUser(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			return
+		}
+
+		//find user
+
+		var user models.User
+		err = database.MongoDB.Collection("user").FindOne(c, bson.M{
+			"_id": idd,
+		}).Decode(&user)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User not found",
+			})
+			return
+		}
+
+		usr := userModalToData(user)
+
+		template := template.Must(template.ParseFiles("main/public/manager/user/index.gohtml"))
+		template.Execute(c.Writer, usr)
+	})
+
+	router.DELETE("/manager/user/:id", middleware.SuperUser(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			return
+		}
+
+		//delete user
+		_, err = database.MongoDB.Collection("user").DeleteOne(c, bson.M{
+			"_id": idd,
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when deleting user",
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "User deleted",
+		})
+	})
+
+	router.GET("/manager/user/create", middleware.SuperUser(), func(c *gin.Context) {
+		template := template.Must(template.ParseFiles("main/public/manager/user/create/index.gohtml"))
+		template.Execute(c.Writer, nil)
+	})
+
+	router.POST("/manager/user/create", middleware.SuperUser(), func(c *gin.Context) {
+		var requestBody struct {
+			SuperUser   bool   `json:"superUser" bson:"superUser"`
+			DateExpires string `json:"dateExpires" bson:"dateExpires"`
+			Name        string `json:"name" bson:"name"`
+			Count       string `json:"count" bson:"count"`
+		}
+
+		err := c.BindJSON(&requestBody)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//parse expire date
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05", requestBody.DateExpires)
+
+		if err != nil || dateExpiresTime.Before(time.Now()) {
+			c.JSON(400, gin.H{
+				"message": "Invalid date",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//create token
+		token := GenerateRandomString(6)
+
+		//parse count
+		count, err := strconv.Atoi(requestBody.Count)
+
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid count",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		_, err = database.MongoDB.Collection("token").InsertOne(c, models.Token{
+			ID:                      primitive.NewObjectID(),
+			Name:                    requestBody.Name,
+			Count:                   count,
+			Token:                   token,
+			DateCreated:             primitive.NewDateTimeFromTime(time.Now()),
+			DateExpires:             primitive.NewDateTimeFromTime(dateExpiresTime),
+			CreatedBy:               c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			IsUserRegistrationToken: true,
+			SuperUser:               requestBody.SuperUser,
+			DirectAdd:               false,
+			Used:                    0,
+			Belongs:                 c.MustGet("userIdPrimitive").(primitive.ObjectID),
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when creating token",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "Token created",
+			"token":   token,
 		})
 	})
 
