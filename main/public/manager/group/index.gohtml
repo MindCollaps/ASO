@@ -29,8 +29,7 @@
         <div class="col">
             <h2>Group Name: {{.Name}}</h2>
             <h2>Group ID: {{.ID}}</h2>
-            <h2>Repo: {{.GitHubRepo}}</h2>
-            <h2>Repo Owner: {{.GitHubOwner}}</h2>
+            <h3>Repository: <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
             <h2>Created: {{.Date}}</h2>
             {{if .Expires}}
                 <h2>Expires: {{.DateExpires}}</h2>
@@ -42,17 +41,26 @@
             <div class="row container gap-3 bg-body-tertiary rounded-3 shadow p-3">
                 {{if .Members}}
                     {{range .Members}}
-                        <div class="row col">
-                            <div class="col-9   ">
+                        <div class="d-inline-flex justify-content-between align-items-center gap-3 col">
+                            <div>
                                 <h4>{{.Username}}</h4>
                             </div>
-                            <div class="d-flex justify-content-center gap-2 align-items-center col">
+                            <div>
+                                    {{if .IsCollaborator}}<a class="text-success text-decoration-none">Is Collaborator</a>{{else}}
+                                        {{if .IsInvited}}<a class="text-warning text-decoration-none">Pending Invite</a>{{else}}
+                                            <a class="text-danger text-decoration-none">Not invited/No collaborator</a>{{end}}{{end}}
+                            </div>
+                            <div class="d-flex justify-content-center gap-2 align-items-center">
                                 <div>
                                     <button class="btn btn-secondary" @click="infoUser('{{.ID}}')"><span class="material-icons align-middle fs-5">info</span></button>
                                 </div>
                                 <div>
-                                    <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')" data-bs-toggle="tooltip" data-bs-placement="top"  data-bs-title="This removes the user from the group"><span class="material-icons align-middle fs-5">person_remove</span>
-                                    </button>
+                                    {{if .IsCollaborator}}<button class="btn btn-danger col" @click="removeFromRepo('{{.ID}}')">Remove from Repo</button>{{else}}
+                                        {{if .IsInvited}}<button class="btn btn-danger col" @click="removeFromRepo('{{.ID}}')">Cancel invite</button>{{else}}
+                                            <button class="btn btn-success col" @click="addToRepo('{{.ID}}')">Add to repo</button>{{end}}{{end}}
+                                </div>
+                                <div>
+                                    <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')"><span class="material-icons align-middle fs-5">person_remove</span></button>
                                 </div>
                             </div>
                         </div>
@@ -74,10 +82,10 @@
             <div class="column container bg-body-tertiary rounded-3 shadow p-3">
                 <h3>Group</h3>
                 <button class="btn btn-danger" @click="removeMembers()" data-bs-toggle="tooltip" data-bs-placement="top"
-                        data-bs-title="This removes all group members.">Remove all Users</button>
+                        data-bs-title="This removes all group members."><span class="material-icons align-middle fs-5">group_remove</span></button>
                 <button class="btn btn-danger" @click="deleteGroup()" data-bs-toggle="tooltip" data-bs-placement="top"
                         
-                        data-bs-title="This deletes the group.">Delete</button>
+                        data-bs-title="This deletes the group."><span class="material-icons align-middle fs-5">delete</span></button>
             </div>
         </div>
     </div>
@@ -91,6 +99,10 @@
         el: '#manager',
         methods: {
             removeFromGroup: async function (id) {
+                if (!confirm("Are you sure you want to remove this user from the group?")) {
+                    return
+                }
+
                 fetch("/manager/group/{{.ID}}/remove/" + id, {
                     method: "GET"
                 }).then(res => {
@@ -166,6 +178,40 @@
                 } else {
                     //error
                     alert("Error adding users to git repo")
+                }
+            },
+            removeFromRepo: async function (id) {
+                if (!confirm("Are you sure you want to remove this user from the repo?")) {
+                    return
+                }
+
+                var res = await fetch('/manager/git/{{.ID}}/remove/' + id, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                })
+
+                if (res.status === 200) {
+                    window.location.reload();
+                } else {
+                    var data = await res.json()
+                    alert("Error removing user from repo " + data.message)
+                }
+            },
+            addToRepo: async function (id) {
+                var res = await fetch('/manager/git/{{.ID}}/add/' + id, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                })
+
+                if (res.status === 200) {
+                    window.location.reload();
+                } else {
+                    var data = await res.json()
+                    alert("Error adding user to repo " + data.message)
                 }
             },
         },

@@ -68,7 +68,7 @@ func CheckRepoExists(owner string, token string, repo string) bool {
 	return true
 }
 
-func AddUserToRepo(username string, token string, repoName string) bool {
+func AddUserToRepo(username string, token string, repoName string, owner string) bool {
 	//add user to repo
 	c := context.Background()
 	//make RepoAddColabo options
@@ -77,13 +77,14 @@ func AddUserToRepo(username string, token string, repoName string) bool {
 	}
 
 	gitClient := GetGithubClient(token)
-	Repo, _, err := gitClient.Repositories.Get(c, username, repoName)
+	Repo, _, err := gitClient.Repositories.Get(c, owner, repoName)
 
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 
-	_, _, err = gitClient.Repositories.AddCollaborator(c, Repo.Owner.GetLogin(), Repo.GetName(), username, opts)
+	_, _, err = gitClient.Repositories.AddCollaborator(c, owner, Repo.GetName(), username, opts)
 
 	if err != nil {
 		return false
@@ -92,7 +93,7 @@ func AddUserToRepo(username string, token string, repoName string) bool {
 	return true
 }
 
-func RemoveUserFromRepo(repoOwner string, usernameToBeAdded string, gitToken string, repoName string) bool {
+func RemoveUserFromRepo(repoOwner string, usernameToBeRemoved string, gitToken string, repoName string) bool {
 	//add user to repo
 	c := context.Background()
 
@@ -103,7 +104,7 @@ func RemoveUserFromRepo(repoOwner string, usernameToBeAdded string, gitToken str
 		return false
 	}
 
-	_, err = gitClient.Repositories.RemoveCollaborator(c, repoOwner, Repo.GetName(), usernameToBeAdded)
+	_, err = gitClient.Repositories.RemoveCollaborator(c, repoOwner, Repo.GetName(), usernameToBeRemoved)
 
 	if err != nil {
 		return false
@@ -112,18 +113,55 @@ func RemoveUserFromRepo(repoOwner string, usernameToBeAdded string, gitToken str
 	return true
 }
 
-func CheckIfRepoExistsAndEditRights(owner string, username string, token string, repo string) bool {
+func CheckIfUserIsColabo(owner string, username string, token string, repo string) bool {
 	c := context.Background()
 	gitClient := GetGithubClient(token)
-	_, _, err := gitClient.Repositories.Get(c, "", repo)
+	_, _, err := gitClient.Repositories.Get(c, owner, repo)
 
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 
 	isCol, _, err := gitClient.Repositories.IsCollaborator(c, owner, repo, username)
 
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
 	return isCol
+}
+
+func CheckIfUserIsPendingInvite(owner string, username string, token string, repo string) bool {
+	c := context.Background()
+	gitClient := GetGithubClient(token)
+	_, _, err := gitClient.Repositories.Get(c, owner, repo)
+
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	options := &github.ListOptions{
+		Page:    1,
+		PerPage: 100,
+	}
+
+	invites, _, err := gitClient.Repositories.ListInvitations(c, owner, repo, options)
+
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	for _, invite := range invites {
+		if invite.GetInvitee().GetLogin() == username {
+			return true
+		}
+	}
+
+	return false
 }
 
 func GetGithubClient(token string) *github.Client {

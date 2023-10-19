@@ -37,17 +37,18 @@
         </div>
         <div class="mb-4 mt-3">
             <h2>User Group</h2>
-            <div class="container" id="userGroup">
+            <div class="container column container bg-body-tertiary rounded-3 shadow p-3" id="userGroup">
                 {{if .Groups}}
                     {{range .Groups}}
-                        <div class="row">
-                            <p class="col">{{.Name}}</p>
-                            <p class="col">Created: {{.Date}}</p>
-                            <button v-if="userGroup == '{{.ID}}'" class="btn btn-danger col" @click="select('')">
-                                Unselect
+                        <div class="d-flex flex-row justify-content-between align-items-center p-3">
+                            <p class="mb-0">{{.Name}}</p>
+                            <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a>
+                            <p class="mb-0">Created: {{.Date}}</p>
+                            <button v-if="userGroup == '{{.ID}}'" class="btn btn-danger" @click="select('')">
+                                <span class="material-icons align-middle fs-5">close</span>
                             </button>
-                            <button v-if="userGroup != '{{.ID}}'" class="btn btn-primary col"
-                                    @click="select('{{.ID}}')">Select
+                            <button v-if="userGroup != '{{.ID}}'" class="btn btn-primary"
+                                    @click="select('{{.ID}}')"><span class="material-icons align-middle fs-5">check</span>
                             </button>
                         </div>
                     {{end}}

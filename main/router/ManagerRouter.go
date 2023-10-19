@@ -236,6 +236,8 @@ type GitUserData struct {
 	ExpiryByGroup  bool            `json:"expiryByGroup" bson:"expiryByGroup"`
 	UserGroup      UserGroupData   `json:"userGroup" bson:"userGroup"`
 	Groups         []UserGroupData `json:"groups" bson:"groups"`
+	IsCollaborator bool            `json:"isCollaborator" bson:"isCollaborator"`
+	IsInvited      bool            `json:"isInvited" bson:"isInvited"`
 }
 
 type UserGroupData struct {
@@ -341,6 +343,8 @@ func initManagerRouter(router *gin.Engine) {
 	router.GET("/manager/gitusr/:id", middleware.LoginToken(), func(c *gin.Context) {
 		id := c.Param("id")
 
+		usr := c.MustGet("user").(models.User)
+
 		//check if id is valid
 		idd, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
@@ -381,7 +385,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		var userData GitUserData
 
-		if err != nil {
+		if userGroup.ID == primitive.NilObjectID {
 			userData = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
@@ -392,6 +396,7 @@ func initManagerRouter(router *gin.Engine) {
 				Username:       user.Username,
 			}
 		} else {
+			userGrpData := userGroupModalToData(userGroup)
 			userData = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
@@ -399,13 +404,21 @@ func initManagerRouter(router *gin.Engine) {
 				ExpiryByGroup:  user.ExpiresGroup,
 				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
 				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
-				UserGroup:      userGroupModalToData(userGroup),
+				UserGroup:      userGrpData,
 				Groups:         grps,
 			}
 		}
 
 		if userData.DateExpires == "0001-01-01 01:00:00" {
 			userData.DateExpires = "Never"
+		}
+
+		if userGroup.ID != primitive.NilObjectID {
+			userData.IsCollaborator = git.CheckIfUserIsColabo(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+			userData.IsInvited = git.CheckIfUserIsPendingInvite(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+		} else {
+			userData.IsCollaborator = false
+			userData.IsInvited = false
 		}
 
 		template := template.Must(template.ParseFiles("main/public/manager/gitusr/index.gohtml"))
@@ -423,6 +436,8 @@ func initManagerRouter(router *gin.Engine) {
 			})
 			return
 		}
+
+		usr := c.MustGet("user").(models.User)
 
 		var group models.UserGroup
 		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
@@ -451,7 +466,12 @@ func initManagerRouter(router *gin.Engine) {
 
 		for i := range users {
 			if users[i].UserGroup.ID == group.ID.Hex() {
-				members = append(members, users[i])
+				user := users[i]
+
+				user.IsCollaborator = git.CheckIfUserIsColabo(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
+				user.IsInvited = git.CheckIfUserIsPendingInvite(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
+
+				members = append(members, user)
 			}
 		}
 
@@ -938,7 +958,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		if tk.DirectAdd {
-			if !git.AddUserToRepo(tbu, creator.GitHubToken, userGroup.GitHubRepo) {
+			if !git.AddUserToRepo(tbu, creator.GitHubToken, userGroup.GitHubRepo, userGroup.GitHubOwner) {
 				c.JSON(500, gin.H{
 					"message": "Internal server error when adding gitusr to repo",
 				})
@@ -1347,6 +1367,59 @@ func initManagerRouter(router *gin.Engine) {
 		}
 	})
 
+	router.GET("/manager/isusercolabo/:id", middleware.LoginToken(), func(c *gin.Context) {
+		userId := c.Param("id")
+
+		userIdd, err := primitive.ObjectIDFromHex(userId)
+
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//check if user exists
+		var user models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+			"_id": userIdd,
+		}).Decode(&user)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User not found",
+			})
+			return
+		}
+
+		usr := c.MustGet("user").(models.User)
+
+		//get user group
+
+		var userGroup models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id": user.UserGroup,
+		}).Decode(&userGroup)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User group not found",
+			})
+			return
+		}
+
+		if git.CheckIfUserIsColabo(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo) {
+			c.JSON(200, gin.H{
+				"message": "User is collaborator",
+			})
+		} else {
+			c.JSON(400, gin.H{
+				"message": "User is not collaborator",
+			})
+		}
+	})
+
 	///manager/git/" + {{.ID}} +"/addAll to add all users from a git repo
 	router.GET("/manager/git/:id/addall", middleware.LoginToken(), func(c *gin.Context) {
 		id := c.Param("id")
@@ -1401,7 +1474,7 @@ func initManagerRouter(router *gin.Engine) {
 				continue
 			}
 
-			if !git.AddUserToRepo(gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+			if !git.AddUserToRepo(gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo, group.GitHubOwner) {
 				problems += gitUser.GitHubUsername + ", "
 			}
 
@@ -1481,7 +1554,7 @@ func initManagerRouter(router *gin.Engine) {
 				continue
 			}
 
-			if !git.RemoveUserFromRepo(user.GitHubUsername, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+			if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
 				problems += gitUser.GitHubUsername + ", "
 			}
 		}
@@ -1549,7 +1622,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//remove user from repo
-		if !git.RemoveUserFromRepo(user.GitHubUsername, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+		if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
 			c.JSON(400, gin.H{
 				"message": "The user could not be removed from the repo",
 			})
@@ -1561,7 +1634,6 @@ func initManagerRouter(router *gin.Engine) {
 		}, bson.M{
 			"$set": bson.M{
 				"addedToRepo": false,
-				"userGroup":   primitive.NilObjectID,
 			},
 		}, options.Update())
 	})
@@ -1623,7 +1695,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//add user to repo
-		if !git.AddUserToRepo(user.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+		if !git.AddUserToRepo(gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo, group.GitHubOwner) {
 			c.JSON(400, gin.H{
 				"message": "The user could not be added to the repo",
 			})
