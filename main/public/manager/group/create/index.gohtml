@@ -37,6 +37,25 @@
             <div id="emailHelp" class="form-text">A name to identify the group in the system</div>
         </div>
         <div class="mb-4 form-check">
+            <input type="checkbox" v-model="gitOwn" class="form-check-input" id="own">
+            <label class="form-check-label" for="own">Own Repo</label>
+            <div id="emailHelp" class="form-text">Does this repo belong to you? github.com/<b>name</b>/project</div>
+        </div>
+        <div v-if="!gitOwn" class="form-floating mb-4">
+            <input v-model="gitOwner" type="text" class="form-control" id="repoOwner"
+                   placeholder="MindCollaps">
+            <label for="repoOwner">Repository owner</label>
+            <div id="emailHelp" class="form-text">The name of the repository owner. github.com/<b>name</b>/project</div>
+        </div>
+        <div class="input-group mb-4">
+            <div class="form-floating">
+                <input v-model="gitName" type="text" class="form-control" id="repoName"
+                       placeholder="MindCollaps">
+                <label for="repoName">Repository Name</label>
+            </div>
+            <button class="btn btn-success" type="button" id="checkRepo" @click="checkRepo()">Check</button>
+        </div>
+        <div class="mb-4 form-check">
             <input type="checkbox" v-model="notify" class="form-check-input" id="getnotified">
             <label class="form-check-label" for="getnotified">Notify</label>
             <div id="emailHelp" class="form-text">Whether you'd like to get notified on this groups activity</div>
@@ -65,12 +84,16 @@
 <script>
     var main = new Vue({
         el: '#manager',
+        delimiters: ['${', '}'],
         data: {
             name: "",
             dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
             doesExpire: true,
             notify: true,
-            autoDelete: true
+            autoDelete: true,
+            gitOwn: true,
+            gitOwner: "",
+            gitName: "",
         },
         methods: {
             submit: async function () {
@@ -84,7 +107,10 @@
                         dateExpires: this.dateExpires,
                         doesExpire: this.doesExpire,
                         notify: this.notify,
-                        autoDelete: this.autoDelete
+                        autoDelete: this.autoDelete,
+                        isOwn: this.gitOwn,
+                        gitOwner: this.gitOwner,
+                        gitRepo: this.gitName
                     })
                 });
                 //send info if it fails
@@ -94,6 +120,39 @@
                 } else {
                     alert("Group created");
                     location.href = "/manager?a=group";
+                }
+            },
+            checkRepo: async function (){
+                let response = await fetch('/manager/repoexists', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gitOwner: this.gitOwner,
+                        gitRepo: this.gitName,
+                        isOwn: this.gitOwn
+                    })
+                });
+
+                if (response.status !== 200) {
+                    document.getElementById("checkRepo").classList.remove("btn-success");
+                    document.getElementById("checkRepo").classList.add("btn-danger");
+
+                    document.getElementById("repoName").classList.remove("is-valid");
+                    document.getElementById("repoName").classList.add("is-invalid");
+
+                    document.getElementById("repoOwner").classList.remove("is-valid");
+                    document.getElementById("repoOwner").classList.add("is-invalid");
+                } else {
+                    document.getElementById("checkRepo").classList.remove("btn-danger");
+                    document.getElementById("checkRepo").classList.add("btn-success");
+
+                    document.getElementById("repoName").classList.remove("is-invalid");
+                    document.getElementById("repoName").classList.add("is-valid");
+
+                    document.getElementById("repoOwner").classList.remove("is-invalid");
+                    document.getElementById("repoOwner").classList.add("is-valid");
                 }
             }
         }

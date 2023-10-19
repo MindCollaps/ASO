@@ -66,6 +66,7 @@
     </div>
     <div class="row container bg-body-secondary rounded-3 shadow p-3">
         <div class="col">
+            <h2>Username: {{.Username}}</h2>
             <h2>Git Username: {{.GitHubUsername}}</h2>
             <h2>User ID: {{.ID}}</h2>
             <h2>Created: {{.DateCreated}}</h2>
@@ -73,7 +74,7 @@
             <h2>Expiry by Group: {{.ExpiryByGroup}}</h2>
             <h2>Group:</h2>
             {{if .UserGroup.Name}}
-                <div class="column">
+                <div class="column container bg-body-tertiary rounded-3 shadow p-3">
                     <h3>Group Name: {{.UserGroup.Name}}</h3>
                     <h3>Group ID: {{.UserGroup.ID}}</h3>
                     <h3>Created: {{.UserGroup.Date}}</h3>

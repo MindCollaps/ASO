@@ -10,12 +10,8 @@
     <meta name="author" content="Noah Elijah Till"/>
 
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
-          crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
-            crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <!-- Google Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet">
@@ -33,6 +29,8 @@
         <div class="col">
             <h2>Group Name: {{.Name}}</h2>
             <h2>Group ID: {{.ID}}</h2>
+            <h2>Repo: {{.GitHubRepo}}</h2>
+            <h2>Repo Owner: {{.GitHubOwner}}</h2>
             <h2>Created: {{.Date}}</h2>
             {{if .Expires}}
                 <h2>Expires: {{.DateExpires}}</h2>
@@ -41,19 +39,21 @@
                 <h2>Expires: Never</h2>
             {{end}}
             <h2>Group Members:</h2>
-            <div class="column gap-3 container">
+            <div class="row container gap-3 bg-body-tertiary rounded-3 shadow p-3">
                 {{if .Members}}
                     {{range .Members}}
                         <div class="row col">
-                            <div class="col">
+                            <div class="col-9   ">
                                 <h4>{{.Username}}</h4>
                             </div>
-                            <div class="col">
-                                <button class="btn btn-secondary" @click="infoUser('{{.ID}}')">i</button>
-                            </div>
-                            <div class="col">
-                                <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')">Remove from Group
-                                </button>
+                            <div class="d-flex justify-content-center gap-2 align-items-center col">
+                                <div>
+                                    <button class="btn btn-secondary" @click="infoUser('{{.ID}}')"><span class="material-icons align-middle fs-5">info</span></button>
+                                </div>
+                                <div>
+                                    <button class="btn btn-danger" @click="removeFromGroup('{{.ID}}')" data-bs-toggle="tooltip" data-bs-placement="top"  data-bs-title="This removes the user from the group"><span class="material-icons align-middle fs-5">person_remove</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     {{end}}
@@ -63,30 +63,42 @@
             </div>
             <br>
             <h1>Management</h1>
-            <button class="btn btn-danger" @click="deleteGroup()">Delete</button>
-            <button class="btn btn-danger" @click="removeGitUsers()">Remove Users from Repo</button>
+            <div class="column container bg-body-tertiary rounded-3 shadow p-3">
+                <h3>Git</h3>
+                <button class="btn btn-success" @click="addAllUsersToRepo()" data-bs-toggle="tooltip" data-bs-placement="top"
+                        
+                        data-bs-title="This adds all users in the group to the repo."><span class="material-icons align-middle fs-5">group_add</span></button>
+                <button class="btn btn-danger" @click="removeGitUsers()" data-bs-toggle="tooltip" data-bs-placement="top"  data-bs-title="This removes all users in the group from the repo"><span class="material-icons align-middle fs-5">group_remove</span></button>
+            </div>
+            <hr>
+            <div class="column container bg-body-tertiary rounded-3 shadow p-3">
+                <h3>Group</h3>
+                <button class="btn btn-danger" @click="removeMembers()" data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-title="This removes all group members.">Remove all Users</button>
+                <button class="btn btn-danger" @click="deleteGroup()" data-bs-toggle="tooltip" data-bs-placement="top"
+                        
+                        data-bs-title="This deletes the group.">Delete</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    
     let manager = new Vue({
         el: '#manager',
         methods: {
             removeFromGroup: async function (id) {
-                let data = {
-                    user: id,
-                    group: '{{.ID}}'
-                }
-                fetch('/manager/group/user/remove', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data),
-                }).then(response => {
-                    if (response.status === 200) {
-                        window.location.reload();
+                fetch("/manager/group/{{.ID}}/remove/" + id, {
+                    method: "GET"
+                }).then(res => {
+                    if (res.status === 200) {
+                        document.location.reload()
+                    } else {
+                        var data = res.json()
+                        alert("Error removing user from group " + data.message)
                     }
                 })
             },
@@ -116,17 +128,46 @@
                     return
                 }
                 //delete group
-                let res = await fetch("/manager/group/{{.ID}}/removeAll", {
-                    method: "DELETE"
+                let res = await fetch("/manager/git/{{.ID}}/removeall", {
+                    method: "GET"
                 })
                 if (res.status === 200) {
                     //reload page
+                    var data = await res.json()
+                    if (data.problems.length > 0 ){
+                        alert("Users removed from git repo, but some users had problems: " + data.problems)
+                    } else {
+                        alert("Users removed from git repo")
+                    }
                     document.location.reload()
                 } else {
                     //error
                     alert("Error removing users from git repo")
                 }
-            }
+            },
+            addAllUsersToRepo: async function () {
+                //confirm delete
+                if (!confirm("Are you sure you want to add all users to the git repo?")) {
+                    return
+                }
+                //delete group
+                let res = await fetch("/manager/git/{{.ID}}/addall", {
+                    method: "GET"
+                })
+                if (res.status === 200) {
+                    //reload page
+                    var data = await res.json()
+                    if (data.problems.length > 0 ){
+                        alert("Users added to git repo, but some users had problems: " + data.problems)
+                    } else {
+                        alert("Users added to git repo")
+                    }
+                    document.location.reload()
+                } else {
+                    //error
+                    alert("Error adding users to git repo")
+                }
+            },
         },
     });
 </script>

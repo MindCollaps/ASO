@@ -2,6 +2,7 @@ package git
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/go-github/v56/github"
 )
 
@@ -54,6 +55,19 @@ func CheckUser(email string, username string, token string) string {
 	}
 }
 
+func CheckRepoExists(owner string, token string, repo string) bool {
+	c := context.Background()
+	gitClient := GetGithubClient(token)
+	_, _, err := gitClient.Repositories.Get(c, owner, repo)
+
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
 func AddUserToRepo(username string, token string, repoName string) bool {
 	//add user to repo
 	c := context.Background()
@@ -78,18 +92,18 @@ func AddUserToRepo(username string, token string, repoName string) bool {
 	return true
 }
 
-func RemoveUserFromRepo(owner string, username string, token string, repoName string) bool {
+func RemoveUserFromRepo(repoOwner string, usernameToBeAdded string, gitToken string, repoName string) bool {
 	//add user to repo
 	c := context.Background()
 
-	gitClient := GetGithubClient(token)
-	Repo, _, err := gitClient.Repositories.Get(c, owner, repoName)
+	gitClient := GetGithubClient(gitToken)
+	Repo, _, err := gitClient.Repositories.Get(c, repoOwner, repoName)
 
 	if err != nil {
 		return false
 	}
 
-	_, err = gitClient.Repositories.RemoveCollaborator(c, owner, Repo.GetName(), username)
+	_, err = gitClient.Repositories.RemoveCollaborator(c, repoOwner, Repo.GetName(), usernameToBeAdded)
 
 	if err != nil {
 		return false
@@ -119,8 +133,37 @@ func GetGithubClient(token string) *github.Client {
 
 	if GitHubClients[token] == nil {
 		GitHubClients[token] = github.NewClient(nil).WithAuthToken(token)
+		if GitHubClients[token] == nil {
+			return nil
+		}
 		return GitHubClients[token]
 	}
 
 	return GitHubClients[token]
+}
+
+func CheckNewToken(owner string, token string, tokenBefore string) bool {
+	if GitHubClients == nil {
+		GitHubClients = make(map[string]*github.Client)
+	}
+
+	if GitHubClients[tokenBefore] != nil {
+		delete(GitHubClients, tokenBefore)
+	}
+
+	gitClient := github.NewClient(nil).WithAuthToken(token)
+
+	if gitClient == nil {
+		return false
+	}
+
+	_, _, err := gitClient.Users.Get(context.Background(), owner)
+
+	if err != nil {
+		return false
+	}
+
+	GitHubClients[token] = gitClient
+
+	return true
 }

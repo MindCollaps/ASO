@@ -24,7 +24,8 @@
 </head>
 <body>
 
-<div id="register" class="container">
+<div id="register" class="container mt-5">
+    <h1 class="text-white mb-3">Register</h1>
     <div class="form-floating mb-3">
         <input v-model="username" type="text" class="form-control" id="floatingInput"
                placeholder="ASO">
@@ -37,12 +38,12 @@
     </div>
     <div class="mb-3 form-floating">
         <input v-model="password1" type="password" class="form-control" id="floatingPassword"
-               placeholder="Password">
+               placeholder="Password" @keyup.enter="register()">
         <label for="floatingPassword">Password</label>
     </div>
     <div class="mb-3 form-floating">
         <input v-model="password2" type="password" class="form-control" id="floatingPassword1"
-               placeholder="Repeat Password">
+               placeholder="Repeat Password" @keyup.enter="register()">
         <label for="floatingPassword1">Repeat Password</label>
     </div>
     <div class="mb-3 d-flex justify-content-center">

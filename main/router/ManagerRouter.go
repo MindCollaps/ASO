@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -74,6 +75,8 @@ func userGroupModalToData(group models.UserGroup) UserGroupData {
 		Expires:     group.Expires,
 		AutoDelete:  group.AutoDelete,
 		Notify:      group.Notify,
+		GitHubRepo:  group.GitHubRepo,
+		GitHubOwner: group.GitHubOwner,
 	}
 
 	if g.DateExpires == "0001-01-01 01:00:00" {
@@ -246,6 +249,7 @@ type UserGroupData struct {
 	AutoDelete  bool          `json:"autoDelete" bson:"autoDelete"`
 	Notify      bool          `json:"notify" bson:"notify"`
 	GitHubRepo  string        `json:"githubRepo" bson:"githubRepo"`
+	GitHubOwner string        `json:"githubOwner" bson:"githubOwner"`
 }
 
 type TokenData struct {
@@ -404,8 +408,6 @@ func initManagerRouter(router *gin.Engine) {
 			userData.DateExpires = "Never"
 		}
 
-		fmt.Println(userData)
-
 		template := template.Must(template.ParseFiles("main/public/manager/gitusr/index.gohtml"))
 		template.Execute(c.Writer, userData)
 	})
@@ -459,8 +461,6 @@ func initManagerRouter(router *gin.Engine) {
 			groupData.Members = members
 		}
 
-		fmt.Println(groupData)
-
 		template := template.Must(template.ParseFiles("main/public/manager/group/index.gohtml"))
 		template.Execute(c.Writer, groupData)
 	})
@@ -507,7 +507,10 @@ func initManagerRouter(router *gin.Engine) {
 			Expires     bool   `json:"doesExpire" bson:"doesExpire"`
 			AutoDelete  bool   `json:"autoDelete" bson:"autoDelete"`
 			GitRepo     string `json:"gitRepo" bson:"gitRepo"`
+			GitOwner    string `json:"gitOwner" bson:"gitOwner"`
+			IsOwn       bool   `json:"isOwn" bson:"isOwn"`
 		}
+
 		//get from body
 		err := c.BindJSON(&requestBody)
 		if err != nil {
@@ -531,6 +534,22 @@ func initManagerRouter(router *gin.Engine) {
 			}
 		}
 
+		//check repo
+		var owner = ""
+
+		if requestBody.IsOwn {
+			owner = c.MustGet("user").(models.User).GitHubUsername
+		} else {
+			owner = requestBody.GitOwner
+		}
+
+		if !git.CheckRepoExists(owner, c.MustGet("user").(models.User).GitHubToken, requestBody.GitRepo) {
+			c.JSON(400, gin.H{
+				"message": "Invalid git repo",
+			})
+			return
+		}
+
 		//create group
 		_, err = database.MongoDB.Collection("userGroup").InsertOne(c, models.UserGroup{
 			ID:              primitive.NewObjectID(),
@@ -542,6 +561,8 @@ func initManagerRouter(router *gin.Engine) {
 			NotifiedExpired: false,
 			Expires:         requestBody.Expires,
 			Belongs:         c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			GitHubRepo:      requestBody.GitRepo,
+			GitHubOwner:     owner,
 		})
 
 		if err != nil {
@@ -1288,7 +1309,848 @@ func initManagerRouter(router *gin.Engine) {
 		})
 	})
 
+	router.POST("/manager/repoexists", middleware.LoginToken(), func(c *gin.Context) {
+		var requestBody struct {
+			GitRepo  string `json:"gitRepo" bson:"gitRepo"`
+			GitOwner string `json:"gitOwner" bson:"gitOwner"`
+			IsOwn    bool   `json:"isOwn" bson:"isOwn"`
+		}
+
+		err := c.BindJSON(&requestBody)
+
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		usr := c.MustGet("user").(models.User)
+
+		var owner = ""
+
+		if requestBody.IsOwn {
+			owner = usr.GitHubUsername
+		} else {
+			owner = requestBody.GitOwner
+		}
+
+		if git.CheckRepoExists(owner, usr.GitHubToken, requestBody.GitRepo) {
+			c.JSON(200, gin.H{
+				"message": "Repo exists",
+			})
+		} else {
+			c.JSON(400, gin.H{
+				"message": "Invalid git repo",
+			})
+		}
+	})
+
+	///manager/git/" + {{.ID}} +"/addAll to add all users from a git repo
+	router.GET("/manager/git/:id/addall", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//get all users from repo group
+		users, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+			"userGroup": group.ID,
+			"belongs":   user.ID,
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when fetching users",
+			})
+			return
+		}
+
+		//add all users to repo
+		problems := ""
+
+		for users.Next(c) {
+			var gitUser models.GitHubUser
+			err = users.Decode(&gitUser)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			if !git.AddUserToRepo(gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+				problems += gitUser.GitHubUsername + ", "
+			}
+
+			database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+				"_id": gitUser.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"addedToRepo": true,
+				},
+			})
+		}
+
+		c.JSON(200, gin.H{
+			"message":  "All users added to repo",
+			"problems": problems,
+		})
+	})
+
+	///manager/git/" + {{.ID}} +"/removeAll to remove all users from a git repo
+	router.GET("/manager/git/:id/removeall", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//check if the user is the owner of the repo
+		if group.GitHubOwner != c.MustGet("user").(models.User).GitHubUsername {
+			c.JSON(400, gin.H{
+				"message": "You are not the owner of the repo",
+			})
+			return
+		}
+
+		//remove all users from repo
+		users, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+			"userGroup": group.ID,
+			"belongs":   user.ID,
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when fetching users",
+			})
+			return
+		}
+
+		problems := ""
+
+		for users.Next(c) {
+			var gitUser models.GitHubUser
+			err = users.Decode(&gitUser)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			if !git.RemoveUserFromRepo(user.GitHubUsername, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+				problems += gitUser.GitHubUsername + ", "
+			}
+		}
+
+		c.JSON(200, gin.H{
+			"message":  "All users removed from repo",
+			"problems": problems,
+		})
+	})
+
+	///manager/git/" + {{.ID}} +"/remove/ {{.UserID}} to remove a user from a group
+	router.GET("/manager/git/:id/remove/:userid", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//find user
+		userid := c.Param("userid")
+		useridd, err := primitive.ObjectIDFromHex(userid)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			return
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+			"_id":       useridd,
+			"userGroup": group.ID,
+			"belongs":   user.ID,
+		}).Decode(&gitUser)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User not found",
+			})
+			return
+		}
+
+		//remove user from repo
+		if !git.RemoveUserFromRepo(user.GitHubUsername, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+			c.JSON(400, gin.H{
+				"message": "The user could not be removed from the repo",
+			})
+			return
+		}
+
+		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+			"_id": gitUser.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"addedToRepo": false,
+				"userGroup":   primitive.NilObjectID,
+			},
+		}, options.Update())
+	})
+
+	//manager/git/" + {{.ID}} +"/add/ {{.UserID}} to add a user to a repo
+	router.GET("/manager/git/:id/add/:userid", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//find user
+		userid := c.Param("userid")
+		useridd, err := primitive.ObjectIDFromHex(userid)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			return
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+			"_id":       useridd,
+			"userGroup": group.ID,
+			"belongs":   user.ID,
+		}).Decode(&gitUser)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User not found",
+			})
+			return
+		}
+
+		//add user to repo
+		if !git.AddUserToRepo(user.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+			c.JSON(400, gin.H{
+				"message": "The user could not be added to the repo",
+			})
+			return
+		}
+
+		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+			"_id": gitUser.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"addedToRepo": true,
+				"userGroup":   group.ID,
+			},
+		}, options.Update())
+
+		c.JSON(200, gin.H{
+			"message": "User added to repo",
+		})
+	})
+
 	///manager/group/" + {{.ID}} +"/removeAll to remove all users from a group
+	router.GET("/manager/group/:id/removeAll", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//remove all users from repo
+		users, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+			"userGroup": group.ID,
+			"belongs":   user.ID,
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when fetching users",
+			})
+			return
+		}
+
+		problems := ""
+
+		for users.Next(c) {
+			var gitUser models.GitHubUser
+			err = users.Decode(&gitUser)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			database.MongoDB.Collection("gitUser").UpdateOne(c,
+				bson.M{
+					"_id": gitUser.ID,
+				},
+				bson.M{
+					"$set": bson.M{
+						"userGroup": primitive.NilObjectID,
+					},
+				}, options.Update())
+		}
+
+		c.JSON(200, gin.H{
+			"message":  "All users removed from repo",
+			"problems": problems,
+		})
+	})
+
 	///manager/group/" + {{.ID}} +"/remove/ {{.UserID}} to remove a user from a group
+	router.GET("/manager/group/:id/remove/:userid", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//find user
+		userid := c.Param("userid")
+		useridd, err := primitive.ObjectIDFromHex(userid)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			return
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+			"_id":       useridd,
+			"userGroup": group.ID,
+			"belongs":   user.ID,
+		}).Decode(&gitUser)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User not found",
+			})
+			return
+		}
+
+		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+			"_id": gitUser.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"userGroup": primitive.NilObjectID,
+			},
+		}, options.Update())
+	})
+
 	//manager/group/" + {{.ID}} +"/add/ {{.UserID}} to add a user to a group
+	router.GET("/manager/group/:id/add/:userid", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		user := c.MustGet("user").(models.User)
+
+		//find group
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id":     idd,
+			"belongs": user.ID,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//find user
+		userid := c.Param("userid")
+		useridd, err := primitive.ObjectIDFromHex(userid)
+
+		if err != nil {
+			//wrong gitusr request
+			c.JSON(400, gin.H{
+				"message": "Invalid user id",
+			})
+			return
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+			"_id":     useridd,
+			"belongs": user.ID,
+		}).Decode(&gitUser)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "User not found",
+			})
+			return
+		}
+
+		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+			"_id": gitUser.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"userGroup": group.ID,
+			},
+		}, options.Update())
+
+		c.JSON(200, gin.H{
+			"message": "User added to group",
+		})
+	})
+
+	router.GET("/profile", middleware.LoginToken(), func(c *gin.Context) {
+		user := c.MustGet("user").(models.User)
+
+		userData := userModalToData(user)
+
+		template := template.Must(template.ParseFiles("main/public/profile/index.gohtml"))
+		template.Execute(c.Writer, userData)
+	})
+
+	//profile/update/email username git password
+
+	router.POST("/profile/update/email", middleware.LoginToken(), func(c *gin.Context) {
+		var requestBody struct {
+			Email string `json:"email" bson:"email"`
+		}
+
+		usr := c.MustGet("user").(models.User)
+
+		err := c.BindJSON(&requestBody)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//check if email is valid
+		if !strings.Contains(requestBody.Email, "@") {
+			c.JSON(400, gin.H{
+				"message": "Invalid email",
+			})
+			fmt.Println("Invalid email")
+			return
+		}
+
+		//check length
+		if len(requestBody.Email) < 3 {
+			c.JSON(400, gin.H{
+				"message": "Email is too short",
+			})
+			fmt.Println("Email is too short")
+			return
+		}
+
+		if len(requestBody.Email) > 50 {
+			c.JSON(400, gin.H{
+				"message": "Email is too long",
+			})
+			fmt.Println("Email is too long")
+			return
+		}
+
+		//check if email is already in use
+		var user models.User
+		err = database.MongoDB.Collection("user").FindOne(c, bson.M{
+			"email": requestBody.Email,
+		}).Decode(&user)
+
+		if err == nil {
+			c.JSON(400, gin.H{
+				"message": "Email is already in use",
+			})
+			fmt.Println("Email is already in use")
+			return
+		}
+
+		//update email
+		_, err = database.MongoDB.Collection("user").UpdateOne(c, bson.M{
+			"_id": usr.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"email": requestBody.Email,
+			},
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when updating email",
+			})
+			fmt.Println("Internal server error when updating email")
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "Email updated",
+		})
+	})
+
+	router.POST("/profile/update/username", middleware.LoginToken(), func(c *gin.Context) {
+		var requestBody struct {
+			Username string `json:"username" bson:"username"`
+		}
+
+		usr := c.MustGet("user").(models.User)
+
+		err := c.BindJSON(&requestBody)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//check if username is valid
+		if len(requestBody.Username) < 3 {
+			c.JSON(400, gin.H{
+				"message": "Username is too short",
+			})
+			fmt.Println("Username is too short")
+			return
+		}
+
+		if len(requestBody.Username) > 20 {
+			c.JSON(400, gin.H{
+				"message": "Username is too long",
+			})
+			fmt.Println("Username is too long")
+			return
+		}
+
+		//check if username is already in use
+		var user models.User
+		err = database.MongoDB.Collection("user").FindOne(c, bson.M{
+			"username": requestBody.Username,
+		}).Decode(&user)
+
+		if err == nil {
+			c.JSON(400, gin.H{
+				"message": "Username is already in use",
+			})
+			fmt.Println("Username is already in use")
+			return
+		}
+
+		//update username
+		_, err = database.MongoDB.Collection("user").UpdateOne(c, bson.M{
+			"_id": usr.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"username": requestBody.Username,
+			},
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when updating username",
+			})
+			fmt.Println("Internal server error when updating username")
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "Username updated",
+		})
+	})
+
+	//updates gitUsername and gitToken
+	router.POST("/profile/update/git", middleware.LoginToken(), func(c *gin.Context) {
+		var requestBody struct {
+			GitUsername string `json:"gitUsername" bson:"gitUsername"`
+			GitToken    string `json:"gitToken" bson:"gitToken"`
+		}
+
+		usr := c.MustGet("user").(models.User)
+
+		err := c.BindJSON(&requestBody)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//check if gitUsername is valid
+		if len(requestBody.GitUsername) < 3 {
+			c.JSON(400, gin.H{
+				"message": "GitUsername is too short",
+			})
+			fmt.Println("GitUsername is too short")
+			return
+		}
+
+		if len(requestBody.GitUsername) > 20 {
+			c.JSON(400, gin.H{
+				"message": "GitUsername is too long",
+			})
+			fmt.Println("GitUsername is too long")
+			return
+		}
+
+		//check if gitToken is valid
+		if len(requestBody.GitToken) < 3 {
+			c.JSON(400, gin.H{
+				"message": "GitToken is too short",
+			})
+			fmt.Println("GitToken is too short")
+			return
+		}
+
+		if len(requestBody.GitToken) > 100 {
+			c.JSON(400, gin.H{
+				"message": "GitToken is too long",
+			})
+			fmt.Println("GitToken is too long")
+			return
+		}
+
+		if !git.CheckNewToken(requestBody.GitUsername, requestBody.GitToken, usr.GitHubToken) {
+			c.JSON(400, gin.H{
+				"message": "Invalid gitToken or gitUsername",
+			})
+			fmt.Println("Invalid gitToken or gitUsername")
+			return
+		}
+
+		//update gitUsername and gitToken
+		_, err = database.MongoDB.Collection("user").UpdateOne(c, bson.M{
+			"_id": usr.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"githubUsername": requestBody.GitUsername,
+				"githubToken":    requestBody.GitToken,
+			},
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when updating gitUsername and gitToken",
+			})
+			fmt.Println("Internal server error when updating gitUsername and gitToken")
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "GitUsername and gitToken updated",
+		})
+	})
+
+	router.POST("/profile/update/password", middleware.LoginToken(), func(c *gin.Context) {
+		var requestBody struct {
+			Password string `json:"password" bson:"password"`
+		}
+
+		usr := c.MustGet("user").(models.User)
+
+		err := c.BindJSON(&requestBody)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		//check if password is valid
+		if len(requestBody.Password) < 3 {
+			c.JSON(400, gin.H{
+				"message": "Password is too short",
+			})
+			fmt.Println("Password is too short")
+			return
+		}
+
+		if len(requestBody.Password) > 50 {
+			c.JSON(400, gin.H{
+				"message": "Password is too long",
+			})
+			fmt.Println("Password is too long")
+			return
+		}
+
+		//hash password
+		hashedPassword, err := crypt.HashPassword(requestBody.Password)
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when hashing password",
+			})
+			fmt.Println("Internal server error when hashing password")
+			return
+		}
+
+		//update password
+		_, err = database.MongoDB.Collection("user").UpdateOne(c, bson.M{
+			"_id": usr.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"password": hashedPassword,
+			},
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when updating password",
+			})
+			fmt.Println("Internal server error when updating password")
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "Password updated",
+		})
+	})
 }

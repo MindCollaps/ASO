@@ -12,5 +12,6 @@ type UserGroup struct {
 	Notify          bool               `json:"notify" bson:"notify"`
 	NotifiedExpired bool               `json:"notified" bson:"notified"`
 	GitHubRepo      string             `json:"githubRepo" bson:"githubRepo"`
+	GitHubOwner     string             `json:"githubOwner" bson:"githubOwner"`
 	Belongs         primitive.ObjectID `json:"belongs" bson:"belongs"`
 }

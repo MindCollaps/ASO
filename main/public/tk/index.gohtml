@@ -39,13 +39,13 @@
                 <div id="helper" class="form-text">A name to easily identify you in the system</div>
             </div>
             <div class="form-floating mb-4">
-                <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="MindCollaps">
+                <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="MindCollaps" @keyup.enter="submit()">
                 <label for="floatingInput">GitHub Username</label>
                 <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
             </div>
             <div class="form-floating mb-4">
                 <input v-model="email" type="email" class="form-control" id="floatingInput"
-                       placeholder="example@example.example">
+                       placeholder="example@example.example" @keyup.enter="submit()">
                 <label for="floatingInput">GitHub E-Mail</label>
                 <div id="helper" class="form-text">In case your profile can't be found by your username, we try to find it by your email.</div>
             </div>

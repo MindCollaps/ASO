@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <title>Profile</title>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Copyright -->
+    <meta name="author" content="Noah Elijah Till"/>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+          crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+            crossorigin="anonymous"></script>
+    <!-- Google Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <!-- Vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="register" class="container mt-5">
+    <div class="d-flex flex-row align-items-center">
+        <h1 class="flex-grow-1 text-white">Profile</h1>
+        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
+    </div>
+    <div class="input-group mb-4">
+        <div class="form-floating">
+            <input v-model="username" type="text" class="form-control" id="username"
+                   placeholder="MindCollaps" @keyup.enter="updateUsername()">
+            <label for="username">Username</label>
+        </div>
+        <button class="btn btn-primary" type="button" @click="updateUsername()">Update</button>
+    </div>
+    <div class="input-group mb-4">
+        <div class="form-floating">
+            <input v-model="email" type="email" class="form-control" id="email"
+                   placeholder="example@example.ex" @keyup.enter="updateEmail()">
+            <label for="email">E-Mail</label>
+        </div>
+        <button class="btn btn-primary" type="button" @click="updateEmail()">Update</button>
+    </div>
+    <hr class="mt-5 mb-5">
+    <h2>Change Password</h2>
+    <div class="mb-3 form-floating">
+        <input v-model="password2" type="password" class="form-control" id="password2"
+               placeholder="Password">
+        <label for="password2">Password</label>
+    </div>
+    <div class="input-group mb-4">
+        <div class="form-floating">
+            <input v-model="password1" type="password" class="form-control" id="password1"
+                   placeholder="Repeat Password" @keyup.enter="updatePassword()">
+            <label for="password1">Repeat Password</label>
+        </div>
+        <button class="btn btn-primary" type="button" @click="updatePassword()">Update</button>
+    </div>
+    <hr class="mt-5 mb-5">
+    <h2>GitHub</h2>
+    <div class="form-floating mb-4">
+        <input v-model="gitHubUsername" type="text" class="form-control" id="gitUsername"
+               placeholder="MindCollaps" @keyup.enter="updateGitUsername()">
+        <label for="gitUsername">Git Username</label>
+        <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
+    </div>
+    <div class="form-floating mb-4">
+        <input v-model="gitHubToken" type="text" class="form-control" id="token"
+               placeholder="example@example.ex" @keyup.enter="updateToken()">
+        <label for="token">Token</label>
+        <div id="helper" class="form-text">Your GitHub Token. Click <a href="https://github.com/settings/tokens" target="_blank">here</a> to see generate one. Make sure the expiry date is either set to <q>No expiration</q> or the time you want to use this tool. Also select the scope repo!</div>
+    </div>
+    <button class="btn btn-primary" type="button" @click="updateGit()">Update Git</button>
+</div>
+
+<script>
+    var main = new Vue({
+        el: '#register',
+        data: {
+            username: '{{.Username}}',
+            email: '{{.Email}}',
+            password1: '',
+            password2: '',
+            gitHubToken: '',
+            gitHubUsername: '{{.GitHubUsername}}',
+        },
+        methods: {
+            invalidPasswords: function () {
+                document.getElementById('password1').removeAttribute('is-valid');
+                document.getElementById('password1').setAttribute('is-invalid', '');
+                document.getElementById('password2').removeAttribute('is-valid');
+                document.getElementById('password2').setAttribute('is-invalid', '');
+            },
+            updatePassword: async function () {
+                if (this.password1 !== this.password2) {
+                    alert('Passwords do not match');
+
+                    invalidPassword();
+                    return;
+                }
+
+                let res = await fetch('/profile/update/password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: this.password1
+                    })
+                });
+
+                if (res.status !== 200) {
+                    var data = await res.json();
+                    alert('Error updating password ' + data.message);
+                    document.getElementById('password1').setAttribute('value', '');
+                    document.getElementById('password2').setAttribute('value', '');
+                    return;
+                } else {
+                    alert('Password updated');
+                }
+
+                document.getElementById('password1').removeAttribute('is-invalid');
+                document.getElementById('password1').setAttribute('is-valid', '');
+                document.getElementById('password2').removeAttribute('is-invalid');
+                document.getElementById('password2').setAttribute('is-valid', '');
+            },
+            updateUsername: async function () {
+                let res = await fetch('/profile/update/username', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: this.username
+                    })
+                });
+
+                if (res.status !== 200) {
+                    var data = await res.json();
+                    alert('Error updating username ' + data.message);
+                    return;
+                } else {
+                    alert('Username updated');
+                }
+            },
+            updateEmail: async function () {
+                let res = await fetch('/profile/update/email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: this.email
+                    })
+                });
+
+                if (res.status !== 200) {
+                    var data = await res.json();
+                    alert('Error updating email ' + data.message);
+                    return;
+                } else {
+                    alert('Email updated');
+                }
+            },
+            updateGit: async function () {
+                let res = await fetch('/profile/update/git', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gitToken: this.gitHubToken,
+                        gitUsername: this.gitHubUsername
+                    })
+                });
+
+                if (res.status !== 200) {
+                    var data = await res.json();
+                    alert('Error updating git ' + data.message);
+                    return;
+                } else {
+                    alert('Token updated');
+                }
+            },
+        }
+    });
+</script>
+</body>
+</html>

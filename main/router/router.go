@@ -379,13 +379,6 @@ func InitRouter() {
 		}
 	})
 
-	// Seite zur Generierung des Tokens
-	router.GET("/generate-token", func(c *gin.Context) {
-		// Hier können Sie die Logik zur Generierung des GitHub-Tokens implementieren
-		// und die generierten Tokens an die Benutzer senden.
-		// Zum Beispiel: c.JSON(http.StatusOK, gin.H{"token": "GENERATED_TOKEN"})
-	})
-
 	// Seite zur Eingabe des Tokens und Hinzufügen des Benutzernamens zum Repo
 	router.GET("/token", func(c *gin.Context) {
 		token := c.Query("token")
@@ -397,6 +390,12 @@ func InitRouter() {
 		} else {
 
 		}
+	})
+
+	router.GET("/logout", func(c *gin.Context) {
+		c.SetCookie("auth", "", -1, "/", "", false, true)
+		c.Redirect(http.StatusTemporaryRedirect, "/")
+		return
 	})
 
 	initManagerRouter(router)
