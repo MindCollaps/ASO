@@ -112,6 +112,8 @@
                         gitOwner: this.gitOwner,
                         gitRepo: this.gitName
                     })
+                }).then((res) => {
+                    return res;
                 });
                 //send info if it fails
                 if (response.status !== 200) {
@@ -133,6 +135,8 @@
                         gitRepo: this.gitName,
                         isOwn: this.gitOwn
                     })
+                }).then((res) => {
+                    return res;
                 });
 
                 if (response.status !== 200) {

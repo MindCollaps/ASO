@@ -22,41 +22,45 @@
     <!-- Vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
 </head>
-<body>
-
+<body class="vw-100 vh-100">
 {{if .Failed}}
-<div id="token-manager" class="container">
-    <h1>{{.Message}}</h1>
+<div id="token-manager" class="container h-100">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <h1>{{.Message}}</h1>
+    </div>
 </div>
 {{else}}
-<div id="token-manager" class="container mt-5">
-    <div v-if="!done">
-        <h1>Register</h1>
-        <div class="container">
-            <div class="form-floating mb-4">
-                <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="Noah Till">
-                <label for="floatingInput">Username</label>
-                <div id="helper" class="form-text">A name to easily identify you in the system</div>
-            </div>
-            <div class="form-floating mb-4">
-                <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="MindCollaps" @keyup.enter="submit()">
-                <label for="floatingInput">GitHub Username</label>
-                <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
-            </div>
-            <div class="form-floating mb-4">
-                <input v-model="email" type="email" class="form-control" id="floatingInput"
-                       placeholder="example@example.example" @keyup.enter="submit()">
-                <label for="floatingInput">GitHub E-Mail</label>
-                <div id="helper" class="form-text">In case your profile can't be found by your username, we try to find it by your email.</div>
-            </div>
-            <div class="mb-4 d-flex justify-content-center">
-                <button @click="submit()" class="btn btn-primary align-center">Submit</button>
+<div id="token-manager" class="container h-100">
+    <div v-if="!done && !failed" class="h-100">
+        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+            <h1>Register</h1>
+            <div class="container">
+                <div class="form-floating mb-4">
+                    <input v-model="username" type="text" class="form-control" id="username" placeholder="Noah Till">
+                    <label for="username">Username</label>
+                    <div id="helper" class="form-text">A name to easily identify you in the system. The Username should be: Between 3 and 30 characters long, contains only upper and lower case characters, . and _ (but not at the end)</div>
+                </div>
+                <div class="form-floating mb-4">
+                    <input v-model="gitUsername" type="text" class="form-control" id="gitUsername" placeholder="MindCollaps" @keyup.enter="submit()">
+                    <label for="gitUsername">GitHub Username</label>
+                    <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile. The Username should be: Between 3 and 30 characters long, contains only upper and lower case characters, . and _ (but not at the end)</div>
+                </div>
+                <div class="mb-4 d-flex justify-content-center">
+                    <button @click="submit()" class="btn btn-primary align-center">Submit</button>
+                </div>
             </div>
         </div>
     </div>
-    <div v-if="done">
-        <h1>Success</h1>
-        <p>You can now close this window.</p>
+    <div class="container h-100" v-if="done && !failed">
+        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+            <h1>Success</h1>
+            <p>You can now close this window.</p>
+        </div>
+    </div>
+    <div class="container h-100" v-if="!done && failed">
+        <div class="d-flex align-items-center justify-content-center h-100">
+            <h1>${message]</h1>
+        </div>
     </div>
 </div>
 
@@ -66,10 +70,12 @@
         data: {
             username: "",
             gitUsername: "",
-            email: "",
             token: "",
-            done: false
+            done: false,
+            failed: false,
+            message: ""
         },
+        delimiters: ['${', '}'],
         created: function () {
             this.token = window.location.href.split("/").pop();
         },
@@ -83,15 +89,34 @@
                     body: JSON.stringify({
                         username: this.username,
                         gitUsername: this.gitUsername,
-                        email: this.email,
                         token: this.token
                     })
+                }).then((res) => {
+                    return res;
                 });
                 // Send info if it fails
                 if (response.status !== 200) {
                     let data = await response.json();
-                    alert(data.message);
+
+                    if (data.tokenError){
+                        this.message = data.message;
+                        this.failed = true;
+                        return
+                    }
+                    if (data.field === "username") {
+                        document.getElementById("username").classList.add("is-invalid");
+                        document.getElementById("gitUsername").classList.remove("is-invalid");
+                    } else if (data.field === "gitUsername") {
+                        document.getElementById("gitUsername").classList.add("is-invalid");
+                        document.getElementById("username").classList.remove("is-invalid");
+                    } else {
+                        alert(data.message);
+                    }
                 } else {
+                    document.getElementById("gitUsername").classList.remove("is-invalid");
+                    document.getElementById("username").classList.remove("is-invalid");
+                    document.getElementById("username").classList.add("is-valid");
+                    document.getElementById("gitUsername").classList.add("is-valid");
                     alert("Success");
                     this.done = true
                 }

@@ -34,26 +34,34 @@
         <hr>
         <ul class="nav nav-pills flex-column mb-auto align-items-center p-2">
             <li>
-                <button @click="href('git')" data-bs-toggle="tab" id="git-user-tab" data-bs-target="#git-user-tab-pane" type="button" role="tab" aria-controls="git-user-tab-pane" aria-selected="true" class="nav-link" aria-current="page">
+                <button @click="href('git')" data-bs-toggle="tab" id="git-user-tab" data-bs-target="#git-user-tab-pane"
+                        type="button" role="tab" aria-controls="git-user-tab-pane" aria-selected="true" class="nav-link"
+                        aria-current="page">
                     <span class="material-icons align-middle fs-5">group</span>
                     <span class="align-middle">Members</span>
                 </button>
             </li>
             <li class="nav-item">
-                <button @click="href('group')" data-bs-toggle="tab" id="user-group-tab" data-bs-target="#user-group-tab-pane" type="button" role="tab" aria-controls="user-group-tab-pane" aria-selected="true" class="nav-link" aria-current="page">
+                <button @click="href('group')" data-bs-toggle="tab" id="user-group-tab"
+                        data-bs-target="#user-group-tab-pane" type="button" role="tab"
+                        aria-controls="user-group-tab-pane" aria-selected="true" class="nav-link" aria-current="page">
                     <span class="material-icons align-middle fs-5">groups</span>
                     <span class="align-middle">Groups</span>
                 </button>
             </li>
             <li>
-                <button @click="href('token')" data-bs-toggle="tab" id="token-tab" data-bs-target="#token-tab-pane" type="button" role="tab" aria-controls="token-tab-pane" aria-selected="true" class="nav-link" aria-current="page">
+                <button @click="href('token')" data-bs-toggle="tab" id="token-tab" data-bs-target="#token-tab-pane"
+                        type="button" role="tab" aria-controls="token-tab-pane" aria-selected="true" class="nav-link"
+                        aria-current="page">
                     <span class="material-icons align-middle fs-5">vpn_key</span>
                     <span class="align-middle">Token</span>
                 </button>
             </li>
             {{if .SuperUser}}
                 <li>
-                    <button @click="href('user')" data-bs-toggle="tab" id="user-tab" data-bs-target="#user-tab-pane" type="button" role="tab" aria-controls="user-tab-pane" aria-selected="true" class="nav-link" aria-current="page">
+                    <button @click="href('user')" data-bs-toggle="tab" id="user-tab" data-bs-target="#user-tab-pane"
+                            type="button" role="tab" aria-controls="user-tab-pane" aria-selected="true" class="nav-link"
+                            aria-current="page">
                         <span class="material-icons align-middle fs-5">manage_accounts</span>
                         <span class="align-middle">Users</span>
                     </button>
@@ -62,69 +70,86 @@
         </ul>
         <hr>
         <div class="dropdown p-3">
-            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+               data-bs-toggle="dropdown" aria-expanded="false">
                 <strong>{{.User.Username}}</strong>
             </a>
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                 <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
                 <li><a class="dropdown-item" href="/logout">Sign out</a></li>
             </ul>
         </div>
     </div>
-    <div class="container col p-5" style="width: 80%;">
-        <div class="tab-content" id="v-pills-tabContent">
-            <div class="tab-pane fade" id="git-user-tab-pane" role="tabpanel" aria-labelledby="git-user-tab" tabindex="0">
-                <h1 class="fw-bold text-white show active">Git User Management</h1>
-                <button class="btn btn-primary mb-3 mt-4" @click="createGitUser()"><span class="material-icons align-middle fs-5">person_add</span></button>
-                <div class="d-flex justify-content-center align-items-center flex-column gap-4">
-                    {{if .GUsers}}
-                        {{range .GUsers}}
-                            <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                <h1>{{.GitHubUsername}}</h1>
-                                <h3>Created: {{.DateCreated}}</h3>
-                                <h3>Expires: {{.DateExpires}}</h3>
-                                {{if .UserGroup}}
-                                    <h3>Group: {{.UserGroup.Name}}</h3>
-                                {{else}}
-                                    <h3>Group: None</h3>
-                                {{end}}
-                                <button class="btn btn-secondary mb-3 mt-4" @click="infoGUser('{{.ID}}')"><span class="material-icons align-middle fs-5">info</span></button>
-                                <button class="btn btn-danger mb-3 mt-4"
-                                        @click="deleteGUser('{{.ID}}')"><span class="material-icons align-middle fs-5">delete</span>
-                                </button>
-                            </div>
+    <div class="container col p-5 h-100" style="width: 80%;">
+        <div class="tab-content h-100" id="v-pills-tabContent">
+            <div class="tab-pane fade" id="git-user-tab-pane" role="tabpanel" aria-labelledby="git-user-tab"
+                 tabindex="0">
+                <div class="h-100 d-flex flex-column align-items-stretch">
+                    <h1 class="fw-bold text-white show active">Git User Management</h1>
+                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGitUser()"><span
+                                class="material-icons align-middle fs-5">person_add</span></button>
+                    <div class="d-flex align-items-center flex-column overflow-auto">
+                        {{if .GUsers}}
+                            {{range .GUsers}}
+                                <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
+                                    <h1>{{.GitHubUsername}}</h1>
+                                    <h3>Created: {{.DateCreated}}</h3>
+                                    <h3>Expires: {{.DateExpires}}</h3>
+                                    {{if .UserGroup}}
+                                        <h3>Group: {{.UserGroup.Name}}</h3>
+                                    {{else}}
+                                        <h3>Group: None</h3>
+                                    {{end}}
+                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoGUser('{{.ID}}')"><span
+                                                class="material-icons align-middle fs-5">info</span></button>
+                                    <button class="btn btn-danger mb-3 mt-4"
+                                            @click="deleteGUser('{{.ID}}')"><span
+                                                class="material-icons align-middle fs-5">delete</span>
+                                    </button>
+                                </div>
+                            {{end}}
+                        {{else}}
+                            <h3>No Users</h3>
                         {{end}}
-                    {{else}}
-                        <h3>No Users</h3>
-                    {{end}}
+                    </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="user-group-tab-pane" role="tabpanel" aria-labelledby="user-group-tab" tabindex="0">
-                <h1 class="fw-bold text-white">User Group Management</h1>
-                <button class="btn btn-primary mb-3 mt-4" @click="createGroup()"><span class="material-icons align-middle fs-5">group_add</span></button>
-                <div class="d-flex justify-content-center align-items-center flex-column gap-4">
-                    {{if .Groups}}
-                        {{range .Groups}}
-                            <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                <h1>{{.Name}}</h1>
-                                <h3>Created: {{.Date}}</h3>
-                                <h3>Expires: {{.DateExpires}}</h3>
-                                <h3>Users: {{.Users}}</h3>
-                                <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span class="material-icons align-middle fs-5">info</span></button>
-                                <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')"><span class="material-icons align-middle fs-5">delete</span>
-                                </button>
-                            </div>
+            <div class="tab-pane fade h-100" id="user-group-tab-pane" role="tabpanel" aria-labelledby="user-group-tab"
+                 tabindex="0">
+                <div class="h-100 d-flex flex-column align-items-stretch">
+                    <h1 class="fw-bold text-white">User Group Management</h1>
+                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGroup()"><span
+                                class="material-icons align-middle fs-5">group_add</span></button>
+                    <div class="d-flex align-items-center flex-column overflow-auto">
+                        {{if .Groups}}
+                            {{range .Groups}}
+                                <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3">
+                                    <h1>{{.Name}}</h1>
+                                    <h3>Created: {{.Date}}</h3>
+                                    <h3>Expires: {{.DateExpires}}</h3>
+                                    <h3>Users: {{.Users}}</h3>
+                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
+                                                class="material-icons align-middle fs-5">info</span></button>
+                                    <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')"><span
+                                                class="material-icons align-middle fs-5">delete</span>
+                                    </button>
+                                </div>
+                            {{end}}
+                        {{else}}
+                            <h3>No Groups</h3>
                         {{end}}
-                    {{else}}
-                        <h3>No Groups</h3>
-                    {{end}}
+                    </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="token-tab-pane" role="tabpanel" aria-labelledby="token-tab" tabindex="0">
+            <div class="tab-pane fade h-100" id="token-tab-pane" role="tabpanel" aria-labelledby="token-tab"
+                 tabindex="0">
                 <h1 class="fw-bold text-white">Token Management</h1>
-                <button class="btn btn-primary mb-3 mt-4" @click="createGitUserTk()"><span class="material-icons align-middle fs-5">add</span></button>
-                <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+                <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGitUserTk()"><span
+                            class="material-icons align-middle fs-5">add</span></button>
+                <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
                     {{if .Tokens}}
                         {{range .Tokens}}
                             <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
@@ -132,8 +157,10 @@
                                 <h3>Created: {{.DateCreated}}</h3>
                                 <h3>Expires: {{.DateExpires}}</h3>
                                 <h3>Used: {{.Used}}</h3>
-                                <button class="btn btn-secondary mb-3 mt-4" @click="infoToken('{{.ID}}')"><span class="material-icons align-middle fs-5">info</span></button>
-                                <button class="btn btn-secondary mb-3 mt-4" @click="qrToken('{{.Token}}')"><span class="material-icons align-middle fs-5">qr_code_scanner</span></button>
+                                <button class="btn btn-secondary mb-3 mt-4" @click="infoToken('{{.ID}}')"><span
+                                            class="material-icons align-middle fs-5">info</span></button>
+                                <button class="btn btn-secondary mb-3 mt-4" @click="qrToken('{{.Token}}')"><span
+                                            class="material-icons align-middle fs-5">qr_code_scanner</span></button>
                                 <button class="btn btn-danger mb-3 mt-4"
                                         @click="deleteToken('{{.ID}}')">Delete
                                 </button>
@@ -145,10 +172,13 @@
                 </div>
             </div>
             {{if .SuperUser}}
-                <div class="tab-pane fade" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab" tabindex="0">
+            <div class="tab-pane fade h-100" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab"
+                 tabindex="0">
+                <div class="h-100 d-flex flex-column align-items-stretch">
                     <h1 class="fw-bold text-white">User Management</h1>
-                    <button class="btn btn-primary mb-3 mt-4" @click="createRegisterToken()"><span class="material-icons align-middle fs-5">person_add</span></button>
-                    <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createRegisterToken()"><span
+                                class="material-icons align-middle fs-5">person_add</span></button>
+                    <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
                         {{if .Users}}
                             {{range .Users}}
                                 <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
@@ -156,8 +186,10 @@
                                     <h3>Email: {{.Email}}</h3>
                                     <h3>Created: {{.DateCreated}}</h3>
                                     <h3>Super User: {{.IsSuperUser}}</h3>
-                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')"><span class="material-icons align-middle fs-5">info</span></button>
-                                    <button class="btn btn-danger mb-3 mt-4" @click="deleteUser('{{.ID}}')"><span class="material-icons align-middle fs-5">delete</span></button>
+                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')"><span
+                                                class="material-icons align-middle fs-5">info</span></button>
+                                    <button class="btn btn-danger mb-3 mt-4" @click="deleteUser('{{.ID}}')"><span
+                                                class="material-icons align-middle fs-5">delete</span></button>
                                 </div>
                             {{end}}
                         {{else}}
@@ -165,7 +197,8 @@
                         {{end}}
                     </div>
                 </div>
-            {{end}}
+                {{end}}
+            </div>
         </div>
     </div>
 </div>
@@ -173,20 +206,20 @@
 <script>
     var main = new Vue({
         el: '#manager',
-        created: async function() {
-          //check url var "a" for tab and set the tab active
+        created: async function () {
+            //check url var "a" for tab and set the tab active
             let url = new URL(window.location.href)
             let a = url.searchParams.get("a")
 
-            if (a == "token" ){
+            if (a == "token") {
                 document.getElementById("token-tab").classList.add("active")
                 document.getElementById("token-tab-pane").classList.add("active")
                 document.getElementById("token-tab-pane").classList.add("show")
-            } else if (a == "user" ){
+            } else if (a == "user") {
                 document.getElementById("user-tab").classList.add("active")
                 document.getElementById("user-tab-pane").classList.add("active")
                 document.getElementById("user-tab-pane").classList.add("show")
-            } else if (a == "group" ){
+            } else if (a == "group") {
                 document.getElementById("user-group-tab").classList.add("active")
                 document.getElementById("user-group-tab-pane").classList.add("active")
                 document.getElementById("user-group-tab-pane").classList.add("show")
@@ -196,6 +229,9 @@
                 document.getElementById("git-user-tab-pane").classList.add("show")
             }
 
+            if (a == null) {
+                a = "git"
+            }
             this.href(a)
         },
         methods: {
@@ -207,7 +243,9 @@
                 //delete group
                 let res = await fetch("/manager/group/" + id, {
                     method: "DELETE"
-                })
+                }).then((res) => {
+                    return res;
+                });
                 if (res.status === 200) {
                     //reload page
                     document.location.reload()
@@ -224,7 +262,9 @@
                 //delete user
                 let res = await fetch("/manager/gitusr/" + id, {
                     method: "DELETE"
-                })
+                }).then((res) => {
+                    return res;
+                });
                 if (res.status === 200) {
                     //reload page
                     document.location.reload()
@@ -287,7 +327,9 @@
                 //delete token
                 let res = await fetch("/manager/token/" + id, {
                     method: "DELETE"
-                })
+                }).then((res) => {
+                    return res;
+                });
                 if (res.status === 200) {
                     //reload page
                     document.location.reload()
@@ -308,7 +350,9 @@
                 //delete user
                 let res = await fetch("/manager/user/" + id, {
                     method: "DELETE"
-                })
+                }).then((res) => {
+                    return res;
+                });
                 if (res.status === 200) {
                     //reload page
                     document.location.reload()
@@ -325,17 +369,17 @@
                 //redirect to create register token page
                 document.location.href = "/manager/user/create"
             },
-            href: function (tab){
+            href: function (tab) {
                 history.pushState({}, null, "/manager?a=" + tab);
 
                 name = ""
-                if (tab == "git"){
+                if (tab == "git") {
                     name = "Git User"
-                } else if (tab == "group"){
+                } else if (tab == "group") {
                     name = "User Group"
-                } else if (tab == "token"){
+                } else if (tab == "token") {
                     name = "Token"
-                } else if (tab == "user"){
+                } else if (tab == "user") {
                     name = "User"
                 }
 

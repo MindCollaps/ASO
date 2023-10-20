@@ -9,7 +9,7 @@ import (
 // map of github clients
 var GitHubClients map[string]*github.Client
 
-func CheckUser(email string, username string, token string) string {
+func CheckUser(username string, token string) bool {
 	gitClient := GetGithubClient(token)
 
 	usr, res, error := gitClient.Users.Get(context.Background(), username)
@@ -27,31 +27,10 @@ func CheckUser(email string, username string, token string) string {
 		statusUsrName = false
 	}
 
-	//try again with email
-	usr, res, error = gitClient.Users.Get(context.Background(), email)
-
-	statusEmail := true
-
-	if error != nil {
-		statusEmail = false
-	}
-
-	if res.StatusCode != 200 {
-		statusEmail = false
-	}
-
-	if usr == nil {
-		statusEmail = false
-	}
-
-	if statusUsrName && statusEmail {
-		return username
-	} else if statusUsrName {
-		return username
-	} else if statusEmail {
-		return email
+	if statusUsrName {
+		return true
 	} else {
-		return ""
+		return false
 	}
 }
 

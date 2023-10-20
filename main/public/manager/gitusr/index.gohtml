@@ -129,7 +129,9 @@
                 //delete user
                 let res = await fetch("/manager/gitusr/" + '{{.ID}}', {
                     method: "DELETE"
-                })
+                }).then((res) => {
+                    return res;
+                });
                 if (res.status === 200) {
                     //reload page
                     document.location.href = "/manager"
@@ -160,7 +162,9 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                })
+                }).then((res) => {
+                    return res;
+                });
 
                 if (res.status === 200) {
                     window.location.reload();
@@ -179,7 +183,9 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                })
+                }).then((res) => {
+                    return res;
+                });
 
                 if (res.status === 200) {
                     window.location.reload();
@@ -194,7 +200,9 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                })
+                }).then((res) => {
+                    return res;
+                });
 
                 if (res.status === 200) {
                     window.location.reload();

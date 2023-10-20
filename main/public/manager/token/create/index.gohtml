@@ -104,6 +104,8 @@
                         dateExpires: this.dateExpires,
                         count: this.times.toString()
                     })
+                }).then((res) => {
+                    return res;
                 });
                 // Send info if it fails
                 if (response.status !== 200) {

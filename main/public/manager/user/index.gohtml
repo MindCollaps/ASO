@@ -58,7 +58,9 @@
                 //delete user
                 let res = await fetch("/manager/user/{{.ID}}", {
                     method: "DELETE"
-                })
+                }).then((res) => {
+                    return res;
+                });
                 if (res.status === 200) {
                     //reload page
                     document.location.href = "/manager"

@@ -8,11 +8,11 @@ import (
 	"ASO/main/middleware"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/softbrewery/gojoi/pkg/joi"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
-	"strings"
 	"text/template"
 	"time"
 )
@@ -200,6 +200,7 @@ func userModalToData(user models.User) UserData {
 		GitHubUsername: user.GitHubUsername,
 		DateCreated:    dateCreated,
 		IsSuperUser:    user.IsSuperUser,
+		Token:          user.GitHubToken,
 	}
 
 }
@@ -276,6 +277,7 @@ type UserData struct {
 	GitHubUsername string `json:"githubUsername" bson:"githubUsername"`
 	DateCreated    string `json:"dateCreated" bson:"dateCreated"`
 	IsSuperUser    bool   `json:"isSuperUser" bson:"isSuperUser"`
+	Token          string `json:"token" bson:"token"`
 }
 
 func initManagerRouter(router *gin.Engine) {
@@ -842,7 +844,6 @@ func initManagerRouter(router *gin.Engine) {
 		var requestBody struct {
 			Token          string `json:"token" bson:"token"`
 			GitHubUsername string `json:"gitUsername" bson:"gitUsername"`
-			Email          string `json:"email" bson:"email"`
 			Username       string `json:"username" bson:"username"`
 		}
 
@@ -855,6 +856,32 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
+		//joi validation
+		if err := joi.Validate(requestBody.Username, UsernameSchema); err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid username",
+				"error":   err.Error(),
+				"field":   "username",
+			})
+
+			fmt.Println("Invalid username")
+			return
+		}
+
+		if err := joi.Validate(requestBody.GitHubUsername, GitHubUsername); err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid github username",
+				"error":   err.Error(),
+				"field":   "gitUsername",
+			})
+
+			fmt.Println("Invalid github username")
+			return
+		}
+
+		//check if the username is okay length, characters etc
+		username := requestBody.Username
+
 		//check if token exists
 
 		var tk models.Token
@@ -864,22 +891,28 @@ func initManagerRouter(router *gin.Engine) {
 
 		if err != nil {
 			c.JSON(404, gin.H{
-				"message": "Token not found",
+				"message":    "Token not found",
+				"tokenError": true,
 			})
+
+			fmt.Println("Token not found")
 			return
 		}
 
 		if tk.IsUserRegistrationToken {
 			c.JSON(400, gin.H{
-				"message": "Token is a user registration token",
+				"message":    "Token is a user registration token",
+				"tokenError": true,
 			})
+			fmt.Println("Token is a user registration token")
 			return
 		}
 
 		//check if token is expired
 		if tk.DateExpires.Time().Before(time.Now()) {
 			c.JSON(400, gin.H{
-				"message": "Token is already expired",
+				"message":    "Token is already expired",
+				"tokenError": true,
 			})
 			fmt.Println("Token is already expired")
 			return
@@ -888,7 +921,8 @@ func initManagerRouter(router *gin.Engine) {
 		//check if token is used
 		if tk.Used >= tk.Count {
 			c.JSON(400, gin.H{
-				"message": "Tokens usage limit reached",
+				"message":    "Tokens usage limit reached",
+				"tokenError": true,
 			})
 			fmt.Println("Tokens usage limit reached")
 			return
@@ -897,19 +931,6 @@ func initManagerRouter(router *gin.Engine) {
 		var user models.GitHubUser
 		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
 			"githubUsername": requestBody.GitHubUsername,
-		}).Decode(&user)
-
-		if err == nil {
-			c.JSON(400, gin.H{
-				"message": "User already exists",
-			})
-			fmt.Println("User already exists")
-			return
-		}
-
-		//check if gitusr exists by email
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
-			"email": requestBody.Email,
 		}).Decode(&user)
 
 		if err == nil {
@@ -948,17 +969,16 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		tbu := git.CheckUser(requestBody.Email, requestBody.GitHubUsername, creator.GitHubToken)
-		if tbu == "" {
+		if !git.CheckUser(requestBody.GitHubUsername, creator.GitHubToken) {
 			c.JSON(400, gin.H{
 				"message": "User can not be found on github",
 			})
-			fmt.Println("User already exists")
+			fmt.Println("User can not be found on github")
 			return
 		}
 
 		if tk.DirectAdd {
-			if !git.AddUserToRepo(tbu, creator.GitHubToken, userGroup.GitHubRepo, userGroup.GitHubOwner) {
+			if !git.AddUserToRepo(requestBody.GitHubUsername, creator.GitHubToken, userGroup.GitHubRepo, userGroup.GitHubOwner) {
 				c.JSON(500, gin.H{
 					"message": "Internal server error when adding gitusr to repo",
 				})
@@ -967,37 +987,18 @@ func initManagerRouter(router *gin.Engine) {
 			}
 		}
 
-		//check if the username is okay length, characters etc
-		username := requestBody.Username
-
-		if len(username) < 3 {
-			c.JSON(400, gin.H{
-				"message": "Username is too short",
-			})
-			fmt.Println("Username is too short")
-			return
-		}
-
-		if len(username) > 20 {
-			c.JSON(400, gin.H{
-				"message": "Username is too long",
-			})
-			fmt.Println("Username is too long")
-			return
-		}
-
 		//create gitusr
 		_, err = database.MongoDB.Collection("gitUser").InsertOne(c, models.GitHubUser{
 			ID:             primitive.NewObjectID(),
 			Username:       username,
-			GitHubUsername: tbu,
+			GitHubUsername: requestBody.GitHubUsername,
 			DateCreated:    primitive.NewDateTimeFromTime(time.Now()),
 			Expires:        true,
 			ExpiresGroup:   true,
 			DateExpires:    userGroup.DateExpires,
 			UserGroup:      userGroup.ID,
 			AddedToRepo:    tk.DirectAdd,
-			Belongs:        c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			Belongs:        creator.ID,
 		})
 
 		if err != nil {
@@ -1007,6 +1008,8 @@ func initManagerRouter(router *gin.Engine) {
 			fmt.Println("Internal server error when creating gitusr")
 			return
 		}
+
+		tk.Used++
 
 		//update token
 		if tk.Used >= tk.Count {
@@ -1019,7 +1022,7 @@ func initManagerRouter(router *gin.Engine) {
 				"_id": tk.ID,
 			}, bson.M{
 				"$set": bson.M{
-					"used": tk.Used + 1,
+					"used": tk.Used,
 				},
 			})
 		}
@@ -1131,7 +1134,11 @@ func initManagerRouter(router *gin.Engine) {
 				c.JSON(400, gin.H{
 					"message": "Invalid date",
 				})
-				fmt.Println(err)
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println("Invalid date")
+				}
 				return
 			}
 		}
@@ -1282,7 +1289,11 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid date",
 			})
-			fmt.Println(err)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("Date is before now")
+			}
 			return
 		}
 
@@ -1947,28 +1958,13 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//check if email is valid
-		if !strings.Contains(requestBody.Email, "@") {
+		err = joi.Validate(requestBody.Email, EmailSchema)
+
+		if err != nil {
 			c.JSON(400, gin.H{
 				"message": "Invalid email",
 			})
-			fmt.Println("Invalid email")
-			return
-		}
-
-		//check length
-		if len(requestBody.Email) < 3 {
-			c.JSON(400, gin.H{
-				"message": "Email is too short",
-			})
-			fmt.Println("Email is too short")
-			return
-		}
-
-		if len(requestBody.Email) > 50 {
-			c.JSON(400, gin.H{
-				"message": "Email is too long",
-			})
-			fmt.Println("Email is too long")
+			fmt.Println(err)
 			return
 		}
 
@@ -2024,20 +2020,13 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		//check if username is valid
-		if len(requestBody.Username) < 3 {
-			c.JSON(400, gin.H{
-				"message": "Username is too short",
-			})
-			fmt.Println("Username is too short")
-			return
-		}
+		err = joi.Validate(requestBody.Username, UsernameSchema)
 
-		if len(requestBody.Username) > 20 {
+		if err != nil {
 			c.JSON(400, gin.H{
-				"message": "Username is too long",
+				"message": "Invalid username",
 			})
-			fmt.Println("Username is too long")
+			fmt.Println(err)
 			return
 		}
 
@@ -2095,37 +2084,23 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		//check if gitUsername is valid
-		if len(requestBody.GitUsername) < 3 {
+		err = joi.Validate(requestBody.GitUsername, GitHubUsername)
+
+		if err != nil {
 			c.JSON(400, gin.H{
-				"message": "GitUsername is too short",
+				"message": "Invalid gitUsername",
 			})
-			fmt.Println("GitUsername is too short")
+			fmt.Println(err)
 			return
 		}
 
-		if len(requestBody.GitUsername) > 20 {
-			c.JSON(400, gin.H{
-				"message": "GitUsername is too long",
-			})
-			fmt.Println("GitUsername is too long")
-			return
-		}
+		err = joi.Validate(requestBody.GitToken, GitTokenSchema)
 
-		//check if gitToken is valid
-		if len(requestBody.GitToken) < 3 {
+		if err != nil {
 			c.JSON(400, gin.H{
-				"message": "GitToken is too short",
+				"message": "Invalid gitToken",
 			})
-			fmt.Println("GitToken is too short")
-			return
-		}
-
-		if len(requestBody.GitToken) > 100 {
-			c.JSON(400, gin.H{
-				"message": "GitToken is too long",
-			})
-			fmt.Println("GitToken is too long")
+			fmt.Println(err)
 			return
 		}
 
@@ -2176,20 +2151,13 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		//check if password is valid
-		if len(requestBody.Password) < 3 {
-			c.JSON(400, gin.H{
-				"message": "Password is too short",
-			})
-			fmt.Println("Password is too short")
-			return
-		}
+		err = joi.Validate(requestBody.Password, PasswordSchema)
 
-		if len(requestBody.Password) > 50 {
+		if err != nil {
 			c.JSON(400, gin.H{
-				"message": "Password is too long",
+				"message": "Invalid password",
 			})
-			fmt.Println("Password is too long")
+			fmt.Println(err)
 			return
 		}
 

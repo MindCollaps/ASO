@@ -29,15 +29,21 @@
         <h1 class="flex-grow-1 text-white">Profile</h1>
         <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
     </div>
-    <div class="input-group mb-4">
-        <div class="form-floating">
-            <input v-model="username" type="text" class="form-control" id="username"
-                   placeholder="MindCollaps" @keyup.enter="updateUsername()">
-            <label for="username">Username</label>
+    <div class="mb-4">
+        <div class="input-group">
+            <div class="form-floating">
+                <input v-model="username" type="text" class="form-control" id="username"
+                       placeholder="MindCollaps" @keyup.enter="updateUsername()">
+                <label for="username">Username</label>
+            </div>
+            <button class="btn btn-primary" type="button" @click="updateUsername()">Update</button>
         </div>
-        <button class="btn btn-primary" type="button" @click="updateUsername()">Update</button>
+        <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only upper
+            and lower case characters, . and _ (but not at the end)
+        </div>
     </div>
-    <div class="input-group mb-4">
+    <div class="mb-4">
+    <div class="input-group">
         <div class="form-floating">
             <input v-model="email" type="email" class="form-control" id="email"
                    placeholder="example@example.ex" @keyup.enter="updateEmail()">
@@ -45,12 +51,19 @@
         </div>
         <button class="btn btn-primary" type="button" @click="updateEmail()">Update</button>
     </div>
+        <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is looked up
+            for validation.
+        </div>
+    </div>
     <hr class="mt-5 mb-5">
     <h2>Change Password</h2>
     <div class="mb-3 form-floating">
         <input v-model="password2" type="password" class="form-control" id="password2"
                placeholder="Password">
         <label for="password2">Password</label>
+        <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only upper
+            and lower case characters, numbers, and special characters . _ ! ? # - *
+        </div>
     </div>
     <div class="input-group mb-4">
         <div class="form-floating">
@@ -87,6 +100,13 @@
             password2: '',
             gitHubToken: '',
             gitHubUsername: '{{.GitHubUsername}}',
+            isToken: {{if .Token}}true{{else}}false{{end}},
+        },
+        created: function () {
+            if (!this.isToken) {
+                document.getElementById('token').classList.add('is-invalid');
+                document.getElementById('gitUsername').classList.add('is-invalid');
+            }
         },
         methods: {
             invalidPasswords: function () {
@@ -111,6 +131,8 @@
                     body: JSON.stringify({
                         password: this.password1
                     })
+                }).then((res) => {
+                    return res;
                 });
 
                 if (res.status !== 200) {
@@ -137,6 +159,8 @@
                     body: JSON.stringify({
                         username: this.username
                     })
+                }).then((res) => {
+                    return res;
                 });
 
                 if (res.status !== 200) {
@@ -156,6 +180,8 @@
                     body: JSON.stringify({
                         email: this.email
                     })
+                }).then((res) => {
+                    return res;
                 });
 
                 if (res.status !== 200) {
@@ -176,14 +202,23 @@
                         gitToken: this.gitHubToken,
                         gitUsername: this.gitHubUsername
                     })
+                }).then((res) => {
+                    return res;
                 });
 
                 if (res.status !== 200) {
                     var data = await res.json();
                     alert('Error updating git ' + data.message);
+                    document.getElementById('gitUsername').classList.add('is-invalid');
+                    document.getElementById('gitUsername').classList.remove('is-valid');
+                    document.getElementById('token').classList.add('is-invalid');
+                    document.getElementById('token').classList.remove('is-valid');
                     return;
                 } else {
-                    alert('Token updated');
+                    document.getElementById('gitUsername').classList.remove('is-invalid');
+                    document.getElementById('gitUsername').classList.add('is-valid');
+                    document.getElementById('token').classList.remove('is-invalid');
+                    document.getElementById('token').classList.add('is-valid');
                 }
             },
         }

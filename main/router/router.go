@@ -126,21 +126,17 @@ func InitRouter() {
 			}
 			token := jwt["token"]
 
-			res := database.MongoDB.Collection("token").FindOne(c, bson.M{
+			var tk models.Token
+			err = database.MongoDB.Collection("token").FindOne(c, bson.M{
 				"token": token,
-			})
+			}).Decode(&tk)
 
-			//TODO check if token is valid
-
-			if res.Err() != nil {
+			if err != nil {
 				c.SetCookie("regauth", "", -1, "/", "", false, true)
 				c.Redirect(http.StatusTemporaryRedirect, "/")
 				fmt.Println(err)
 				return
 			}
-
-			var tk models.Token
-			res.Decode(&tk)
 
 			//check date
 			if tk.DateExpires.Time().Before(time.Now()) {
@@ -159,50 +155,18 @@ func InitRouter() {
 
 	router.POST("/reg", func(c *gin.Context) {
 		regAuth, err := c.Cookie("regauth")
-		var token models.Token
 
-		if regAuth != "" && err == nil {
-			jwt, err := crypt.ParseJwt(regAuth)
-			if err != nil {
-				c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-				fmt.Println(err)
-				return
-			}
-
-			res := database.MongoDB.Collection("token").FindOne(c, bson.M{
-				"token": jwt["token"].(string),
-			})
-
-			if res.Err() != nil {
-				c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-				fmt.Println(res.Err())
-				return
-			}
-
-			res.Decode(&token)
-
-			//check date
-			if token.DateExpires.Time().Before(time.Now()) {
-				c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-				return
-			}
-
-			if !token.IsUserRegistrationToken {
-				c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-				return
-			}
-
-			//check count
-			if token.Used >= token.Count {
-				c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-				return
-			}
+		jwt, err := crypt.ParseJwt(regAuth)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			fmt.Println(err)
+			return
 		}
 
 		var requestBody struct {
-			Username string `json:"username" binding:"required"`
-			Password string `json:"password" binding:"required"`
-			Email    string `json:"email" binding:"required"`
+			Username string `json:"username"`
+			Password string `json:"password"`
+			Email    string `json:"email"`
 		}
 
 		if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -210,42 +174,54 @@ func InitRouter() {
 			return
 		}
 
+		var token models.Token
+
+		err = database.MongoDB.Collection("token").FindOne(c, bson.M{
+			"token": jwt["token"].(string),
+		}).Decode(&token)
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			fmt.Println(err)
+			return
+		}
+
+		//check date
+		if token.DateExpires.Time().Before(time.Now()) {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			return
+		}
+
+		if !token.IsUserRegistrationToken {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			return
+		}
+
+		//check count
+		if token.Used >= token.Count {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			return
+		}
+
+		//joi validation
+		if err := UsernameSchema.Validate(requestBody.Username); err != nil {
+			c.JSON(400, gin.H{"error": err.Error(), "message": "Username invalid", "field": "username"})
+			return
+		}
+
+		if err := PasswordSchema.Validate(requestBody.Password); err != nil {
+			c.JSON(400, gin.H{"error": err.Error(), "message": "Password invalid", "field": "password"})
+			return
+		}
+
+		if err := EmailSchema.Validate(requestBody.Email); err != nil {
+			c.JSON(400, gin.H{"error": err.Error(), "message": "Email invalid", "field": "email"})
+			return
+		}
+
 		username := requestBody.Username
 		password := requestBody.Password
 		email := requestBody.Email
-
-		//check username
-		if len(username) < 3 {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Username too short"})
-			return
-		}
-
-		if len(username) > 64 {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Username too long"})
-			return
-		}
-
-		//check email
-		if len(email) < 3 {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Email too short"})
-			return
-		}
-
-		if len(email) > 64 {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Email too long"})
-			return
-		}
-
-		//check password
-		if len(password) < 8 {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Password too short"})
-			return
-		}
-
-		if len(password) > 64 {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Password too long"})
-			return
-		}
 
 		// Check if the user already exists in the database by querying with the username
 		var existingUser models.User
@@ -254,10 +230,6 @@ func InitRouter() {
 		if err == nil {
 			// User with the same username already exists
 			c.JSON(http.StatusConflict, gin.H{"message": "Username already exists"})
-			return
-		} else if err != mongo.ErrNoDocuments {
-			// Handle other database query errors
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
 			return
 		}
 
@@ -304,7 +276,6 @@ func InitRouter() {
 				"token": token,
 			})
 		} else {
-			token.Used = token.Used + 1
 			_, _ = database.MongoDB.Collection("token").UpdateOne(c, bson.M{
 				"_id": token.ID,
 			}, bson.M{
@@ -314,12 +285,12 @@ func InitRouter() {
 			})
 		}
 
-		jwt, err := crypt.GenerateLoginToken(newUsr.InsertedID.(primitive.ObjectID))
+		jwtToken, err := crypt.GenerateLoginToken(newUsr.InsertedID.(primitive.ObjectID))
 
 		c.SetCookie("regauth", "", -1, "/", "", false, true)
 
 		if err == nil {
-			c.SetCookie("auth", jwt, 3600*24*2, "/", "", false, false)
+			c.SetCookie("auth", jwtToken, 3600*24*2, "/", "", false, false)
 		}
 
 		c.JSON(http.StatusOK, gin.H{"status": 200, "message": "Created user"})

@@ -27,27 +27,46 @@
 <div id="register" class="container mt-5">
     <h1 class="text-white mb-3">Register</h1>
     <div class="form-floating mb-3">
-        <input v-model="username" type="text" class="form-control" id="floatingInput"
+        <input v-model="username" type="text" class="form-control" id="username"
                placeholder="ASO">
-        <label for="floatingInput">Username</label>
+        <label for="username">Username</label>
+        <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only upper
+            and lower case characters, . and _ (but not at the end)
+        </div>
     </div>
     <div class="form-floating mb-3">
-        <input v-model="email" type="email" class="form-control" id="floatingInput"
+        <input v-model="email" type="email" class="form-control" id="email"
                placeholder="ASO">
-        <label for="floatingInput">E-Mail</label>
+        <label for="email">E-Mail</label>
+        <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is looked up
+            for validation.
+        </div>
     </div>
     <div class="mb-3 form-floating">
-        <input v-model="password1" type="password" class="form-control" id="floatingPassword"
+        <input v-model="password1" type="password" class="form-control" id="password"
                placeholder="Password" @keyup.enter="register()">
-        <label for="floatingPassword">Password</label>
+        <label for="password">Password</label>
+        <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only upper
+            and lower case characters, numbers, and special characters . _ ! ? # - *
+        </div>
     </div>
     <div class="mb-3 form-floating">
-        <input v-model="password2" type="password" class="form-control" id="floatingPassword1"
+        <input v-model="password2" type="password" class="form-control" id="repeatPassword"
                placeholder="Repeat Password" @keyup.enter="register()">
-        <label for="floatingPassword1">Repeat Password</label>
+        <label for="repeatPassword">Repeat Password</label>
     </div>
     <div class="mb-3 d-flex justify-content-center">
         <button @click="register()" class="btn btn-primary align-center">Register</button>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="theToast" class="toast text-bg-warning align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${error}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -59,16 +78,23 @@
             email: '',
             password1: '',
             password2: '',
+            error: ''
         },
+        delimiters: ['${', '}'],
         methods: {
             register: async function () {
                 if (this.password1 !== this.password2) {
                     alert('Passwords do not match');
+                    document.getElementById("password").classList.add("is-invalid");
+                    document.getElementById("repeatPassword").classList.add("is-invalid");
                     return;
+                } else {
+                    document.getElementById("password").classList.remove("is-invalid");
+                    document.getElementById("repeatPassword").classList.remove("is-invalid");
                 }
 
 
-                await fetch('/reg', {
+                var res = await fetch('/reg', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -78,14 +104,42 @@
                         password: this.password1,
                         email: this.email
                     })
-                }).then(response => response.json()).then(response => {
-                    if (response.status === 200) {
-                        window.location.href = '/manager';
-                    } else {
-                        alert(response.message || 'An error occurred');
-                    }
+                }).then((res) => {
+                    return res;
                 });
-            }
+
+                if (res.status === 200) {
+                    window.location.href = '/manager';
+                } else {
+                    var data = await res.json();
+
+                    if (data.field == 'username') {
+                        document.getElementById("username").classList.add("is-invalid");
+                    } else {
+                        document.getElementById("username").classList.remove("is-invalid");
+                    }
+
+                    if (data.field == 'email') {
+                        document.getElementById("email").classList.add("is-invalid");
+                    } else {
+                        document.getElementById("email").classList.remove("is-invalid");
+                    }
+
+                    if (data.field == 'password') {
+                        document.getElementById("password").classList.add("is-invalid");
+                    } else {
+                        document.getElementById("password").classList.remove("is-invalid");
+                    }
+
+                    if (data.field == null){
+                        alert(data.message)
+                    }
+
+                    this.error = data.error;
+                    document.getElementById("theToast").classList.add("show");
+
+                }
+            },
         }
     });
 </script>

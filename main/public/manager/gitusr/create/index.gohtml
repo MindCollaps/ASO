@@ -110,6 +110,8 @@
                         expires: this.expire,
                         dateExpires: this.dateExpires,
                     })
+                }).then((res) => {
+                    return res;
                 });
                 // Send info if it fails
                 if (response.status !== 200) {
