@@ -4,7 +4,7 @@ ASO (Arnold's Super Organizer) is a powerful program designed to help you effici
 
 ## Features
 
-- **Create User Groups**: ASO allows you to create user groups within your GitHub project. Each user group can have an optional expiration date, ensuring that users are automatically removed from the project when the specified date is reached.
+- **Create User Groups**: ASO allows you to create user groups for your GitHub project. Each user group can have an optional expiration date, ensuring that users are automatically removed from the project when the specified date is reached.
 
 - **User Group Actions**: Perform various actions on user groups, including adding all users to the Git repository or removing them from the repository beforehand.
 
@@ -18,11 +18,11 @@ To run ASO, make sure you have the following prerequisites:
 
 - MongoDB installed and running.
 - Go programming language installed.
-- An `.env` file with the following environment variables:
+- An `.env` file in the directory of the source code, with the following environment variables:
 
 ```shell
 MONGODB_URI=mongodb://localhost:27017
-GITHUB_TOKEN=<your_github_token>
+PORT=<server port> (optional default port: 8080)
 ```
 
 
@@ -33,10 +33,14 @@ GITHUB_TOKEN=<your_github_token>
    ```shell
    git clone https://github.com/MindCollaps/ASO
    ```
-2. **Set Up Environment Variables**: Create an .env file in the root directory and add your MongoDB URI and GitHub token, as mentioned in the prerequisites.
-3. **Run the Program**: Execute the program using the following command:
+2. **Set Up Environment Variables**: Create an .env file in the root directory and add your MongoDB URI and the optional PORT, as mentioned in the prerequisites.
+3. **Compile the Program**: Build the program using the following command in the ASO directory:
    ```shell
-   go run main.go
+   go build
+   ```
+5. **Run the Program**: Execute the program using the following command:
+   ```shell
+   ./ASO
    ```
 
 
