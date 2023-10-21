@@ -19,14 +19,13 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
 </head>
 <body>
-
 <div id="manager" class="container mt-5">
-    <div class="d-flex flex-row align-items-center">
-        <h1 class="flex-grow-1 text-white">Group Info</h1>
-        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=group'">Back</button>
-    </div>
-    <div class="row container bg-body-secondary rounded-3 shadow p-3">
-        <div class="col">
+    <div class="container d-flex flex-column">
+        <div class="d-flex flex-row align-items-center mb-3">
+            <h1 class="flex-grow-1 text-white">Group Info</h1>
+            <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=group'">Back</button>
+        </div>
+        <div class="bg-body-secondary rounded-3 shadow p-4">
             <h2>Group Name: {{.Name}}</h2>
             <h2>Group ID: {{.ID}}</h2>
             <h3>Repository: <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
@@ -38,10 +37,10 @@
                 <h2>Expires: Never</h2>
             {{end}}
             <h2>Group Members:</h2>
-            <ul class="row container gap-3 bg-body-tertiary rounded-3 shadow p-3 overflow-auto">
+            <ul class="d-flex flex-column container gap-3 bg-body-tertiary rounded-3 shadow p-3 h-50 overflow-auto">
                 {{if .Members}}
                     {{range .Members}}
-                        <div class="d-inline-flex justify-content-between align-items-center gap-3 col">
+                        <div class="d-inline-flex justify-content-between align-items-center gap-3">
                             <div>
                                 <h4>{{.Username}}</h4>
                             </div>
@@ -110,7 +109,7 @@
                         document.location.reload()
                     } else {
                         var data = res.json()
-                        alert("Error removing user from group " + data.message)
+                        alert("Error removing user from group\n" + data.message)
                     }
                 })
             },
@@ -130,7 +129,7 @@
                 });
                 if (res.status === 200) {
                     //reload page
-                    document.location.href = "/manager"
+                    document.location.href = "/manager?a=group"
                 } else {
                     //error
                     alert("Error deleting group")
@@ -151,7 +150,7 @@
                     //reload page
                     var data = await res.json()
                     if (data.problems.length > 0 ){
-                        alert("Users removed from git repo, but some users had problems: " + data.problems)
+                        alert("Users removed from git repo, but some users had problems:\n" + data.problems)
                     } else {
                         alert("Users removed from git repo")
                     }
@@ -162,11 +161,9 @@
                 }
             },
             addAllUsersToRepo: async function () {
-                //confirm delete
                 if (!confirm("Are you sure you want to add all users to the git repo?")) {
                     return
                 }
-                //delete group
                 let res = await fetch("/manager/git/{{.ID}}/addall", {
                     method: "GET"
                 }).then((res) => {
@@ -176,7 +173,7 @@
                     //reload page
                     var data = await res.json()
                     if (data.problems.length > 0 ){
-                        alert("Users added to git repo, but some users had problems: " + data.problems)
+                        alert("Users added to git repo, but some users had problems:\n" + data.problems)
                     } else {
                         alert("Users added to git repo")
                     }
@@ -204,7 +201,7 @@
                     window.location.reload();
                 } else {
                     var data = await res.json()
-                    alert("Error removing user from repo " + data.message)
+                    alert("Error removing user from repo\n" + data.message)
                 }
             },
             addToRepo: async function (id) {
@@ -221,7 +218,7 @@
                     window.location.reload();
                 } else {
                     var data = await res.json()
-                    alert("Error adding user to repo " + data.message)
+                    alert("Error adding user to repo\n" + data.message)
                 }
             },
         },

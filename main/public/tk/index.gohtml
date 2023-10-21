@@ -24,13 +24,13 @@
 </head>
 <body class="vw-100 vh-100">
 {{if .Failed}}
-<div id="token-manager" class="container h-100">
+<div id="token-manager" class="d-flex justify-content-center align-items-center flex-column position-absolute w-100" style="top: 20vh">
     <div class="d-flex align-items-center justify-content-center h-100">
         <h1>{{.Message}}</h1>
     </div>
 </div>
 {{else}}
-<div id="token-manager" class="container h-100">
+<div id="token-manager" class="d-flex justify-content-center align-items-center flex-column position-absolute w-100" style="top: 20vh">
     <div v-if="!done && !failed" class="h-100">
         <div class="d-flex flex-column align-items-center justify-content-center h-100">
             <h1>Register</h1>
@@ -51,13 +51,13 @@
             </div>
         </div>
     </div>
-    <div class="container h-100" v-if="done && !failed">
+    <div class="d-flex justify-content-center align-items-center flex-column position-absolute w-100" style="top: 20vh" v-if="done && !failed">
         <div class="d-flex flex-column align-items-center justify-content-center h-100">
             <h1>Success</h1>
             <p>You can now close this window.</p>
         </div>
     </div>
-    <div class="container h-100" v-if="!done && failed">
+    <div class="d-flex justify-content-center align-items-center flex-column position-absolute w-100" style="top: 20vh" v-if="!done && failed">
         <div class="d-flex align-items-center justify-content-center h-100">
             <h1>${message]</h1>
         </div>
@@ -125,5 +125,6 @@
     });
 </script>
 {{end}}
+{{template "footer"}}
 </body>
 </html>

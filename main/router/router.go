@@ -13,6 +13,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"text/template"
 	"time"
 )
@@ -108,7 +109,7 @@ func InitRouter() {
 				c.Redirect(http.StatusTemporaryRedirect, "/manager")
 				return
 			} else {
-				template := template.Must(template.ParseFiles("main/public/homepage/index.gohtml"))
+				template := template.Must(template.ParseFiles("main/public/homepage/index.gohtml", "main/templates/template.gohtml"))
 				template.Execute(c.Writer, nil)
 			}
 		}
@@ -304,7 +305,7 @@ func InitRouter() {
 			c.Redirect(http.StatusTemporaryRedirect, "/manager")
 			return
 		} else {
-			template := template.Must(template.ParseFiles("main/public/login/index.gohtml"))
+			template := template.Must(template.ParseFiles("main/public/login/index.gohtml", "main/templates/template.gohtml"))
 			template.Execute(c.Writer, nil)
 		}
 	})
@@ -369,7 +370,15 @@ func InitRouter() {
 		return
 	})
 
+	router.StaticFile("/favicon.ico", "main/public/static/favicon.png")
+
 	initManagerRouter(router)
 
-	router.Run(":8080")
+	//Get port from env
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	router.Run(":" + port)
 }

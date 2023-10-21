@@ -40,6 +40,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 
 		var usrDt GitUserData
 
+		expired := time.Now().After(user.DateExpires.Time())
+
 		if err != nil {
 			usrDt = GitUserData{
 				ID:             user.ID.Hex(),
@@ -47,6 +49,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
 				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
 				Username:       user.Username,
+				IsExpired:      expired,
+				ExpiryByGroup:  user.ExpiresGroup,
 			}
 		} else {
 			usrDt = GitUserData{
@@ -56,6 +60,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
 				UserGroup:      userGroupModalToData(userGroup),
 				Username:       user.Username,
+				IsExpired:      expired,
+				ExpiryByGroup:  user.ExpiresGroup,
 			}
 		}
 		if usrDt.DateExpires == "0001-01-01 01:00:00" {
@@ -67,6 +73,7 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 }
 
 func userGroupModalToData(group models.UserGroup) UserGroupData {
+	expired := time.Now().After(group.DateExpires.Time())
 	var g = UserGroupData{
 		ID:          group.ID.Hex(),
 		Name:        group.Name,
@@ -77,6 +84,7 @@ func userGroupModalToData(group models.UserGroup) UserGroupData {
 		Notify:      group.Notify,
 		GitHubRepo:  group.GitHubRepo,
 		GitHubOwner: group.GitHubOwner,
+		IsExpired:   expired,
 	}
 
 	if g.DateExpires == "0001-01-01 01:00:00" {
@@ -86,6 +94,7 @@ func userGroupModalToData(group models.UserGroup) UserGroupData {
 }
 
 func tokenModalToData(token models.Token) TokenData {
+	expired := time.Now().After(token.DateExpires.Time())
 	return TokenData{
 		ID:          token.ID.Hex(),
 		Name:        token.Name,
@@ -95,6 +104,7 @@ func tokenModalToData(token models.Token) TokenData {
 		DateExpires: token.DateExpires.Time().Format("2006-01-02 15:04:05"),
 		DirectAdd:   token.DirectAdd,
 		Used:        token.Used,
+		IsExpired:   expired,
 	}
 }
 
@@ -239,6 +249,7 @@ type GitUserData struct {
 	Groups         []UserGroupData `json:"groups" bson:"groups"`
 	IsCollaborator bool            `json:"isCollaborator" bson:"isCollaborator"`
 	IsInvited      bool            `json:"isInvited" bson:"isInvited"`
+	IsExpired      bool            `json:"isExpired" bson:"isExpired"`
 }
 
 type UserGroupData struct {
@@ -253,6 +264,7 @@ type UserGroupData struct {
 	Notify      bool          `json:"notify" bson:"notify"`
 	GitHubRepo  string        `json:"githubRepo" bson:"githubRepo"`
 	GitHubOwner string        `json:"githubOwner" bson:"githubOwner"`
+	IsExpired   bool          `json:"isExpired" bson:"isExpired"`
 }
 
 type TokenData struct {
@@ -268,6 +280,7 @@ type TokenData struct {
 	Notify      bool          `json:"notify" bson:"notify"`
 	Used        int           `json:"used" bson:"used"`
 	CreatedBy   string        `json:"createdBy" bson:"createdBy"`
+	IsExpired   bool          `json:"isExpired" bson:"isExpired"`
 }
 
 type UserData struct {
@@ -417,7 +430,11 @@ func initManagerRouter(router *gin.Engine) {
 
 		if userGroup.ID != primitive.NilObjectID {
 			userData.IsCollaborator = git.CheckIfUserIsColabo(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
-			userData.IsInvited = git.CheckIfUserIsPendingInvite(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+			if userData.IsCollaborator {
+				userData.IsInvited = false
+			} else {
+				userData.IsInvited = git.CheckIfUserIsPendingInvite(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+			}
 		} else {
 			userData.IsCollaborator = false
 			userData.IsInvited = false
@@ -833,7 +850,7 @@ func initManagerRouter(router *gin.Engine) {
 			}
 		}
 
-		template := template.Must(template.ParseFiles("main/public/tk/index.gohtml"))
+		template := template.Must(template.ParseFiles("main/public/tk/index.gohtml", "main/templates/template.gohtml"))
 		template.Execute(c.Writer, ManagerTkData{
 			Failed:  failed,
 			Message: message,

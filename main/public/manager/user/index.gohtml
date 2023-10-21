@@ -25,20 +25,20 @@
 <body>
 
 <div id="manager" class="container mt-5">
-    <div class="d-flex flex-row align-items-center">
-        <h1 class="flex-grow-1 text-white">User Info</h1>
-        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
-    </div>
-    <div class="container row bg-body-secondary rounded-3 shadow p-3">
-        <div class="col">
-            <h2>Username: {{.Username}}</h2>
-            <h2>User ID: {{.ID}}</h2>
-            <h2>Email: {{.Email}}</h2>
-            <h2>Created: {{.DateCreated}}</h2>
-            <h2>Git Username: {{.GitHubUsername}}</h2>
-            <br>
-            <h1>Management</h1>
-            <button class="btn btn-danger" @click="deleteUser()">Delete User</button>
+    <div class="container d-flex flex-column">
+        <div class="d-flex flex-row align-items-center mb-3">
+            <h1 class="flex-grow-1 text-white">User Info</h1>
+            <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
+        </div>
+        <div class="bg-body-secondary rounded-3 shadow p-4">
+                <h2>Username: {{.Username}}</h2>
+                <h2>User ID: {{.ID}}</h2>
+                <h2>Email: {{.Email}}</h2>
+                <h2>Created: {{.DateCreated}}</h2>
+                <h2>Git Username: {{.GitHubUsername}}</h2>
+                <br>
+                <h1>Management</h1>
+                <button class="btn btn-danger" @click="deleteUser()">Delete User</button>
         </div>
     </div>
 </div>
@@ -63,7 +63,7 @@
                 });
                 if (res.status === 200) {
                     //reload page
-                    document.location.href = "/manager"
+                    document.location.href = "/manager?A=user"
                 } else {
                     //error
                     alert("Error deleting user")

@@ -25,33 +25,35 @@
 <body>
 
 <div id="token-manager" class="container mt-5">
-    <div class="d-flex flex-row align-items-center">
-        <h1 class="flex-grow-1 text-white">Create User Token</h1>
-        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
-    </div>
-    <div class="container">
-        <div class="form-floating mb-4">
-            <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="Token Name">
-            <label for="floatingInput">Name</label>
-            <div id="emailHelp" class="form-text">A name to identify the token in the system</div>
+    <div class="container d-flex flex-column">
+        <div class="d-flex flex-row align-items-center mb-3">
+            <h1 class="flex-grow-1 text-white">Create User Token</h1>
+            <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
         </div>
-        <div class="mb-4 form-floating">
-            <input v-model="times" type="number" class="form-control" id="count">
-            <label for="count">Count</label>
-            <div id="emailHelp" class="form-text">How many times can this token be used</div>
-        </div>
-        <div class="mb-4 form-floating">
-            <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
-            <label for="dateExpires">Expiry</label>
-            <div id="emailHelp" class="form-text">When will this token no longer be usable?</div>
-        </div>
-        <div class="mb-4 form-check">
-            <input type="checkbox" v-model="superUser" class="form-check-input" id="superUser">
-            <label class="form-check-label" for="superUser">Super User</label>
-            <div id="helper" class="form-text">Will the user be able to have super user privileges?</div>
-        </div>
-        <div class="mb-4 d-flex justify-content-center">
-            <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
+        <div class="d-flex flex-column justify-content-center">
+            <div class="form-floating mb-4">
+                <input v-model="name" type="text" class="form-control" id="floatingInput" placeholder="Token Name">
+                <label for="floatingInput">Name</label>
+                <div id="emailHelp" class="form-text">A name to identify the token in the system</div>
+            </div>
+            <div class="mb-4 form-floating">
+                <input v-model="times" type="number" class="form-control" id="count">
+                <label for="count">Count</label>
+                <div id="emailHelp" class="form-text">How many times can this token be used</div>
+            </div>
+            <div class="mb-4 form-floating">
+                <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
+                <label for="dateExpires">Expiry</label>
+                <div id="emailHelp" class="form-text">When will this token no longer be usable?</div>
+            </div>
+            <div class="mb-4 form-check">
+                <input type="checkbox" v-model="superUser" class="form-check-input" id="superUser">
+                <label class="form-check-label" for="superUser">Super User</label>
+                <div id="helper" class="form-text">Will the user be able to have super user privileges?</div>
+            </div>
+            <div class="mb-4 d-flex justify-content-center">
+                <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
+            </div>
         </div>
     </div>
 </div>
@@ -84,7 +86,7 @@
                 // Send info if it fails
                 if (response.status !== 200) {
                     let data = await response.json();
-                    alert("Failed to create token " + data.message);
+                    alert("Failed to create token\n" + data.message);
                 } else {
                     alert("Token created");
                     //show qr code

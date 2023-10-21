@@ -12,6 +12,9 @@ ASO (Arnold's Super Organizer) is a powerful program designed to help you effici
 
 - **Effortless Setup**: ASO is designed with user-friendliness in mind. Setting up and using the program is a breeze, thanks to clear and intuitive instructions.
 
+- **Automatic RSA Key Generation**: ASO automatically generates an RSA key for jwt authentication, saving you the hassle of generating one yourself.\
+If you already have an RSA key, you can simply replace the existing key with your own under `./rsa_private_key.pem`
+
 ## Getting Started
 
 To run ASO, make sure you have the following prerequisites:

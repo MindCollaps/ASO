@@ -25,58 +25,60 @@
 <body>
 
 <div id="manager" class="container mt-5">
-    <div class="d-flex flex-row align-items-center">
-        <h1 class="flex-grow-1 text-white">Create User Group</h1>
-        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=group'">Back</button>
-    </div>
-    <div class="container">
-        <div class="form-floating mb-4">
-            <input v-model="name" type="text" class="form-control" id="floatingInput"
-                   placeholder="Studentengruppe 1">
-            <label for="floatingInput">Name</label>
-            <div id="emailHelp" class="form-text">A name to identify the group in the system</div>
+    <div class="container d-flex flex-column">
+        <div class="d-flex flex-row align-items-center mb-3">
+            <h1 class="flex-grow-1 text-white">Create User Group</h1>
+            <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=group'">Back</button>
         </div>
-        <div class="mb-4 form-check">
-            <input type="checkbox" v-model="gitOwn" class="form-check-input" id="own">
-            <label class="form-check-label" for="own">Own Repo</label>
-            <div id="emailHelp" class="form-text">Does this repo belong to you? github.com/<b>name</b>/project</div>
-        </div>
-        <div v-if="!gitOwn" class="form-floating mb-4">
-            <input v-model="gitOwner" type="text" class="form-control" id="repoOwner"
-                   placeholder="MindCollaps">
-            <label for="repoOwner">Repository owner</label>
-            <div id="emailHelp" class="form-text">The name of the repository owner. github.com/<b>name</b>/project</div>
-        </div>
-        <div class="input-group mb-4">
-            <div class="form-floating">
-                <input v-model="gitName" type="text" class="form-control" id="repoName"
-                       placeholder="MindCollaps">
-                <label for="repoName">Repository Name</label>
+        <div class="d-flex flex-column justify-content-center">
+            <div class="form-floating mb-4">
+                <input v-model="name" type="text" class="form-control" id="floatingInput"
+                       placeholder="Studentengruppe 1">
+                <label for="floatingInput">Name</label>
+                <div id="emailHelp" class="form-text">A name to identify the group in the system</div>
             </div>
-            <button class="btn btn-success" type="button" id="checkRepo" @click="checkRepo()">Check</button>
-        </div>
-        <div class="mb-4 form-check">
-            <input type="checkbox" v-model="notify" class="form-check-input" id="getnotified">
-            <label class="form-check-label" for="getnotified">Notify</label>
-            <div id="emailHelp" class="form-text">Whether you'd like to get notified on this groups activity</div>
-        </div>
-        <div class="mb-4 form-check">
-            <input type="checkbox" v-model="doesExpire" class="form-check-input" id="doesExpire">
-            <label class="form-check-label" for="doesExpire">Expires</label>
-            <div id="emailHelp" class="form-text">Does this group expire and is therefor deleted automatically?</div>
-        </div>
-        <div v-if="doesExpire" class="mb-4 form-floating">
-            <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
-            <label for="dateExpires">Expiry</label>
-            <div id="emailHelp" class="form-text">The date this group expires and is therefor deleted automatically (when Auto Delete is selected)</div>
-        </div>
-        <div class="mb-4 form-check">
-            <input type="checkbox" v-model="autoDelete" class="form-check-input" id="autoDelete">
-            <label class="form-check-label" for="autoDelete">Auto Delete</label>
-            <div id="emailHelp" class="form-text">Weather this group triggers the delete event on the members, when the expiry date is reached</div>
-        </div>
-        <div class="mb-4 d-flex justify-content-center">
-            <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
+            <div class="mb-4 form-check">
+                <input type="checkbox" v-model="gitOwn" class="form-check-input" id="own">
+                <label class="form-check-label" for="own">Own Repo</label>
+                <div id="emailHelp" class="form-text">Does this repo belong to you? github.com/<b>name</b>/project</div>
+            </div>
+            <div v-if="!gitOwn" class="form-floating mb-4">
+                <input v-model="gitOwner" type="text" class="form-control" id="repoOwner"
+                       placeholder="MindCollaps">
+                <label for="repoOwner">Repository owner</label>
+                <div id="emailHelp" class="form-text">The name of the repository owner. github.com/<b>name</b>/project</div>
+            </div>
+            <div class="input-group mb-4">
+                <div class="form-floating">
+                    <input v-model="gitName" type="text" class="form-control" id="repoName"
+                           placeholder="MindCollaps">
+                    <label for="repoName">Repository Name</label>
+                </div>
+                <button class="btn btn-success" type="button" id="checkRepo" @click="checkRepo()">Check</button>
+            </div>
+            <div class="mb-4 form-check">
+                <input type="checkbox" v-model="notify" class="form-check-input" id="getnotified">
+                <label class="form-check-label" for="getnotified">Notify</label>
+                <div id="emailHelp" class="form-text">Whether you'd like to get notified on this groups activity</div>
+            </div>
+            <div class="mb-4 form-check">
+                <input type="checkbox" v-model="doesExpire" class="form-check-input" id="doesExpire">
+                <label class="form-check-label" for="doesExpire">Expires</label>
+                <div id="emailHelp" class="form-text">Does this group expire and is therefor deleted automatically?</div>
+            </div>
+            <div v-if="doesExpire" class="mb-4 form-floating">
+                <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
+                <label for="dateExpires">Expiry</label>
+                <div id="emailHelp" class="form-text">The date this group expires and is therefor deleted automatically (when Auto Delete is selected)</div>
+            </div>
+            <div class="mb-4 form-check">
+                <input type="checkbox" v-model="autoDelete" class="form-check-input" id="autoDelete">
+                <label class="form-check-label" for="autoDelete">Auto Delete</label>
+                <div id="emailHelp" class="form-text">Weather this group triggers the delete event on the members, when the expiry date is reached</div>
+            </div>
+            <div class="mb-4 d-flex justify-content-center">
+                <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
+            </div>
         </div>
     </div>
 </div>

@@ -25,63 +25,65 @@
 <body>
 
 <div id="token-manager" class="container mt-5">
-    <div class="d-flex flex-row align-items-center">
-        <h1 class="flex-grow-1 text-white">Create User</h1>
-        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=git'">Back</button>
-    </div>
-    <div class="container mt-3">
-        <div class="form-floating mb-4">
-            <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="Username">
-            <label for="floatingInput">Username</label>
-            <div id="helper" class="form-text">A name to identify the user in the system</div>
-        </div>
-        <div class="form-floating mb-4">
-            <input v-model="gitusername" type="text" class="form-control" id="floatingInput" placeholder="Git Username">
-            <label for="floatingInput">Git Username</label>
-            <div id="helper" class="form-text">The Username the users has in GitHub</div>
-        </div>
-        <div class="mb-4 mt-4">
-            <h2>User Group</h2>
-            <div class="container column container bg-body-tertiary rounded-3 shadow p-3" id="userGroup">
-                {{if .Groups}}
-                    {{range .Groups}}
-                        <div class="row">
-                            <p class="col">{{.Name}}</p>
-                            <p class="col">Created: {{.Date}}</p>
-                            <button v-if="userGroup == '{{.ID}}'" class="btn btn-danger col" @click="select('')">
-                                Unselect
-                            </button>
-                            <button v-if="userGroup != '{{.ID}}'" class="btn btn-primary col"
-                                    @click="select('{{.ID}}')">Select
-                            </button>
-                        </div>
-                    {{end}}
-                {{else}}
-                    <p>No User Groups</p>
-                    <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">Create User Group
-                    </button>
-                {{end}}
-            </div>
-        </div>
-        <div class="mb-4 form-check">
-            <input type="checkbox" v-model="expiregroup" class="form-check-input" id="expiregroup">
-            <label class="form-check-label" for="expiregroup">Expires by Group</label>
-            <div id="emailHelp" class="form-text">Does the expiration date depend on the group</div>
-        </div>
-        <div v-if="!expiregroup" class="mb-4 form-check">
-            <input type="checkbox" v-model="expire" class="form-check-input" id="expire">
-            <label class="form-check-label" for="expire">Expires</label>
-            <div id="helper" class="form-text">Does this user expires at all?</div>
-        </div>
-        <div v-if="!expiregroup && expire" class="mb-4 form-floating">
-            <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
-            <label for="dateExpires">Expires</label>
-            <div id="help" class="form-text">The date when this user gets deleted automatically</div>
-        </div>
-        <div class="mb-4 d-flex justify-content-center">
-            <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
-        </div>
-    </div>
+   <div class="container d-flex flex-column">
+       <div class="d-flex flex-row align-items-center mb-3">
+           <h1 class="flex-grow-1 text-white">Create User</h1>
+           <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=git'">Back</button>
+       </div>
+       <div class="d-flex flex-column justify-content-center">
+           <div class="form-floating mb-4">
+               <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="Username">
+               <label for="floatingInput">Username</label>
+               <div id="helper" class="form-text">A name to identify the user in the system</div>
+           </div>
+           <div class="form-floating mb-4">
+               <input v-model="gitusername" type="text" class="form-control" id="floatingInput" placeholder="Git Username">
+               <label for="floatingInput">Git Username</label>
+               <div id="helper" class="form-text">The Username the users has in GitHub</div>
+           </div>
+           <div class="mb-4 mt-4">
+               <h2>User Group</h2>
+               <div class="container column container bg-body-tertiary rounded-3 shadow p-3" id="userGroup">
+                   {{if .Groups}}
+                       {{range .Groups}}
+                           <div class="row">
+                               <p class="col">{{.Name}}</p>
+                               <p class="col">Created: {{.Date}}</p>
+                               <button v-if="userGroup == '{{.ID}}'" class="btn btn-danger col" @click="select('')">
+                                   Unselect
+                               </button>
+                               <button v-if="userGroup != '{{.ID}}'" class="btn btn-primary col"
+                                       @click="select('{{.ID}}')">Select
+                               </button>
+                           </div>
+                       {{end}}
+                   {{else}}
+                       <p>No User Groups</p>
+                       <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">Create User Group
+                       </button>
+                   {{end}}
+               </div>
+           </div>
+           <div class="mb-4 form-check">
+               <input type="checkbox" v-model="expiregroup" class="form-check-input" id="expiregroup">
+               <label class="form-check-label" for="expiregroup">Expires by Group</label>
+               <div id="emailHelp" class="form-text">Does the expiration date depend on the group</div>
+           </div>
+           <div v-if="!expiregroup" class="mb-4 form-check">
+               <input type="checkbox" v-model="expire" class="form-check-input" id="expire">
+               <label class="form-check-label" for="expire">Expires</label>
+               <div id="helper" class="form-text">Does this user expires at all?</div>
+           </div>
+           <div v-if="!expiregroup && expire" class="mb-4 form-floating">
+               <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
+               <label for="dateExpires">Expires</label>
+               <div id="help" class="form-text">The date when this user gets deleted automatically</div>
+           </div>
+           <div class="mb-4 d-flex justify-content-center">
+               <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
+           </div>
+       </div>
+   </div>
 </div>
 
 <script>

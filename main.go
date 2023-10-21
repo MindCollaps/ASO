@@ -4,6 +4,7 @@ import (
 	"ASO/main/crypt"
 	"ASO/main/database"
 	"ASO/main/router"
+	"ASO/main/tasks"
 	"fmt"
 	"github.com/joho/godotenv"
 	"log"
@@ -33,6 +34,8 @@ func main() {
 		log.Println("Database connection failed exiting...")
 		return
 	}
+
+	tasks.StartRepeatingTasks()
 
 	router.InitRouter()
 }

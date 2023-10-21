@@ -23,173 +23,178 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
 </head>
 <body class="vw-100 vh-100">
-
-<div id="manager" class="row h-100 w-100">
-    <div class="d-flex flex-column bg-body-tertiary h-100" style="width: 12%">
-        <div class="d-flex justify-content-center mt-4">
-            <a href="/" class="d-flex fs-4 fw-bold text-white text-decoration-none">
-                ASO
-            </a>
-        </div>
-        <hr>
-        <ul class="nav nav-pills flex-column mb-auto align-items-center p-2">
-            <li>
-                <button @click="href('git')" data-bs-toggle="tab" id="git-user-tab" data-bs-target="#git-user-tab-pane"
-                        type="button" role="tab" aria-controls="git-user-tab-pane" aria-selected="true" class="nav-link"
-                        aria-current="page">
-                    <span class="material-icons align-middle fs-5">group</span>
-                    <span class="align-middle">Members</span>
-                </button>
-            </li>
-            <li class="nav-item">
-                <button @click="href('group')" data-bs-toggle="tab" id="user-group-tab"
-                        data-bs-target="#user-group-tab-pane" type="button" role="tab"
-                        aria-controls="user-group-tab-pane" aria-selected="true" class="nav-link" aria-current="page">
-                    <span class="material-icons align-middle fs-5">groups</span>
-                    <span class="align-middle">Groups</span>
-                </button>
-            </li>
-            <li>
-                <button @click="href('token')" data-bs-toggle="tab" id="token-tab" data-bs-target="#token-tab-pane"
-                        type="button" role="tab" aria-controls="token-tab-pane" aria-selected="true" class="nav-link"
-                        aria-current="page">
-                    <span class="material-icons align-middle fs-5">vpn_key</span>
-                    <span class="align-middle">Token</span>
-                </button>
-            </li>
-            {{if .SuperUser}}
+<div id="manager" class="h-100 w-100">
+    <div class="row h-100 w-100" v-if="!loading">
+        <div class="d-flex flex-column bg-body-tertiary h-100" style="width: 12%">
+            <div class="d-flex justify-content-center mt-4">
+                <a href="/" class="d-flex align-items-center justify-content-center fs-4 fw-bold text-white text-decoration-none">
+                    <img class="w-50" src="/favicon.ico" alt="ASO Icon">
+                </a>
+            </div>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto align-items-center p-2">
                 <li>
-                    <button @click="href('user')" data-bs-toggle="tab" id="user-tab" data-bs-target="#user-tab-pane"
-                            type="button" role="tab" aria-controls="user-tab-pane" aria-selected="true" class="nav-link"
+                    <button @click="href('git')" data-bs-toggle="tab" id="git-user-tab"
+                            data-bs-target="#git-user-tab-pane"
+                            type="button" role="tab" aria-controls="git-user-tab-pane" aria-selected="true"
+                            class="nav-link"
                             aria-current="page">
-                        <span class="material-icons align-middle fs-5">manage_accounts</span>
-                        <span class="align-middle">Users</span>
+                        <span class="material-icons align-middle fs-5">group</span>
+                        <span class="align-middle">Members</span>
                     </button>
                 </li>
-            {{end}}
-        </ul>
-        <hr>
-        <div class="dropdown p-3">
-            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-               data-bs-toggle="dropdown" aria-expanded="false">
-                <strong>{{.User.Username}}</strong>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                <li>
-                    <hr class="dropdown-divider">
+                <li class="nav-item">
+                    <button @click="href('group')" data-bs-toggle="tab" id="user-group-tab"
+                            data-bs-target="#user-group-tab-pane" type="button" role="tab"
+                            aria-controls="user-group-tab-pane" aria-selected="true" class="nav-link"
+                            aria-current="page">
+                        <span class="material-icons align-middle fs-5">groups</span>
+                        <span class="align-middle">Groups</span>
+                    </button>
                 </li>
-                <li><a class="dropdown-item" href="/logout">Sign out</a></li>
+                <li>
+                    <button @click="href('token')" data-bs-toggle="tab" id="token-tab" data-bs-target="#token-tab-pane"
+                            type="button" role="tab" aria-controls="token-tab-pane" aria-selected="true"
+                            class="nav-link"
+                            aria-current="page">
+                        <span class="material-icons align-middle fs-5">vpn_key</span>
+                        <span class="align-middle">Token</span>
+                    </button>
+                </li>
+                {{if .SuperUser}}
+                    <li>
+                        <button @click="href('user')" data-bs-toggle="tab" id="user-tab" data-bs-target="#user-tab-pane"
+                                type="button" role="tab" aria-controls="user-tab-pane" aria-selected="true"
+                                class="nav-link"
+                                aria-current="page">
+                            <span class="material-icons align-middle fs-5">manage_accounts</span>
+                            <span class="align-middle">Users</span>
+                        </button>
+                    </li>
+                {{end}}
             </ul>
+            <hr>
+            <div class="dropdown p-3">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <strong>{{.User.Username}}</strong>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                    <li><a class="dropdown-item" href="/notify">Notifications</a></li>
+                    <li>
+                    <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="/logout">Sign out</a></li>
+                </ul>
+            </div>
         </div>
-    </div>
-    <div class="container col p-5 h-100" style="width: 80%;">
-        <div class="tab-content h-100" id="v-pills-tabContent">
-            <div class="tab-pane fade" id="git-user-tab-pane" role="tabpanel" aria-labelledby="git-user-tab"
-                 tabindex="0">
-                <div class="h-100 d-flex flex-column align-items-stretch">
-                    <h1 class="fw-bold text-white show active">Git User Management</h1>
-                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGitUser()"><span
-                                class="material-icons align-middle fs-5">person_add</span></button>
-                    <div class="d-flex align-items-center flex-column overflow-auto">
-                        {{if .GUsers}}
-                            {{range .GUsers}}
-                                <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                    <h1>{{.GitHubUsername}}</h1>
-                                    <h3>Created: {{.DateCreated}}</h3>
-                                    <h3>Expires: {{.DateExpires}}</h3>
-                                    {{if .UserGroup}}
-                                        <h3>Group: {{.UserGroup.Name}}</h3>
-                                    {{else}}
-                                        <h3>Group: None</h3>
-                                    {{end}}
-                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoGUser('{{.ID}}')"><span
-                                                class="material-icons align-middle fs-5">info</span></button>
-                                    <button class="btn btn-danger mb-3 mt-4"
-                                            @click="deleteGUser('{{.ID}}')"><span
-                                                class="material-icons align-middle fs-5">delete</span>
-                                    </button>
-                                </div>
+        <div class="container col p-5 h-100" style="width: 80%;">
+            <div class="tab-content h-100" id="v-pills-tabContent">
+                <div class="tab-pane fade h-100" id="git-user-tab-pane" role="tabpanel" aria-labelledby="git-user-tab"
+                     tabindex="0">
+                    <div class="h-100 d-flex flex-column align-items-stretch">
+                        <h1 class="fw-bold text-white show active">Git User Management</h1>
+                        <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGitUser()"><span
+                                    class="material-icons align-middle fs-5">person_add</span></button>
+                        <div class="d-flex align-items-center flex-column overflow-auto">
+                            {{if .GUsers}}
+                                {{range .GUsers}}
+                                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3">
+                                        <h1>{{.GitHubUsername}}</h1>
+                                        <h3>Created: {{.DateCreated}}</h3>
+                                        {{if .ExpiryByGroup}}
+                                            {{if .UserGroup.Name}}
+                                                {{if .UserGroup.IsExpired}}
+                                                    <h3>Expires by group: <a class="text-decoration-none text-danger">Expired</a>
+                                                    </h3>
+                                                {{else}}<h3>Expires by group: <a
+                                                            class="text-decoration-none text-warning">{{.UserGroup.DateExpires}}</a>
+                                                </h3>{{end}}
+                                            {{else}}{{if .IsExpired}}<h3>Expires: <a
+                                                        class="text-decoration-none text-danger">Expired</a>
+                                            </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                                            {{end}}{{else}}
+                                            {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
+                                            </h3>{{else}}<h3>
+                                                Expires: {{.DateExpires}}</h3>{{end}}{{end}}
+                                        <div class="d-flex flex-column bg-body-tertiary rounded-3 p-3">
+                                            {{if .UserGroup.Name}}
+                                                <h3>Group: {{.UserGroup.Name}}</h3>
+                                                <h3>Repository: <a target="_blank"
+                                                                   href="https://github.com/{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}">{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}</a></h3>
+                                            {{else}}
+                                                <h3>Group: None</h3>
+                                            {{end}}
+                                        </div>
+                                        <button class="btn btn-secondary mb-3 mt-4" @click="infoGUser('{{.ID}}')"><span
+                                                    class="material-icons align-middle fs-5">info</span></button>
+                                        <button class="btn btn-danger mb-3 mt-4"
+                                                @click="deleteGUser('{{.ID}}')"><span
+                                                    class="material-icons align-middle fs-5">delete</span>
+                                        </button>
+                                    </div>
+                                {{end}}
+                            {{else}}
+                                <h3>No Users</h3>
                             {{end}}
-                        {{else}}
-                            <h3>No Users</h3>
-                        {{end}}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="tab-pane fade h-100" id="user-group-tab-pane" role="tabpanel" aria-labelledby="user-group-tab"
-                 tabindex="0">
-                <div class="h-100 d-flex flex-column align-items-stretch">
-                    <h1 class="fw-bold text-white">User Group Management</h1>
-                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGroup()"><span
-                                class="material-icons align-middle fs-5">group_add</span></button>
-                    <div class="d-flex align-items-center flex-column overflow-auto">
-                        {{if .Groups}}
-                            {{range .Groups}}
-                                <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3">
-                                    <h1>{{.Name}}</h1>
-                                    <h3>Created: {{.Date}}</h3>
-                                    <h3>Expires: {{.DateExpires}}</h3>
-                                    <h3>Users: {{.Users}}</h3>
-                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
-                                                class="material-icons align-middle fs-5">info</span></button>
-                                    <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')"><span
-                                                class="material-icons align-middle fs-5">delete</span>
-                                    </button>
-                                </div>
+                <div class="tab-pane fade h-100" id="user-group-tab-pane" role="tabpanel"
+                     aria-labelledby="user-group-tab"
+                     tabindex="0">
+                    <div class="h-100 d-flex flex-column align-items-stretch">
+                        <h1 class="fw-bold text-white">User Group Management</h1>
+                        <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGroup()"><span
+                                    class="material-icons align-middle fs-5">group_add</span></button>
+                        <div class="d-flex align-items-center flex-column overflow-auto">
+                            {{if .Groups}}
+                                {{range .Groups}}
+                                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3">
+                                        <h1>{{.Name}}</h1>
+                                        <h3>Created: {{.Date}}</h3>
+                                        {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
+                                        </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                                        <h3>Repository: <a target="_blank"
+                                                           href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
+                                        <h3>Users: {{.Users}}</h3>
+                                        <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
+                                                    class="material-icons align-middle fs-5">info</span></button>
+                                        <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')"><span
+                                                    class="material-icons align-middle fs-5">delete</span>
+                                        </button>
+                                    </div>
+                                {{end}}
+                            {{else}}
+                                <h3>No Groups</h3>
                             {{end}}
-                        {{else}}
-                            <h3>No Groups</h3>
-                        {{end}}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="tab-pane fade h-100" id="token-tab-pane" role="tabpanel" aria-labelledby="token-tab"
-                 tabindex="0">
-                <h1 class="fw-bold text-white">Token Management</h1>
-                <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGitUserTk()"><span
-                            class="material-icons align-middle fs-5">add</span></button>
-                <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
-                    {{if .Tokens}}
-                        {{range .Tokens}}
-                            <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                <h1>{{.Name}}</h1>
-                                <h3>Created: {{.DateCreated}}</h3>
-                                <h3>Expires: {{.DateExpires}}</h3>
-                                <h3>Used: {{.Used}}</h3>
-                                <button class="btn btn-secondary mb-3 mt-4" @click="infoToken('{{.ID}}')"><span
-                                            class="material-icons align-middle fs-5">info</span></button>
-                                <button class="btn btn-secondary mb-3 mt-4" @click="qrToken('{{.Token}}')"><span
-                                            class="material-icons align-middle fs-5">qr_code_scanner</span></button>
-                                <button class="btn btn-danger mb-3 mt-4"
-                                        @click="deleteToken('{{.ID}}')">Delete
-                                </button>
-                            </div>
-                        {{end}}
-                    {{else}}
-                        <h3>No Tokens</h3>
-                    {{end}}
-                </div>
-            </div>
-            {{if .SuperUser}}
-            <div class="tab-pane fade h-100" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab"
-                 tabindex="0">
-                <div class="h-100 d-flex flex-column align-items-stretch">
-                    <h1 class="fw-bold text-white">User Management</h1>
-                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createRegisterToken()"><span
-                                class="material-icons align-middle fs-5">person_add</span></button>
+                <div class="tab-pane fade h-100" id="token-tab-pane" role="tabpanel" aria-labelledby="token-tab"
+                     tabindex="0">
+                    <h1 class="fw-bold text-white">Token Management</h1>
+                    <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createGitUserTk()"><span
+                                class="material-icons align-middle fs-5">add</span></button>
                     <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
-                        {{if .Users}}
-                            {{range .Users}}
+                        {{if .Tokens}}
+                            {{range .Tokens}}
                                 <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                    <h1>{{.Username}}</h1>
-                                    <h3>Email: {{.Email}}</h3>
+                                    <h1>{{.Name}}</h1>
                                     <h3>Created: {{.DateCreated}}</h3>
-                                    <h3>Super User: {{.IsSuperUser}}</h3>
-                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')"><span
+                                    {{if .IsExpired}}<h3>Expires: <a
+                                                class="text-decoration-none text-danger">Expired</a>
+                                    </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                                    <h3>Used: {{.Used}}</h3>
+                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoToken('{{.ID}}')"><span
                                                 class="material-icons align-middle fs-5">info</span></button>
-                                    <button class="btn btn-danger mb-3 mt-4" @click="deleteUser('{{.ID}}')"><span
-                                                class="material-icons align-middle fs-5">delete</span></button>
+                                    <button class="btn btn-secondary mb-3 mt-4" @click="qrToken('{{.Token}}')"><span
+                                                class="material-icons align-middle fs-5">qr_code_scanner</span></button>
+                                    <button class="btn btn-danger mb-3 mt-4"
+                                            @click="deleteToken('{{.ID}}')">Delete
+                                    </button>
                                 </div>
                             {{end}}
                         {{else}}
@@ -197,15 +202,129 @@
                         {{end}}
                     </div>
                 </div>
-                {{end}}
+                {{if .SuperUser}}
+                <div class="tab-pane fade h-100" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab"
+                     tabindex="0">
+                    <div class="h-100 d-flex flex-column align-items-stretch">
+                        <h1 class="fw-bold text-white">User Management</h1>
+                        <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createRegisterToken()"><span
+                                    class="material-icons align-middle fs-5">person_add</span></button>
+                        <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
+                            {{if .Users}}
+                                {{range .Users}}
+                                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
+                                        <h1>{{.Username}}</h1>
+                                        <h3>Email: {{.Email}}</h3>
+                                        <h3>Created: {{.DateCreated}}</h3>
+                                        <h3>Super User: {{.IsSuperUser}}</h3>
+                                        <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')"><span
+                                                    class="material-icons align-middle fs-5">info</span></button>
+                                        <button class="btn btn-danger mb-3 mt-4" @click="deleteUser('{{.ID}}')"><span
+                                                    class="material-icons align-middle fs-5">delete</span></button>
+                                    </div>
+                                {{end}}
+                            {{else}}
+                                <h3>No Tokens</h3>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
             </div>
         </div>
     </div>
+    <div class="d-flex flex-column justify-content-center align-items-center h-100" v-if="loading">
+        <div class="loadingio-spinner-ripple-s923ubzj03i"><div class="ldio-uo18igsiuze">
+                <div></div><div></div>
+            </div></div>
+           <div class="mt-3 animation" id="textAnimation" style="transition: 0.4s opacity; opacity: 1;">
+               <h1 class="text-white">${loadingText}</h1>
+           </div>
+    </div>
 </div>
 
+
+<style type="text/css">
+    @keyframes ldio-uo18igsiuze {
+        0% {
+            top: 96px;
+            left: 96px;
+            width: 0;
+            height: 0;
+            opacity: 1;
+        }
+        100% {
+            top: 18px;
+            left: 18px;
+            width: 156px;
+            height: 156px;
+            opacity: 0;
+        }
+    }.ldio-uo18igsiuze div {
+         position: absolute;
+         border-width: 4px;
+         border-style: solid;
+         opacity: 1;
+         border-radius: 50%;
+         animation: ldio-uo18igsiuze 1s cubic-bezier(0,0.2,0.8,1) infinite;
+     }.ldio-uo18igsiuze div:nth-child(1) {
+          border-color: #337ab7;
+          animation-delay: 0s;
+      }
+    .ldio-uo18igsiuze div:nth-child(2) {
+        border-color: #5bc0de;
+        animation-delay: -0.5s;
+    }
+    .loadingio-spinner-ripple-s923ubzj03i {
+        width: 200px;
+        height: 200px;
+        display: inline-block;
+        overflow: hidden;
+    }
+    .ldio-uo18igsiuze {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform: translateZ(0) scale(1);
+        backface-visibility: hidden;
+        transform-origin: 0 0; /* see note above */
+    }
+    .ldio-uo18igsiuze div { box-sizing: content-box;}
+    /* generated by https://loading.io/ */
+</style>
+
 <script>
+
     var main = new Vue({
         el: '#manager',
+        data: {
+            loading: false,
+            loadingText: "Loading...",
+            loadingTexts: [
+                "Compiling your hopes and dreams",
+                "Dividing by zero",
+                "Recursing into the abyss",
+                "Searching for the meaning of life",
+                "Optimizing for your impatience",
+                "Debugging the universe",
+                "Encrypting cat videos",
+                "Constructing a digital fort",
+                "Refactoring reality",
+                "Counting all the stars in JavaScript",
+                "Uploading your cat pictures to the cloud",
+                "Sorting bits and bytes",
+                "Thinking about memory leaks",
+                "Compiling with love and caffeine",
+                "Summoning infinite monkeys to write code",
+                "Converting coffee into code",
+                "Training AI to appreciate your sense of humor",
+                "Calculating the meaning of life, the universe, and everything",
+                "Downloading more RAM",
+                "Checking if the cake is a lie",
+            ]
+
+        },
+        delimiters: ['${', '}'],
         created: async function () {
             //check url var "a" for tab and set the tab active
             let url = new URL(window.location.href)
@@ -281,7 +400,8 @@
                     user: usr,
                     group: grp,
                     groups: [],
-                    showModal: false
+                    showModal: false,
+                    loading: false,
                 }
                 fetch('/manager/group/user/remove', {
                     method: 'POST',
@@ -301,10 +421,12 @@
             },
             infoGroup: async function (id) {
                 //redirect to info group page
+                this.loadingScreen()
                 document.location.href = "/manager/group/" + id
             },
             infoGUser: async function (id) {
                 //redirect to manage users page
+                this.loadingScreen()
                 document.location.href = "/manager/gitusr/" + id
             },
             createGitUser: async function () {
@@ -317,6 +439,7 @@
             },
             infoToken: async function (id) {
                 //redirect to info token page
+                this.loadingScreen()
                 document.location.href = "/manager/token/" + id
             },
             deleteToken: async function (id) {
@@ -363,6 +486,7 @@
             },
             infoUser: async function (id) {
                 //redirect to info user page
+                this.loadingScreen()
                 document.location.href = "/manager/user/" + id
             },
             createRegisterToken: async function () {
@@ -385,8 +509,49 @@
 
                 document.title = "Manager - " + name
             },
+            loadingScreen: async function () {
+                setTimeout(() => {
+                    this.loading = true
+
+                    this.loadingFirst(true)
+                }, 200)
+            },
+            setLoadingText: async function(text){
+                this.loadingText = text
+            },
+            loadingFirst: async function (first) {
+                let phrase = this.loadingTexts[Math.floor(Math.random() * this.loadingTexts.length)]
+                if(first)
+                    this.loadingText = phrase
+                else {
+                    document.getElementById('textAnimation').style.opacity = '0';
+                    setTimeout(() => {
+                        this.setLoadingText(phrase)
+                        document.getElementById('textAnimation').style.opacity = '1';
+                    }, 300);
+                }
+
+                setTimeout(() => {
+                    this.setLoadingText(phrase + " .")
+                    setTimeout(() => {
+                        this.setLoadingText(phrase + " . .")
+                        setTimeout(() => {
+                            this.setLoadingText(phrase + " . . .")
+                            setTimeout(() => {
+                                this.setLoadingText(phrase + " . .")
+                                setTimeout(() => {
+                                    this.setLoadingText(phrase + " .")
+                                    setTimeout(() => {
+                                        this.loadingFirst(false)
+                                    }, 1000)
+                                }, 1000)
+                            }, 1000)
+                        }, 1000)
+                    }, 1000)
+                }, 1000)
+            }
         }
-    })
+    }).$mount("#manager");
 </script>
 </body>
 </html>
