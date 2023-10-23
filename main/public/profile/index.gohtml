@@ -24,70 +24,73 @@
 </head>
 <body>
 
-<div id="register" class="container mt-5">
-    <div class="d-flex flex-row align-items-center mb-4">
-        <h1 class="flex-grow-1 text-white">Profile</h1>
-        <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
-    </div>
-    <div class="mb-4">
-        <div class="input-group">
-            <div class="form-floating">
-                <input v-model="username" type="text" class="form-control" id="username"
-                       placeholder="MindCollaps" @keyup.enter="updateUsername()">
-                <label for="username">Username</label>
+<div class="vh-100">
+    <div id="register" class="container mt-5">
+        <div class="d-flex flex-row align-items-center mb-4">
+            <h1 class="flex-grow-1 text-white">Profile</h1>
+            <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
+        </div>
+        <div class="mb-4">
+            <div class="input-group">
+                <div class="form-floating">
+                    <input v-model="username" type="text" class="form-control" id="username"
+                           placeholder="MindCollaps" @keyup.enter="updateUsername()">
+                    <label for="username">Username</label>
+                </div>
+                <button class="btn btn-primary" type="button" @click="updateUsername()">Update</button>
             </div>
-            <button class="btn btn-primary" type="button" @click="updateUsername()">Update</button>
+            <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only upper
+                and lower case characters, . and _ (but not at the end)
+            </div>
         </div>
-        <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only upper
-            and lower case characters, . and _ (but not at the end)
+        <div class="mb-4">
+            <div class="input-group">
+                <div class="form-floating">
+                    <input v-model="email" type="email" class="form-control" id="email"
+                           placeholder="example@example.ex" @keyup.enter="updateEmail()">
+                    <label for="email">E-Mail</label>
+                </div>
+                <button class="btn btn-primary" type="button" @click="updateEmail()">Update</button>
+            </div>
+            <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is looked up
+                for validation.
+            </div>
         </div>
-    </div>
-    <div class="mb-4">
-    <div class="input-group">
-        <div class="form-floating">
-            <input v-model="email" type="email" class="form-control" id="email"
-                   placeholder="example@example.ex" @keyup.enter="updateEmail()">
-            <label for="email">E-Mail</label>
+        <hr class="mt-5 mb-5">
+        <h2>Change Password</h2>
+        <div class="mb-3 form-floating">
+            <input v-model="password2" type="password" class="form-control" id="password2"
+                   placeholder="Password">
+            <label for="password2">Password</label>
+            <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only upper
+                and lower case characters, numbers, and special characters . _ ! ? # - *
+            </div>
         </div>
-        <button class="btn btn-primary" type="button" @click="updateEmail()">Update</button>
-    </div>
-        <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is looked up
-            for validation.
+        <div class="input-group mb-4">
+            <div class="form-floating">
+                <input v-model="password1" type="password" class="form-control" id="password1"
+                       placeholder="Repeat Password" @keyup.enter="updatePassword()">
+                <label for="password1">Repeat Password</label>
+            </div>
+            <button class="btn btn-primary" type="button" @click="updatePassword()">Update</button>
         </div>
-    </div>
-    <hr class="mt-5 mb-5">
-    <h2>Change Password</h2>
-    <div class="mb-3 form-floating">
-        <input v-model="password2" type="password" class="form-control" id="password2"
-               placeholder="Password">
-        <label for="password2">Password</label>
-        <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only upper
-            and lower case characters, numbers, and special characters . _ ! ? # - *
+        <hr class="mt-5 mb-5">
+        <h2>GitHub</h2>
+        <div class="form-floating mb-4">
+            <input v-model="gitHubUsername" type="text" class="form-control" id="gitUsername"
+                   placeholder="MindCollaps" @keyup.enter="updateGitUsername()">
+            <label for="gitUsername">Git Username</label>
+            <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
         </div>
-    </div>
-    <div class="input-group mb-4">
-        <div class="form-floating">
-            <input v-model="password1" type="password" class="form-control" id="password1"
-                   placeholder="Repeat Password" @keyup.enter="updatePassword()">
-            <label for="password1">Repeat Password</label>
+        <div class="form-floating mb-4">
+            <input v-model="gitHubToken" type="text" class="form-control" id="token"
+                   placeholder="example@example.ex" @keyup.enter="updateToken()">
+            <label for="token">Token</label>
+            <div id="helper" class="form-text">Your GitHub Token. Click <a href="https://github.com/settings/tokens" target="_blank">here</a> to see generate one. Make sure the expiry date is either set to <q>No expiration</q> or the time you want to use this tool. Also select the scope repo!</div>
         </div>
-        <button class="btn btn-primary" type="button" @click="updatePassword()">Update</button>
+        <button class="btn btn-primary" type="button" @click="updateGit()">Update Git</button>
     </div>
-    <hr class="mt-5 mb-5">
-    <h2>GitHub</h2>
-    <div class="form-floating mb-4">
-        <input v-model="gitHubUsername" type="text" class="form-control" id="gitUsername"
-               placeholder="MindCollaps" @keyup.enter="updateGitUsername()">
-        <label for="gitUsername">Git Username</label>
-        <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
-    </div>
-    <div class="form-floating mb-4">
-        <input v-model="gitHubToken" type="text" class="form-control" id="token"
-               placeholder="example@example.ex" @keyup.enter="updateToken()">
-        <label for="token">Token</label>
-        <div id="helper" class="form-text">Your GitHub Token. Click <a href="https://github.com/settings/tokens" target="_blank">here</a> to see generate one. Make sure the expiry date is either set to <q>No expiration</q> or the time you want to use this tool. Also select the scope repo!</div>
-    </div>
-    <button class="btn btn-primary" type="button" @click="updateGit()">Update Git</button>
+    {{template "footer"}}
 </div>
 
 <script>
@@ -166,7 +169,7 @@
                 if (res.status !== 200) {
                     var data = await res.json();
                     alert('Error updating username ' + data.message);
-                    return;
+
                 } else {
                     alert('Username updated');
                 }
@@ -187,7 +190,7 @@
                 if (res.status !== 200) {
                     var data = await res.json();
                     alert('Error updating email ' + data.message);
-                    return;
+
                 } else {
                     alert('Email updated');
                 }
@@ -213,7 +216,7 @@
                     document.getElementById('gitUsername').classList.remove('is-valid');
                     document.getElementById('token').classList.add('is-invalid');
                     document.getElementById('token').classList.remove('is-valid');
-                    return;
+
                 } else {
                     document.getElementById('gitUsername').classList.remove('is-invalid');
                     document.getElementById('gitUsername').classList.add('is-valid');

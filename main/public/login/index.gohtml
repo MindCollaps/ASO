@@ -24,26 +24,27 @@
 </head>
 <body>
 
-<div class="vw-100 vh-100">
-    <div id="login" class="d-flex justify-content-center align-items-center flex-column position-absolute w-100" style="top: 20vh">
-        <h1 class="text-white">Login</h1>
-        <div class="form-floating mb-2 w-50">
-            <input v-model="username" type="text" class="form-control" id="floatingInput"
-                   placeholder="MindCollaps" >
-            <label for="floatingInput">Username</label>
+<div class="vh-100">
+    <div class="d-flex align-items-stretch flex-column h-100">
+        <div id="login" class="d-flex justify-content-center align-items-center flex-column w-100 h-100">
+            <h1 class="text-white">Login</h1>
+            <div class="form-floating mb-2 w-50">
+                <input v-model="username" type="text" class="form-control" id="floatingInput"
+                       placeholder="MindCollaps">
+                <label for="floatingInput">Username</label>
+            </div>
+            <div class="mb-3 form-floating w-50">
+                <input v-model="password" type="password" class="form-control" id="floatingPassword"
+                       placeholder="Password" @keyup.enter="login()">
+                <label for="floatingPassword">Password</label>
+            </div>
+            <div class="mb-3 d-flex justify-content-center">
+                <button @click="login()" class="btn btn-primary align-center">Submit</button>
+            </div>
         </div>
-        <div class="mb-3 form-floating w-50">
-            <input v-model="password" type="password" class="form-control" id="floatingPassword"
-                   placeholder="Password" @keyup.enter="login()">
-            <label for="floatingPassword">Password</label>
-        </div>
-        <div class="mb-3 d-flex justify-content-center">
-            <button @click="login()" class="btn btn-primary align-center">Submit</button>
-        </div>
+        {{template "footer"}}
     </div>
-    {{template "footer"}}
 </div>
-
 
 
 <script>

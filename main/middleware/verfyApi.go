@@ -18,17 +18,11 @@ func LoginToken() gin.HandlerFunc {
 
 		if err != nil {
 			c.Redirect(302, "/login")
-			c.JSON(401, gin.H{
-				"message": "Unauthorized",
-			})
 			c.Abort()
 			return
 		}
 		if token == "" {
 			c.Redirect(302, "/login")
-			c.JSON(401, gin.H{
-				"message": "Unauthorized",
-			})
 			c.Abort()
 			return
 		}
@@ -36,9 +30,7 @@ func LoginToken() gin.HandlerFunc {
 		jwt, err := crypt.ParseJwt(token)
 		if err != nil {
 			c.SetCookie("auth", "", -1, "/", "", false, true)
-			c.JSON(401, gin.H{
-				"message": "Unauthorized",
-			})
+			c.Redirect(302, "/login")
 			c.Abort()
 			return
 		}

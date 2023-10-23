@@ -72,9 +72,14 @@
                 <div id="emailHelp" class="form-text">The date this group expires and is therefor deleted automatically (when Auto Delete is selected)</div>
             </div>
             <div class="mb-4 form-check">
+                <input type="checkbox" v-model="autoRemove" class="form-check-input" id="autoRemove">
+                <label class="form-check-label" for="autoRemove">Auto Remove</label>
+                <div id="emailHelp" class="form-text">Weather this group triggers the remove event on the members, when the expiry date is reached</div>
+            </div>
+            <div class="mb-4 form-check">
                 <input type="checkbox" v-model="autoDelete" class="form-check-input" id="autoDelete">
                 <label class="form-check-label" for="autoDelete">Auto Delete</label>
-                <div id="emailHelp" class="form-text">Weather this group triggers the delete event on the members, when the expiry date is reached</div>
+                <div id="emailHelp" class="form-text">Weather this group deletes itself when the expiry date is reached</div>
             </div>
             <div class="mb-4 d-flex justify-content-center">
                 <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
@@ -96,6 +101,7 @@
             gitOwn: true,
             gitOwner: "",
             gitName: "",
+            autoRemove: true
         },
         methods: {
             submit: async function () {
@@ -112,7 +118,8 @@
                         autoDelete: this.autoDelete,
                         isOwn: this.gitOwn,
                         gitOwner: this.gitOwner,
-                        gitRepo: this.gitName
+                        gitRepo: this.gitName,
+                        autoRemoveUsers: this.autoRemove
                     })
                 }).then((res) => {
                     return res;

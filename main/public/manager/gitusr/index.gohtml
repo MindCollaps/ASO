@@ -52,18 +52,21 @@
                                 </div>
                             {{end}}
                         {{else}}
-                            <p>No User Groups</p>
-                            <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">
-                                Create User Group
-                            </button>
+                            <div class="d-flex flex-row align-items-center justify-content-center p-2">
+                                <p class="m-0 me-2">No User Groups</p>
+                                <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">
+                                <span
+                                        class="material-icons align-middle fs-5">group_add</span>
+                                </button>
+                            </div>
                         {{end}}
                     </div>
                     <div class="modal-footer">
                         <div class="d-flex flex-row gap-2 align-items-center">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" @click="addToGroup()">Save changes</button>
                             <button class="btn btn-success" onclick="location.href='/manager/group/create'"><span
                                         class="material-icons align-middle fs-5">group_add</span></button>
-                            <button type="button" class="btn btn-primary" @click="addToGroup()">Save changes</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>

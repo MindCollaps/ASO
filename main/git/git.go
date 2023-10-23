@@ -73,7 +73,6 @@ func AddUserToRepo(username string, token string, repoName string, owner string)
 }
 
 func RemoveUserFromRepo(repoOwner string, usernameToBeRemoved string, gitToken string, repoName string) bool {
-	//add user to repo
 	c := context.Background()
 
 	gitClient := GetGithubClient(gitToken)
@@ -88,6 +87,8 @@ func RemoveUserFromRepo(repoOwner string, usernameToBeRemoved string, gitToken s
 	if err != nil {
 		return false
 	}
+
+	//TODO if all fails, try to remove the invite
 
 	return true
 }

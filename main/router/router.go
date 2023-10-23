@@ -4,6 +4,7 @@ import (
 	"ASO/main/crypt"
 	"ASO/main/database"
 	"ASO/main/database/models"
+	"ASO/main/middleware"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -150,7 +151,7 @@ func InitRouter() {
 			return
 		}
 
-		template := template.Must(template.ParseFiles("main/public/reg/index.gohtml"))
+		template := template.Must(template.ParseFiles("main/public/reg/index.gohtml", "main/templates/template.gohtml"))
 		template.Execute(c.Writer, nil)
 	})
 
@@ -172,6 +173,7 @@ func InitRouter() {
 
 		if err := c.ShouldBindJSON(&requestBody); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
+			fmt.Println(err)
 			return
 		}
 
@@ -190,33 +192,39 @@ func InitRouter() {
 		//check date
 		if token.DateExpires.Time().Before(time.Now()) {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			fmt.Println("Token expired")
 			return
 		}
 
 		if !token.IsUserRegistrationToken {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			fmt.Println("Token is not a user registration token")
 			return
 		}
 
 		//check count
 		if token.Used >= token.Count {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			fmt.Println("Token count exceeded")
 			return
 		}
 
 		//joi validation
 		if err := UsernameSchema.Validate(requestBody.Username); err != nil {
 			c.JSON(400, gin.H{"error": err.Error(), "message": "Username invalid", "field": "username"})
+			fmt.Println(err)
 			return
 		}
 
 		if err := PasswordSchema.Validate(requestBody.Password); err != nil {
 			c.JSON(400, gin.H{"error": err.Error(), "message": "Password invalid", "field": "password"})
+			fmt.Println(err)
 			return
 		}
 
 		if err := EmailSchema.Validate(requestBody.Email); err != nil {
 			c.JSON(400, gin.H{"error": err.Error(), "message": "Email invalid", "field": "email"})
+			fmt.Println(err)
 			return
 		}
 
@@ -231,6 +239,7 @@ func InitRouter() {
 		if err == nil {
 			// User with the same username already exists
 			c.JSON(http.StatusConflict, gin.H{"message": "Username already exists"})
+			fmt.Println("Username already exists")
 			return
 		}
 
@@ -239,10 +248,12 @@ func InitRouter() {
 		if err == nil {
 			// User with the same email already exists
 			c.JSON(http.StatusConflict, gin.H{"message": "Email already exists"})
+			fmt.Println("Email already exists")
 			return
 		} else if err != mongo.ErrNoDocuments {
 			// Handle other database query errors
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
+			fmt.Println(err)
 			return
 		}
 
@@ -250,6 +261,7 @@ func InitRouter() {
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+			fmt.Println(err)
 			return
 		}
 
@@ -267,6 +279,7 @@ func InitRouter() {
 		if err != nil {
 			// Handle database insertion error
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
+			fmt.Println(err)
 			return
 		}
 
@@ -293,6 +306,19 @@ func InitRouter() {
 		if err == nil {
 			c.SetCookie("auth", jwtToken, 3600*24*2, "/", "", false, false)
 		}
+
+		database.MongoDB.Collection("notification").InsertOne(c, models.Notification{
+			ID:           primitive.NewObjectID(),
+			Belongs:      newUsr.InsertedID.(primitive.ObjectID),
+			Notification: "<h3>👋 Welcome to ASO! 🚀</h1>\n<p>We're thrilled to have you on board! To get started, there are just a couple of quick steps to ensure you have the best experience with our tool.</p>\n<ol class=\"list-group\">\n<li class=\"list-group-item\"><h5>1. Set Up Your GitHub Credentials 🌟</h5>\n   ASO relies on your GitHub username and token to work its magic. If you haven't already, please make sure you have your GitHub username and personal access token ready.</li>\n<li class=\"list-group-item\"><h5>2. Let's Dive In! 💻</h5>\n   With your GitHub credentials ready, you're all set to dive into the world of ASO and supercharge your workflow. We can't wait to see what you'll achieve!</li>\n</ol>\n<p>If you have any questions or need assistance along the way, feel free to reach out.</p>\n<p>Enjoy using ASO! 🎉</p>",
+			DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+			Title:        "Welcome to ASO!",
+			UserGroup:    primitive.NilObjectID,
+			GitHubUser:   primitive.NilObjectID,
+			Token:        primitive.NilObjectID,
+			Profile:      true,
+			Style:        "success",
+		})
 
 		c.JSON(http.StatusOK, gin.H{"status": 200, "message": "Created user"})
 	})
@@ -381,4 +407,27 @@ func InitRouter() {
 	}
 
 	router.Run(":" + port)
+
+	router.GET("/notification", middleware.LoginToken(), func(c *gin.Context) {
+		var notifications []models.Notification
+
+		cur, err := database.MongoDB.Collection("notification").Find(c, bson.M{
+			"belongs": c.MustGet("userID"),
+		})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+			return
+		}
+
+		err = cur.All(c, &notifications)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+			return
+		}
+
+		template := template.Must(template.ParseFiles("main/public/notification/index.gohtml"))
+		template.Execute(c.Writer, notifications)
+	})
 }

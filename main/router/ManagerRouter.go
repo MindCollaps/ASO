@@ -51,6 +51,7 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 				Username:       user.Username,
 				IsExpired:      expired,
 				ExpiryByGroup:  user.ExpiresGroup,
+				AddedToRepo:    user.AddedToRepo,
 			}
 		} else {
 			usrDt = GitUserData{
@@ -62,6 +63,7 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 				Username:       user.Username,
 				IsExpired:      expired,
 				ExpiryByGroup:  user.ExpiresGroup,
+				AddedToRepo:    user.AddedToRepo,
 			}
 		}
 		if usrDt.DateExpires == "0001-01-01 01:00:00" {
@@ -106,6 +108,34 @@ func tokenModalToData(token models.Token) TokenData {
 		Used:        token.Used,
 		IsExpired:   expired,
 	}
+}
+
+func notificationModalToData(notification models.Notification) NotificationData {
+	dateCreated := notification.DateCreated.Time().Format("2006-01-02 15:04:05")
+	data := NotificationData{
+		ID:           notification.ID.Hex(),
+		Notification: notification.Notification,
+		DateCreated:  dateCreated,
+		Title:        notification.Title,
+		Style:        notification.Style,
+		Seen:         notification.Seen,
+		Popup:        notification.Popup,
+		Profile:      notification.Profile,
+	}
+
+	if notification.UserGroup != primitive.NilObjectID {
+		data.UserGroup = notification.UserGroup.Hex()
+	}
+
+	if notification.GitHubUser != primitive.NilObjectID {
+		data.GitHubUser = notification.GitHubUser.Hex()
+	}
+
+	if notification.Token != primitive.NilObjectID {
+		data.Token = notification.Token.Hex()
+	}
+
+	return data
 }
 
 func fetchAllGroups(c *gin.Context) ([]UserGroupData, error) {
@@ -200,6 +230,28 @@ func fetchAllUsers(c *gin.Context) ([]UserData, error) {
 	return users, nil
 }
 
+func fetchAllNotifications(c *gin.Context) ([]NotificationData, error) {
+	cur, err := database.MongoDB.Collection("notification").Find(c, bson.M{
+		"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(c)
+
+	var notifications []NotificationData
+	for cur.Next(c) {
+		var notification models.Notification
+		cur.Decode(&notification)
+
+		ntf := notificationModalToData(notification)
+
+		notifications = append(notifications, ntf)
+	}
+
+	return notifications, nil
+}
+
 func userModalToData(user models.User) UserData {
 	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04:05")
 
@@ -216,12 +268,13 @@ func userModalToData(user models.User) UserData {
 }
 
 type ManagerRouteData struct {
-	GUsers    []GitUserData
-	Users     []UserData
-	Groups    []UserGroupData
-	Tokens    []TokenData
-	SuperUser bool
-	User      UserData
+	GUsers        []GitUserData
+	Users         []UserData
+	Groups        []UserGroupData
+	Tokens        []TokenData
+	SuperUser     bool
+	User          UserData
+	Notifications []NotificationData
 }
 
 type ManagerCreateTkData struct {
@@ -250,6 +303,7 @@ type GitUserData struct {
 	IsCollaborator bool            `json:"isCollaborator" bson:"isCollaborator"`
 	IsInvited      bool            `json:"isInvited" bson:"isInvited"`
 	IsExpired      bool            `json:"isExpired" bson:"isExpired"`
+	AddedToRepo    bool            `json:"addedToRepo" bson:"addedToRepo"`
 }
 
 type UserGroupData struct {
@@ -291,6 +345,20 @@ type UserData struct {
 	DateCreated    string `json:"dateCreated" bson:"dateCreated"`
 	IsSuperUser    bool   `json:"isSuperUser" bson:"isSuperUser"`
 	Token          string `json:"token" bson:"token"`
+}
+
+type NotificationData struct {
+	ID           string `json:"id" bson:"_id"`
+	Notification string `json:"notification" bson:"notification"`
+	DateCreated  string `json:"dateCreated" bson:"dateCreated"`
+	Title        string `json:"title" bson:"title"`
+	Style        string `json:"style" bson:"style"`
+	UserGroup    string `json:"userGroup" bson:"userGroup"`
+	GitHubUser   string `json:"githubUser" bson:"githubUser"`
+	Token        string `json:"token" bson:"token"`
+	Seen         bool   `json:"seen" bson:"seen"`
+	Popup        bool   `json:"popup" bson:"popup"`
+	Profile      bool   `json:"profile" bson:"profile"`
 }
 
 func initManagerRouter(router *gin.Engine) {
@@ -342,13 +410,16 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
+		notifications, err := fetchAllNotifications(c)
+
 		data := ManagerRouteData{
-			Groups:    groups,
-			GUsers:    gitUsers,
-			Tokens:    tokens,
-			SuperUser: isSuperUser,
-			Users:     users,
-			User:      userModalToData(c.MustGet("user").(models.User)),
+			Groups:        groups,
+			GUsers:        gitUsers,
+			Tokens:        tokens,
+			SuperUser:     isSuperUser,
+			Users:         users,
+			User:          userModalToData(c.MustGet("user").(models.User)),
+			Notifications: notifications,
 		}
 
 		template := template.Must(template.ParseFiles("main/public/manager/index.gohtml"))
@@ -429,7 +500,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		if userGroup.ID != primitive.NilObjectID {
-			userData.IsCollaborator = git.CheckIfUserIsColabo(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+			userData.IsCollaborator = user.AddedToRepo
 			if userData.IsCollaborator {
 				userData.IsInvited = false
 			} else {
@@ -487,8 +558,17 @@ func initManagerRouter(router *gin.Engine) {
 			if users[i].UserGroup.ID == group.ID.Hex() {
 				user := users[i]
 
-				user.IsCollaborator = git.CheckIfUserIsColabo(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
-				user.IsInvited = git.CheckIfUserIsPendingInvite(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
+				if group.ID != primitive.NilObjectID {
+					user.IsCollaborator = user.AddedToRepo
+					if user.IsCollaborator {
+						user.IsInvited = false
+					} else {
+						user.IsInvited = git.CheckIfUserIsPendingInvite(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
+					}
+				} else {
+					user.IsCollaborator = false
+					user.IsInvited = false
+				}
 
 				members = append(members, user)
 			}
@@ -540,14 +620,15 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/manager/group/create", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Name        string `json:"name" bson:"name"`
-			DateExpires string `json:"dateExpires" bson:"dateExpires"`
-			Notify      bool   `json:"notify" bson:"notify"`
-			Expires     bool   `json:"doesExpire" bson:"doesExpire"`
-			AutoDelete  bool   `json:"autoDelete" bson:"autoDelete"`
-			GitRepo     string `json:"gitRepo" bson:"gitRepo"`
-			GitOwner    string `json:"gitOwner" bson:"gitOwner"`
-			IsOwn       bool   `json:"isOwn" bson:"isOwn"`
+			Name            string `json:"name" bson:"name"`
+			DateExpires     string `json:"dateExpires" bson:"dateExpires"`
+			Notify          bool   `json:"notify" bson:"notify"`
+			Expires         bool   `json:"doesExpire" bson:"doesExpire"`
+			AutoDelete      bool   `json:"autoDelete" bson:"autoDelete"`
+			GitRepo         string `json:"gitRepo" bson:"gitRepo"`
+			GitOwner        string `json:"gitOwner" bson:"gitOwner"`
+			IsOwn           bool   `json:"isOwn" bson:"isOwn"`
+			AutoRemoveUsers bool   `json:"autoRemoveUsers" bson:"autoRemoveUsers"`
 		}
 
 		//get from body
@@ -948,11 +1029,12 @@ func initManagerRouter(router *gin.Engine) {
 		var user models.GitHubUser
 		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
 			"githubUsername": requestBody.GitHubUsername,
+			"userGroup":      tk.UserGroup,
 		}).Decode(&user)
 
 		if err == nil {
 			c.JSON(400, gin.H{
-				"message": "User already exists",
+				"message": "User already exists in this group",
 			})
 			fmt.Println("User already exists")
 			return
@@ -994,6 +1076,8 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
+		isColabo := false
+
 		if tk.DirectAdd {
 			if !git.AddUserToRepo(requestBody.GitHubUsername, creator.GitHubToken, userGroup.GitHubRepo, userGroup.GitHubOwner) {
 				c.JSON(500, gin.H{
@@ -1002,6 +1086,9 @@ func initManagerRouter(router *gin.Engine) {
 				fmt.Println("Internal server error when adding gitusr to repo")
 				return
 			}
+			isColabo = true
+		} else {
+			isColabo = git.CheckIfUserIsColabo(userGroup.GitHubOwner, requestBody.GitHubUsername, creator.GitHubToken, userGroup.GitHubRepo)
 		}
 
 		//create gitusr
@@ -1014,7 +1101,7 @@ func initManagerRouter(router *gin.Engine) {
 			ExpiresGroup:   true,
 			DateExpires:    userGroup.DateExpires,
 			UserGroup:      userGroup.ID,
-			AddedToRepo:    tk.DirectAdd,
+			AddedToRepo:    isColabo,
 			Belongs:        creator.ID,
 		})
 
@@ -1502,17 +1589,19 @@ func initManagerRouter(router *gin.Engine) {
 				continue
 			}
 
-			if !git.AddUserToRepo(gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo, group.GitHubOwner) {
-				problems += gitUser.GitHubUsername + ", "
-			}
+			if !gitUser.AddedToRepo {
+				if !git.AddUserToRepo(gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo, group.GitHubOwner) {
+					problems += gitUser.GitHubUsername + ", "
+				}
 
-			database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
-				"_id": gitUser.ID,
-			}, bson.M{
-				"$set": bson.M{
-					"addedToRepo": true,
-				},
-			})
+				database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+					"_id": gitUser.ID,
+				}, bson.M{
+					"$set": bson.M{
+						"addedToRepo": true,
+					},
+				})
+			}
 		}
 
 		c.JSON(200, gin.H{
@@ -1582,8 +1671,18 @@ func initManagerRouter(router *gin.Engine) {
 				continue
 			}
 
-			if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
-				problems += gitUser.GitHubUsername + ", "
+			if gitUser.AddedToRepo {
+				if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+					problems += gitUser.GitHubUsername + ", "
+				}
+
+				database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+					"_id": gitUser.ID,
+				}, bson.M{
+					"$set": bson.M{
+						"addedToRepo": false,
+					},
+				})
 			}
 		}
 
@@ -1650,20 +1749,22 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//remove user from repo
-		if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
-			c.JSON(400, gin.H{
-				"message": "The user could not be removed from the repo",
-			})
-			return
-		}
+		if gitUser.AddedToRepo {
+			if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+				c.JSON(400, gin.H{
+					"message": "The user could not be removed from the repo",
+				})
+				return
+			}
 
-		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
-			"_id": gitUser.ID,
-		}, bson.M{
-			"$set": bson.M{
-				"addedToRepo": false,
-			},
-		}, options.Update())
+			database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+				"_id": gitUser.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"addedToRepo": false,
+				},
+			}, options.Update())
+		}
 	})
 
 	//manager/git/" + {{.ID}} +"/add/ {{.UserID}} to add a user to a repo
@@ -1934,11 +2035,15 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
+		//check if user is already in a group
+		isColabo := git.CheckIfUserIsColabo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo)
+
 		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
 			"_id": gitUser.ID,
 		}, bson.M{
 			"$set": bson.M{
-				"userGroup": group.ID,
+				"userGroup":   group.ID,
+				"addedToRepo": isColabo,
 			},
 		}, options.Update())
 
@@ -1952,7 +2057,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		userData := userModalToData(user)
 
-		template := template.Must(template.ParseFiles("main/public/profile/index.gohtml"))
+		template := template.Must(template.ParseFiles("main/public/profile/index.gohtml", "main/templates/template.gohtml"))
 		template.Execute(c.Writer, userData)
 	})
 
@@ -2208,6 +2313,36 @@ func initManagerRouter(router *gin.Engine) {
 
 		c.JSON(200, gin.H{
 			"message": "Password updated",
+		})
+	})
+
+	router.DELETE("/manager/notification/:id", middleware.LoginToken(), func(c *gin.Context) {
+		id := c.Param("id")
+
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid notification id",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		_, err = database.MongoDB.Collection("notification").DeleteOne(c, bson.M{
+			"_id": idd,
+		})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when deleting notification",
+			})
+			fmt.Println(err)
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "Notification deleted",
 		})
 	})
 }

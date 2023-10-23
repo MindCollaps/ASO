@@ -8,6 +8,7 @@ type UserGroup struct {
 	Date            primitive.DateTime `json:"date" bson:"date"`
 	DateExpires     primitive.DateTime `json:"dateExpires" bson:"dateExpires"`
 	Expires         bool               `json:"expires" bson:"expires"`
+	AutoRemoveUsers bool               `json:"autoRemoveUsers" bson:"autoRemoveUsers"`
 	AutoDelete      bool               `json:"autoDelete" bson:"autoDelete"`
 	Notify          bool               `json:"notify" bson:"notify"`
 	NotifiedExpired bool               `json:"notified" bson:"notified"`

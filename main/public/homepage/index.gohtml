@@ -23,22 +23,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha512-z4OUqw38qNLpn1libAN9BsoDx6nbNFio5lA6CuTp9NlK83b89hgyCVq+N5FdBJptINztxn1Z3SaKSKUS5UP60Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<div class="vw-100 vh-100">
-    <div class="d-flex justify-content-center flex-column position-absolute w-100" style="top: 20vh">
-        <div class="d-flex flex-column ">
-            <div class="d-flex justify-content-center align-items-center">
-                <img class="me-2 theimage" style="width: 10vh" src="/favicon.ico" alt="ASO Icon">
-                <div class="text-white mb-0 me-4 fs-2 welcome">Welcome to </div>
-                <div class="aso me-2 position-relative text-white fs-1">ASO</div>
-                <div class="ist me-2 position-relative text-white fs-5">IST</div>
-                <div class="das position-relative text-white fs-5">DAS</div>
-            </div>
-            <div class="d-flex justify-content-center align-items-center mt-5">
-                <a href="/login" class="btn btn-primary thebtn">Login</a>
+<div class="vh-100">
+    <div class="d-flex align-items-stretch flex-column h-100">
+        <div class="d-flex justify-content-center flex-column w-100 h-100">
+            <div class="d-flex flex-column ">
+                <div class="d-flex justify-content-center align-items-center">
+                    <img class="me-2 theimage" style="width: 10vh" src="/favicon.ico" alt="ASO Icon">
+                    <div class="text-white mb-0 me-4 fs-2 welcome">Welcome to </div>
+                    <div class="aso me-2 position-relative text-white fs-1">ASO</div>
+                    <div class="ist me-2 position-relative text-white fs-5">IST</div>
+                    <div class="das position-relative text-white fs-5">DAS</div>
+                </div>
+                <div class="d-flex justify-content-center align-items-center mt-5">
+                    <a href="/login" class="btn btn-primary thebtn">Login</a>
+                </div>
             </div>
         </div>
+        {{template "footer"}}
     </div>
-    {{template "footer"}}
 </div>
 
 <script>

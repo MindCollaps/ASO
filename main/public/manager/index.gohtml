@@ -21,13 +21,16 @@
           rel="stylesheet">
     <!-- Vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
+    <!-- Anime JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha512-z4OUqw38qNLpn1libAN9BsoDx6nbNFio5lA6CuTp9NlK83b89hgyCVq+N5FdBJptINztxn1Z3SaKSKUS5UP60Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body class="vw-100 vh-100">
 <div id="manager" class="h-100 w-100">
     <div class="row h-100 w-100" v-if="!loading">
         <div class="d-flex flex-column bg-body-tertiary h-100" style="width: 12%">
             <div class="d-flex justify-content-center mt-4">
-                <a href="/" class="d-flex align-items-center justify-content-center fs-4 fw-bold text-white text-decoration-none">
+                <a href="/manager"
+                   class="d-flex align-items-center justify-content-center fs-4 fw-bold text-white text-decoration-none">
                     <img class="w-50" src="/favicon.ico" alt="ASO Icon">
                 </a>
             </div>
@@ -74,20 +77,31 @@
                 {{end}}
             </ul>
             <hr>
-            <div class="dropdown p-3">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    <strong>{{.User.Username}}</strong>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                    <li><a class="dropdown-item" href="/notify">Notifications</a></li>
-                    <li>
-                    <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item" href="/logout">Sign out</a></li>
-                </ul>
+            <div class="d-flex flex-row align-items-center p-3 w-100">
+                <div class="dropdown">
+                    <a href="#" class="d-flex overflow-x-hidden align-items-center text-white text-decoration-none"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <strong>${username}</strong>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                        <li>
+                            <a @click="href('notification')" class="dropdown-item d-flex align-items-center" href="#"><span
+                                        class="material-icons align-middle fs-5 me-1">notifications</span>Notifications<span class="badge bg-secondary ms-1" v-if="newNotifications > 0">${newNotifications}</span></a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="/profile"><span
+                                        class="material-icons align-middle fs-5 me-1">person</span>Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="/logout"><span
+                                        class="material-icons align-middle fs-5 me-1">logout</span>Logout</a>
+                        </li>
+                    </ul>
+                </div>
+                <span class="dropdown-toggle ms-2"></span>
+                <span v-if="newNotifications > 0" class="bg-warning notification d-inline-block rounded-circle ms-2" style="height: 15px; width: 15px; opacity: 0"></span>
             </div>
         </div>
         <div class="container col p-5 h-100" style="width: 80%;">
@@ -123,7 +137,8 @@
                                             {{if .UserGroup.Name}}
                                                 <h3>Group: {{.UserGroup.Name}}</h3>
                                                 <h3>Repository: <a target="_blank"
-                                                                   href="https://github.com/{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}">{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}</a></h3>
+                                                                   href="https://github.com/{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}">{{.UserGroup.GitHubOwner}}
+                                                        /{{.UserGroup.GitHubRepo}}</a></h3>
                                             {{else}}
                                                 <h3>Group: None</h3>
                                             {{end}}
@@ -158,7 +173,8 @@
                                         {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
                                         </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
                                         <h3>Repository: <a target="_blank"
-                                                           href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
+                                                           href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
+                                                /{{.GitHubRepo}}</a></h3>
                                         <h3>Users: {{.Users}}</h3>
                                         <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
                                                     class="material-icons align-middle fs-5">info</span></button>
@@ -203,43 +219,104 @@
                     </div>
                 </div>
                 {{if .SuperUser}}
-                <div class="tab-pane fade h-100" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab"
-                     tabindex="0">
+                    <div class="tab-pane fade h-100" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab"
+                         tabindex="0">
+                        <div class="h-100 d-flex flex-column align-items-stretch">
+                            <h1 class="fw-bold text-white">User Management</h1>
+                            <button class="btn btn-primary mb-3 mt-4 align-self-start"
+                                    @click="createRegisterToken()"><span
+                                        class="material-icons align-middle fs-5">person_add</span></button>
+                            <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
+                                {{if .Users}}
+                                    {{range .Users}}
+                                        <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
+                                            <h1>{{.Username}}</h1>
+                                            <h3>Email: {{.Email}}</h3>
+                                            <h3>Created: {{.DateCreated}}</h3>
+                                            <h3>Super User: {{.IsSuperUser}}</h3>
+                                            <button class="btn btn-secondary mb-3 mt-4"
+                                                    @click="infoUser('{{.ID}}')"><span
+                                                        class="material-icons align-middle fs-5">info</span></button>
+                                            <button class="btn btn-danger mb-3 mt-4"
+                                                    @click="deleteUser('{{.ID}}')"><span
+                                                        class="material-icons align-middle fs-5">delete</span></button>
+                                        </div>
+                                    {{end}}
+                                {{else}}
+                                    <h3>No Tokens</h3>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+                {{end}}
+                <div class="tab-pane fade h-100" id="notify-tab-pane">
                     <div class="h-100 d-flex flex-column align-items-stretch">
-                        <h1 class="fw-bold text-white">User Management</h1>
-                        <button class="btn btn-primary mb-3 mt-4 align-self-start" @click="createRegisterToken()"><span
-                                    class="material-icons align-middle fs-5">person_add</span></button>
-                        <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
-                            {{if .Users}}
-                                {{range .Users}}
-                                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                        <h1>{{.Username}}</h1>
-                                        <h3>Email: {{.Email}}</h3>
-                                        <h3>Created: {{.DateCreated}}</h3>
-                                        <h3>Super User: {{.IsSuperUser}}</h3>
-                                        <button class="btn btn-secondary mb-3 mt-4" @click="infoUser('{{.ID}}')"><span
-                                                    class="material-icons align-middle fs-5">info</span></button>
-                                        <button class="btn btn-danger mb-3 mt-4" @click="deleteUser('{{.ID}}')"><span
-                                                    class="material-icons align-middle fs-5">delete</span></button>
+                        <h1 class="fw-bold text-white show active">Notifications</h1>
+                        <div class="d-flex align-items-center flex-column overflow-auto mt-3">
+                            {{if .Notifications}}
+                                {{range .Notifications}}
+                                    <div id="id-{{.ID}}" class="w-75 d-flex flex-row align-items-center justify-content-center rounded-3 shadow p-3 mb-3 list-group-item
+                                        {{if eq .Style "danger"}} list-group-item-danger{{else}}{{if eq .Style "warning"}} list-group-item-warning{{else}}{{if eq .Style "success"}} list-group-item-success{{end}}{{end}}{{end}}">
+                                        <div class="column w-100">
+                                            <h3 class="text-white">{{.Title}}</h3>
+                                            <p>{{.Notification}}</p>
+                                            {{if .UserGroup}}
+                                                <div>
+                                                    <button class="btn btn-secondary"
+                                                            @click="infoGroup('{{.UserGroup}}')"><span
+                                                                class="material-icons align-middle fs-5">info</span>
+                                                    </button>
+                                                </div>
+                                            {{end}}
+                                            {{if .Token}}
+                                                <div>
+                                                    <button class="btn btn-secondary"
+                                                            @click="infoToken('{{.Token}}')"><span
+                                                                class="material-icons align-middle fs-5">info</span>
+                                                    </button>
+                                                </div>
+                                            {{end}}
+                                            {{if .GitHubUser}}
+                                                <div>
+                                                    <button class="btn btn-secondary"
+                                                            @click="infoGUser('{{.GitHubUser}}')"><span
+                                                                class="material-icons align-middle fs-5">info</span>
+                                                    </button>
+                                                </div>
+                                            {{end}}
+                                            {{if .Profile}}
+                                                <div>
+                                                    <button class="btn btn-secondary"
+                                                            @click="window.location.href ='/profile'"><span
+                                                                class="material-icons align-middle fs-5">person</span>
+                                                    </button>
+                                                </div>
+                                            {{end}}
+                                        </div>
+                                        <div>
+                                            <button type="button" class="btn-close" aria-label="Close" @click="dismissNotification('{{.ID}}')"></button>
+                                        </div>
                                     </div>
                                 {{end}}
                             {{else}}
-                                <h3>No Tokens</h3>
+                                <h3>No new Notifications</h3>
                             {{end}}
                         </div>
                     </div>
-                    {{end}}
                 </div>
             </div>
         </div>
-    </div>
-    <div class="d-flex flex-column justify-content-center align-items-center h-100" v-if="loading">
-        <div class="loadingio-spinner-ripple-s923ubzj03i"><div class="ldio-uo18igsiuze">
-                <div></div><div></div>
-            </div></div>
-           <div class="mt-3 animation" id="textAnimation" style="transition: 0.4s opacity; opacity: 1;">
-               <h1 class="text-white">${loadingText}</h1>
-           </div>
+        <div class="d-flex flex-column justify-content-center align-items-center h-100" v-if="loading">
+            <div class="loadingio-spinner-ripple-s923ubzj03i">
+                <div class="ldio-uo18igsiuze">
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+            <div class="mt-3 animation" id="textAnimation" style="transition: 0.4s opacity; opacity: 1;">
+                <h1 class="text-white">${loadingText}</h1>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -260,27 +337,34 @@
             height: 156px;
             opacity: 0;
         }
-    }.ldio-uo18igsiuze div {
-         position: absolute;
-         border-width: 4px;
-         border-style: solid;
-         opacity: 1;
-         border-radius: 50%;
-         animation: ldio-uo18igsiuze 1s cubic-bezier(0,0.2,0.8,1) infinite;
-     }.ldio-uo18igsiuze div:nth-child(1) {
-          border-color: #337ab7;
-          animation-delay: 0s;
-      }
+    }
+
+    .ldio-uo18igsiuze div {
+        position: absolute;
+        border-width: 4px;
+        border-style: solid;
+        opacity: 1;
+        border-radius: 50%;
+        animation: ldio-uo18igsiuze 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    .ldio-uo18igsiuze div:nth-child(1) {
+        border-color: #337ab7;
+        animation-delay: 0s;
+    }
+
     .ldio-uo18igsiuze div:nth-child(2) {
         border-color: #5bc0de;
         animation-delay: -0.5s;
     }
+
     .loadingio-spinner-ripple-s923ubzj03i {
         width: 200px;
         height: 200px;
         display: inline-block;
         overflow: hidden;
     }
+
     .ldio-uo18igsiuze {
         width: 100%;
         height: 100%;
@@ -289,17 +373,23 @@
         backface-visibility: hidden;
         transform-origin: 0 0; /* see note above */
     }
-    .ldio-uo18igsiuze div { box-sizing: content-box;}
+
+    .ldio-uo18igsiuze div {
+        box-sizing: content-box;
+    }
+
     /* generated by https://loading.io/ */
 </style>
 
 <script>
-
     var main = new Vue({
         el: '#manager',
         data: {
             loading: false,
             loadingText: "Loading...",
+            counter: 0,
+            newNotifications: {{len .Notifications}},
+            username: "{{.User.Username}}",
             loadingTexts: [
                 "Compiling your hopes and dreams",
                 "Dividing by zero",
@@ -321,12 +411,60 @@
                 "Calculating the meaning of life, the universe, and everything",
                 "Downloading more RAM",
                 "Checking if the cake is a lie",
+                "Searching for missing semicolons",
+                "Calculating π to a million places",
+                "Rewriting code in binary",
+                "Loading your cat GIFs",
+                "Optimizing the flux capacitor",
+                "Transpiling to ancient Egyptian",
+                "Creating artificial intelligence",
+                "Pondering the meaning of recursion",
+                "Baking cookies for developers",
+                "Deciphering alien technology",
+                "Converting bugs to features",
+                "Counting the stars in the sky",
+                "Summoning the code genie",
+                "Resolving merge conflicts",
+                "Finding Waldo in a sea of pixels",
+                "Drawing a perfect circle",
+                "Building a digital house of cards",
+                "Traversing multidimensional arrays",
+                "Reticulating splines",
+                "Training quantum hamsters",
+                "Compiling happiness",
+                "Hunting for the last unicorn",
+                "Sending your thoughts to the cloud",
+                "Teaching a computer to do the robot dance",
+                "Decoding ancient hieroglyphics",
+                "Calibrating the tinfoil hat",
+                "Capturing cyber butterflies",
+                "Waiting for a bit more patience",
+                "Concatenating all the strings",
+                "Weaving the digital fabric of reality",
+                "Taming wild software bugs",
+                "Chasing ones and zeros",
+                "Solving complex problems with duct tape",
+                "Brewing a potion for faster load times",
+                "Making magic happen in binary",
+                "Rebooting the universe",
+                "Inventing a new programming language",
+                "Refactoring your dreams",
             ]
 
         },
         delimiters: ['${', '}'],
         created: async function () {
+            if(this.username.length > 11) {
+                this.username = this.username.substring(0, 11) + "..."
+            }
+
+            addEventListener("pageshow", (event) => {
+                if (event.persisted) {
+                    window.location.reload()
+                }
+            });
             //check url var "a" for tab and set the tab active
+            console.log("created")
             let url = new URL(window.location.href)
             let a = url.searchParams.get("a")
 
@@ -342,6 +480,9 @@
                 document.getElementById("user-group-tab").classList.add("active")
                 document.getElementById("user-group-tab-pane").classList.add("active")
                 document.getElementById("user-group-tab-pane").classList.add("show")
+            } else if (a == "notification") {
+                document.getElementById("notify-tab-pane").classList.add("active")
+                document.getElementById("notify-tab-pane").classList.add("show")
             } else {
                 document.getElementById("git-user-tab").classList.add("active")
                 document.getElementById("git-user-tab-pane").classList.add("active")
@@ -351,9 +492,38 @@
             if (a == null) {
                 a = "git"
             }
+
             this.href(a)
+
+            if(this.newNotifications > 0){
+                //wait for dom to load
+                setTimeout(() => {
+                    this.notificationAnimation()
+                }, 100)
+            }
         },
         methods: {
+            notificationAnimation: function (){
+                anime({
+                    delay: 0,
+                    targets: '.notification',
+                    opacity: [
+                        { value: 0, duration: 0 },
+                        { value: 1, duration: 1000 },
+                    ],
+                })
+
+                anime({
+                    endDelay: 1800,
+                    targets: '.notification',
+                    translateY: [
+                        { value: -10, duration: 200 },
+                        { value: 0, duration: 200 },
+                    ],
+                    loop: true,
+                    easing: 'easeOutBack',
+                })
+            },
             deleteGroup: async function (id) {
                 //confirm delete
                 if (!confirm("Are you sure you want to delete this group?")) {
@@ -505,6 +675,30 @@
                     name = "Token"
                 } else if (tab == "user") {
                     name = "User"
+                } else if (tab == "notification") {
+                    name = "Notification"
+
+                    document.getElementById("token-tab").classList.remove("active")
+                    document.getElementById("token-tab-pane").classList.remove("active")
+                    document.getElementById("token-tab-pane").classList.remove("show")
+                    document.getElementById("user-tab").classList.remove("active")
+                    document.getElementById("user-tab-pane").classList.remove("active")
+                    document.getElementById("user-tab-pane").classList.remove("show")
+                    document.getElementById("user-group-tab").classList.remove("active")
+                    document.getElementById("user-group-tab-pane").classList.remove("active")
+                    document.getElementById("user-group-tab-pane").classList.remove("show")
+
+                    document.getElementById("notify-tab-pane").classList.add("active")
+                    document.getElementById("notify-tab-pane").classList.add("show")
+
+                    document.getElementById("git-user-tab").classList.remove("active")
+                    document.getElementById("git-user-tab-pane").classList.remove("active")
+                    document.getElementById("git-user-tab-pane").classList.remove("show")
+                }
+
+                if (tab != "notification") {
+                    document.getElementById("notify-tab-pane").classList.remove("active")
+                    document.getElementById("notify-tab-pane").classList.remove("show")
                 }
 
                 document.title = "Manager - " + name
@@ -516,12 +710,30 @@
                     this.loadingFirst(true)
                 }, 200)
             },
-            setLoadingText: async function(text){
+            setLoadingText: async function (text) {
                 this.loadingText = text
             },
+            dismissNotification: async function(id){
+                let res = await fetch("/manager/notification/" + id, {
+                    method: "DELETE"
+                }).then((res) => {
+                    return res;
+                });
+
+                if (res.status != 200) {
+                    alert("Error dismissing notification")
+                } else {
+                    document.getElementById("id-" + id).remove()
+                    this.newNotifications --
+                }
+            },
             loadingFirst: async function (first) {
+                this.counter += 1
+                if (!this.loading)
+                    return
+
                 let phrase = this.loadingTexts[Math.floor(Math.random() * this.loadingTexts.length)]
-                if(first)
+                if (first)
                     this.loadingText = phrase
                 else {
                     document.getElementById('textAnimation').style.opacity = '0';
@@ -532,16 +744,28 @@
                 }
 
                 setTimeout(() => {
+                    if (!this.loading)
+                        return
                     this.setLoadingText(phrase + " .")
                     setTimeout(() => {
+                        if (!this.loading)
+                            return
                         this.setLoadingText(phrase + " . .")
                         setTimeout(() => {
+                            if (!this.loading)
+                                return
                             this.setLoadingText(phrase + " . . .")
                             setTimeout(() => {
+                                if (!this.loading)
+                                    return
                                 this.setLoadingText(phrase + " . .")
                                 setTimeout(() => {
+                                    if (!this.loading)
+                                        return
                                     this.setLoadingText(phrase + " .")
                                     setTimeout(() => {
+                                        if (!this.loading)
+                                            return
                                         this.loadingFirst(false)
                                     }, 1000)
                                 }, 1000)
@@ -551,7 +775,7 @@
                 }, 1000)
             }
         }
-    }).$mount("#manager");
+    })
 </script>
 </body>
 </html>
