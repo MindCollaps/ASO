@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strconv"
 	"time"
 )
 
@@ -31,8 +32,9 @@ func checkSoonExpireGroups() {
 		"expires":         true,
 		"notify":          true,
 		"notifiedExpired": false,
+		"notifiedDeleted": false,
 		"dateExpires": bson.M{
-			"$lte": time.Now().Add(time.Hour * 24 * 30 * -1),
+			"$gte": time.Now().Add(time.Hour * 24 * 30 * -1),
 		},
 	})
 
@@ -52,10 +54,24 @@ func checkSoonExpireGroups() {
 	for _, group := range groups {
 		fmt.Println("Group soon expired: " + group.Name)
 
+		//get days till expire
+		toTime := group.DateExpires.Time()
+		now := time.Now()
+		days := int(toTime.Sub(now).Hours() / 24)
+		daysText := strconv.Itoa(days)
+
+		if days == 1 {
+			daysText = "1 day"
+		} else if days == 0 {
+			daysText = "today"
+		} else {
+			daysText += " days"
+		}
+
 		database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
 			ID:           primitive.NewObjectID(),
 			Belongs:      group.Belongs,
-			Notification: "Group " + group.Name + " will expire in 30 days!",
+			Notification: "Group " + group.Name + " will expire in " + daysText + "!",
 			DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
 			Title:        "Group " + group.Name + " will soon expired",
 			Style:        "warning",
@@ -134,9 +150,9 @@ func checkTokens() {
 			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
 				ID:           primitive.NewObjectID(),
 				Belongs:      token.Belongs,
-				Notification: "Token " + token.Name + " has been deleted!",
+				Notification: "Token " + token.Name + " has been deleted due to expiration!",
 				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-				Title:        "Token deleted",
+				Title:        "Token " + token.Name + " deleted",
 				UserGroup:    primitive.NilObjectID,
 				GitHubUser:   primitive.NilObjectID,
 				Token:        primitive.NilObjectID,
@@ -192,6 +208,9 @@ func checkGitUsers() {
 			"_id": user.UserGroup,
 		}).Decode(&group)
 
+		removedRepo := false
+		groupExists := false
+
 		if err == nil {
 			if user.AddedToRepo {
 				if !git.RemoveUserFromRepo(creator.GitHubUsername, user.GitHubUsername, creator.GitHubToken, user.UserGroup.Hex()) {
@@ -199,7 +218,9 @@ func checkGitUsers() {
 					sendErrorNotification("Failed to remove user from repo", "Failed to remove user "+user.Username+" from repo "+group.GitHubRepo, user.Belongs, 1, user.ID)
 					continue
 				}
+				removedRepo = true
 			}
+			groupExists = true
 		}
 
 		_, err = database.MongoDB.Collection("githubUser").DeleteOne(context.Background(), bson.M{
@@ -212,13 +233,23 @@ func checkGitUsers() {
 			continue
 		}
 
+		extraText := ""
+
+		if groupExists {
+			extraText = "<br>User was removed from group " + group.Name
+		}
+
+		if removedRepo {
+			extraText = "<br>User was removed from repo " + group.GitHubRepo
+		}
+
 		database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
 			ID:           primitive.NewObjectID(),
 			Belongs:      user.Belongs,
-			Notification: "User " + user.Username + " has been deleted!",
+			Notification: "User " + user.Username + " has been deleted due to expiration!" + extraText,
 			DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-			Title:        "User deleted",
-			UserGroup:    primitive.NilObjectID,
+			Title:        "User " + user.Username + " deleted",
+			UserGroup:    group.ID,
 			GitHubUser:   primitive.NilObjectID,
 			Token:        primitive.NilObjectID,
 			Style:        "info",
@@ -287,51 +318,53 @@ func checkGroups() {
 
 		skipped := []string{}
 
-		for _, user := range users {
-			if user.ExpiresGroup && (group.AutoDelete || group.AutoRemoveUsers) {
-				if user.AddedToRepo && group.AutoRemoveUsers {
-					if !git.RemoveUserFromRepo(group.GitHubOwner, user.GitHubUsername, creator.GitHubToken, group.GitHubRepo) {
-						fmt.Println("Failed to remove user " + user.Username + " from repo " + group.GitHubRepo)
-						sendErrorNotification("Failed to remove user from repo", "Failed to remove user "+user.Username+" from repo "+group.GitHubRepo, user.Belongs, 1, user.ID)
-						continue
+		if group.AutoRemoveUsers || group.AutoDelete {
+			for _, user := range users {
+				if user.ExpiresGroup && (group.AutoDelete || group.AutoRemoveUsers) {
+					if user.AddedToRepo && group.AutoRemoveUsers {
+						if !git.RemoveUserFromRepo(group.GitHubOwner, user.GitHubUsername, creator.GitHubToken, group.GitHubRepo) {
+							fmt.Println("Failed to remove user " + user.Username + " from repo " + group.GitHubRepo)
+							sendErrorNotification("Failed to remove user from repo", "Failed to remove user "+user.Username+" from repo "+group.GitHubRepo, user.Belongs, 1, user.ID)
+							continue
+						}
 					}
-				}
 
-				if group.AutoDelete {
-					_, err = database.MongoDB.Collection("gitUser").DeleteOne(context.Background(), bson.M{
-						"_id": user.ID,
+					if group.AutoDelete {
+						_, err = database.MongoDB.Collection("gitUser").DeleteOne(context.Background(), bson.M{
+							"_id": user.ID,
+						})
+					}
+				} else {
+					skipped = append(skipped, user.Username)
+
+					if group.AutoDelete {
+						_, err = database.MongoDB.Collection("gitUser").UpdateOne(context.Background(), bson.M{
+							"_id": user.ID,
+						}, bson.M{
+							"$set": bson.M{
+								"userGroup": primitive.NilObjectID,
+							},
+						})
+					}
+
+					groupId := primitive.NilObjectID
+
+					if !group.AutoDelete {
+						groupId = group.ID
+					}
+
+					database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+						ID:           primitive.NewObjectID(),
+						Belongs:      group.Belongs,
+						Notification: "User " + user.Username + " has <b>not</b> been removed from group " + group.Name + ", because it doesn't expire by group!",
+						DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+						Title:        "User not removed from repo",
+						UserGroup:    groupId,
+						GitHubUser:   user.ID,
+						Token:        primitive.NilObjectID,
+						Style:        "warning",
 					})
 				}
-			} else {
-				skipped = append(skipped, user.Username)
-
-				if group.AutoDelete {
-					_, err = database.MongoDB.Collection("gitUser").UpdateOne(context.Background(), bson.M{
-						"_id": user.ID,
-					}, bson.M{
-						"$set": bson.M{
-							"userGroup": primitive.NilObjectID,
-						},
-					})
-				}
-
-				groupId := primitive.NilObjectID
-
-				if !group.AutoDelete {
-					groupId = group.ID
-				}
-
-				database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
-					ID:           primitive.NewObjectID(),
-					Belongs:      group.Belongs,
-					Notification: "User " + user.Username + " has <b>not</b> been removed from group " + group.Name + ", because it doesn't expire by group!",
-					DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-					Title:        "User not removed from repo",
-					UserGroup:    groupId,
-					GitHubUser:   user.ID,
-					Token:        primitive.NilObjectID,
-					Style:        "warning",
-				})
 			}
 		}
 
@@ -360,13 +393,13 @@ func checkGroups() {
 				Belongs:      group.Belongs,
 				Notification: "Group " + group.Name + " has been deleted! " + fmt.Sprintf("%d", len(users)-len(skipped)) + " users have been removed from the group" + repoRemoveText + "!",
 				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-				Title:        "Group Auto Delete",
+				Title:        "Group " + group.Name + " triggered Auto Delete",
 				UserGroup:    primitive.NilObjectID,
 				GitHubUser:   primitive.NilObjectID,
 				Token:        primitive.NilObjectID,
 				Style:        "info",
 			})
-		} else {
+		} else if group.AutoRemoveUsers {
 			repoRemoveText := ""
 
 			if len(skipped) > 0 {
@@ -378,11 +411,32 @@ func checkGroups() {
 				Belongs:      group.Belongs,
 				Notification: "Group " + group.Name + " has triggered auto remove on " + fmt.Sprintf("%d", len(users)-len(skipped)) + " users. They have been removed from repo " + group.GitHubRepo + repoRemoveText + "!",
 				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-				Title:        "Group Auto Remove",
+				Title:        "Group " + group.Name + " has triggered Auto Remove",
 				UserGroup:    group.ID,
 				GitHubUser:   primitive.NilObjectID,
 				Token:        primitive.NilObjectID,
 				Style:        "info",
+			})
+
+			_, err = database.MongoDB.Collection("userGroup").UpdateOne(context.Background(), bson.M{
+				"_id": group.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"notifiedDeleted": true,
+					"notifiedExpired": true,
+				},
+			})
+		} else {
+			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+				ID:           primitive.NewObjectID(),
+				Belongs:      group.Belongs,
+				Notification: "Group " + group.Name + " has expired! No actions have been taken because auto delete and auto remove are disabled!",
+				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+				Title:        "Group " + group.Name + " has expired",
+				UserGroup:    group.ID,
+				GitHubUser:   primitive.NilObjectID,
+				Token:        primitive.NilObjectID,
+				Style:        "warning",
 			})
 
 			_, err = database.MongoDB.Collection("userGroup").UpdateOne(context.Background(), bson.M{

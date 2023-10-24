@@ -21,3 +21,7 @@ func StartRepeatingTasks() {
 func StopRepeatingTasks() {
 	Scheduler.Clear()
 }
+
+func updateGitUserState() {
+
+}

@@ -117,6 +117,7 @@
         },
         methods: {
             submit: async function () {
+                var date = new Date(this.dateExpires).toISOString();
                 let response = await fetch('/manager/token/create', {
                     method: 'POST',
                     headers: {
@@ -126,7 +127,7 @@
                         name: this.name,
                         userGroup: this.userGroup,
                         directAdd: this.directAdd,
-                        dateExpires: this.dateExpires,
+                        dateExpires: date,
                         count: this.times.toString()
                     })
                 }).then((res) => {

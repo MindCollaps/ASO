@@ -92,6 +92,12 @@ func InitRouter() {
 					Count:                   1,
 					DateCreated:             primitive.NewDateTimeFromTime(time.Now()),
 					DateExpires:             primitive.NewDateTimeFromTime(time.Now().Add(time.Minute * 5)),
+					UserGroup:               primitive.NilObjectID,
+					Used:                    0,
+					Belongs:                 primitive.NilObjectID,
+					DirectAdd:               false,
+					CreatedBy:               primitive.NilObjectID,
+					Name:                    "Initial user",
 				}
 
 				database.MongoDB.Collection("token").InsertOne(c, dbTk, options.InsertOne())
@@ -266,12 +272,14 @@ func InitRouter() {
 		}
 
 		newUser := models.User{
-			ID:          primitive.NewObjectID(),
-			Username:    username,
-			Password:    hashedPassword,
-			DateCreated: primitive.NewDateTimeFromTime(time.Now()),
-			Email:       email,
-			IsSuperUser: token.SuperUser,
+			ID:             primitive.NewObjectID(),
+			Username:       username,
+			Password:       hashedPassword,
+			DateCreated:    primitive.NewDateTimeFromTime(time.Now()),
+			Email:          email,
+			IsSuperUser:    token.SuperUser,
+			GitHubUsername: "",
+			GitHubToken:    "",
 		}
 
 		newUsr, err := database.MongoDB.Collection("user").InsertOne(c, newUser, options.InsertOne())

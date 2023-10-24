@@ -88,6 +88,7 @@
         },
         methods: {
             submit: async function () {
+                var date = new Date(this.dateExpires).toISOString();
                 let response = await fetch('/manager/user/create', {
                     method: 'POST',
                     headers: {
@@ -95,7 +96,7 @@
                     },
                     body: JSON.stringify({
                         superUser: this.superUser,
-                        dateExpires: this.dateExpires,
+                        dateExpires: date,
                         count: this.times.toString(),
                         name: this.name
                     })

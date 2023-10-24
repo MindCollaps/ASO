@@ -172,9 +172,7 @@
                                         <h3>Created: {{.Date}}</h3>
                                         {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
                                         </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
-                                        <h3>Repository: <a target="_blank"
-                                                           href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
-                                                /{{.GitHubRepo}}</a></h3>
+                                        <h3>Repository: <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
                                         <h3>Users: {{.Users}}</h3>
                                         <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
                                                     class="material-icons align-middle fs-5">info</span></button>

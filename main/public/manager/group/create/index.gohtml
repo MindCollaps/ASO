@@ -82,7 +82,7 @@
                 <div id="emailHelp" class="form-text">Weather this group deletes itself and all users in it when the expiry date is reached</div>
             </div>
             <div v-if="!autoRemove && autoDelete" class="bg-danger-subtle rounded-3 shadow p-4">
-                <p class="m-0">Selecting Auto Delete but <b>not</b> Auto Remove will delete the group and all users in it, but not remove them from the repository!</p>
+                <p class="m-0">Selecting Auto Delete but <b>not</b> Auto Remove will delete the group and all users in it, but not remove them from the repository! This results in deleting all git user related data and therefor loosing track of who is in your repository</p>
             </div>
             <div class="mt-4 d-flex justify-content-center">
                 <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
@@ -131,6 +131,8 @@
         },
         methods: {
             submit: async function () {
+                var date = new Date(this.dateExpires).toISOString();
+                console.log(date)
                 let response = await fetch('/manager/group/create', {
                     method: 'POST',
                     headers: {
@@ -138,7 +140,7 @@
                     },
                     body: JSON.stringify({
                         name: this.name,
-                        dateExpires: this.dateExpires,
+                        dateExpires: date,
                         doesExpire: this.doesExpire,
                         notify: this.notify,
                         autoDelete: this.autoDelete,

@@ -77,7 +77,7 @@
            <div v-if="!expiregroup && expire" class="mb-4 form-floating">
                <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
                <label for="dateExpires">Expires</label>
-               <div id="help" class="form-text">The date when this user gets deleted automatically</div>
+               <div id="help" class="form-text">The date when this user gets deleted automatically, removed from the group and the repo</div>
            </div>
            <div class="mb-4 d-flex justify-content-center">
                <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
@@ -121,6 +121,7 @@
         },
         methods: {
             submit: async function () {
+                var date = new Date(this.dateExpires).toISOString();
                 let response = await fetch('/manager/gitusr/create', {
                     method: 'POST',
                     headers: {
@@ -132,7 +133,7 @@
                         userGroup: this.userGroup,
                         expireGroup: this.expiregroup,
                         expires: this.expire,
-                        dateExpires: this.dateExpires,
+                        dateExpires: date,
                     })
                 }).then((res) => {
                     return res;

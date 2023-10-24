@@ -26,17 +26,20 @@
             <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=group'">Back</button>
         </div>
         <div class="bg-body-secondary rounded-3 shadow p-4">
-            <h2>Group Name: {{.Name}}</h2>
+            <h1>Group Name: {{.Name}}</h1>
             <h2>Group ID: {{.ID}}</h2>
-            <h3>Repository: <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
+            <h2>Repository: <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h2>
             <h2>Created: {{.Date}}</h2>
-            {{if .Expires}}
-                <h2>Expires: {{.DateExpires}}</h2>
-                <h2>Auto Delete: {{.AutoDelete}}</h2>
+            <hr>
+            <h2>Auto Remove Users: {{.AutoRemoveUsers}}</h2>
+            <h2>Auto Delete: {{.AutoDelete}}</h2>
+            {{if .IsExpired}}<h2>Expires: <a
+                        class="text-decoration-none text-danger">Expired</a>
+            </h2>
             {{else}}
-                <h2>Expires: Never</h2>
+                <h3>Expires: {{.DateExpires}}</h3>
             {{end}}
-            <h2>Auto Remove Users: {{.AutoRemove}}</h2>
+            <hr>
             <h2>Group Members:</h2>
             <ul class="d-flex flex-column container gap-3 bg-body-tertiary rounded-3 shadow p-3 h-50 overflow-auto">
                 {{if .Members}}

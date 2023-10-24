@@ -46,8 +46,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 			usrDt = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
 				Username:       user.Username,
 				IsExpired:      expired,
 				ExpiryByGroup:  user.ExpiresGroup,
@@ -57,8 +57,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 			usrDt = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
 				UserGroup:      userGroupModalToData(userGroup),
 				Username:       user.Username,
 				IsExpired:      expired,
@@ -77,17 +77,17 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 func userGroupModalToData(group models.UserGroup) UserGroupData {
 	expired := time.Now().After(group.DateExpires.Time())
 	var g = UserGroupData{
-		ID:          group.ID.Hex(),
-		Name:        group.Name,
-		Date:        group.Date.Time().Format("2006-01-02 15:04"),
-		DateExpires: group.DateExpires.Time().Format("2006-01-02 15:04"),
-		Expires:     group.Expires,
-		AutoDelete:  group.AutoDelete,
-		Notify:      group.Notify,
-		GitHubRepo:  group.GitHubRepo,
-		GitHubOwner: group.GitHubOwner,
-		IsExpired:   expired,
-		AutoRemove:  group.AutoRemoveUsers,
+		ID:              group.ID.Hex(),
+		Name:            group.Name,
+		Date:            group.Date.Time().Format("2006-01-02 15:04:05"),
+		DateExpires:     group.DateExpires.Time().Format("2006-01-02 15:04:05"),
+		Expires:         group.Expires,
+		AutoDelete:      group.AutoDelete,
+		Notify:          group.Notify,
+		GitHubRepo:      group.GitHubRepo,
+		GitHubOwner:     group.GitHubOwner,
+		IsExpired:       expired,
+		AutoRemoveUsers: group.AutoRemoveUsers,
 	}
 
 	if g.DateExpires == "0001-01-01 01:00:00" {
@@ -103,8 +103,8 @@ func tokenModalToData(token models.Token) TokenData {
 		Name:        token.Name,
 		Count:       token.Count,
 		Token:       token.Token,
-		DateCreated: token.DateCreated.Time().Format("2006-01-02 15:04"),
-		DateExpires: token.DateExpires.Time().Format("2006-01-02 15:04"),
+		DateCreated: token.DateCreated.Time().Format("2006-01-02 15:04:05"),
+		DateExpires: token.DateExpires.Time().Format("2006-01-02 15:04:05"),
 		DirectAdd:   token.DirectAdd,
 		Used:        token.Used,
 		IsExpired:   expired,
@@ -112,7 +112,7 @@ func tokenModalToData(token models.Token) TokenData {
 }
 
 func notificationModalToData(notification models.Notification) NotificationData {
-	dateCreated := notification.DateCreated.Time().Format("2006-01-02 15:04")
+	dateCreated := notification.DateCreated.Time().Format("2006-01-02 15:04:05")
 	data := NotificationData{
 		ID:           notification.ID.Hex(),
 		Notification: notification.Notification,
@@ -254,7 +254,7 @@ func fetchAllNotifications(c *gin.Context) ([]NotificationData, error) {
 }
 
 func userModalToData(user models.User) UserData {
-	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04")
+	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04:05")
 
 	return UserData{
 		ID:             user.ID.Hex(),
@@ -308,19 +308,19 @@ type GitUserData struct {
 }
 
 type UserGroupData struct {
-	ID          string        `json:"id" bson:"_id"`
-	Name        string        `json:"name" bson:"name"`
-	Date        string        `json:"date" bson:"date"`
-	DateExpires string        `json:"dateExpires" bson:"dateExpires"`
-	Members     []GitUserData `json:"members" bson:"members"`
-	Users       int           `json:"users" bson:"users"`
-	Expires     bool          `json:"expires" bson:"expires"`
-	AutoDelete  bool          `json:"autoDelete" bson:"autoDelete"`
-	Notify      bool          `json:"notify" bson:"notify"`
-	GitHubRepo  string        `json:"githubRepo" bson:"githubRepo"`
-	GitHubOwner string        `json:"githubOwner" bson:"githubOwner"`
-	IsExpired   bool          `json:"isExpired" bson:"isExpired"`
-	AutoRemove  bool          `json:"autoRemove" bson:"autoRemove"`
+	ID              string        `json:"id" bson:"_id"`
+	Name            string        `json:"name" bson:"name"`
+	Date            string        `json:"date" bson:"date"`
+	DateExpires     string        `json:"dateExpires" bson:"dateExpires"`
+	Members         []GitUserData `json:"members" bson:"members"`
+	Users           int           `json:"users" bson:"users"`
+	Expires         bool          `json:"expires" bson:"expires"`
+	AutoDelete      bool          `json:"autoDelete" bson:"autoDelete"`
+	Notify          bool          `json:"notify" bson:"notify"`
+	GitHubRepo      string        `json:"githubRepo" bson:"githubRepo"`
+	GitHubOwner     string        `json:"githubOwner" bson:"githubOwner"`
+	IsExpired       bool          `json:"isExpired" bson:"isExpired"`
+	AutoRemoveUsers bool          `json:"autoRemoveUsers" bson:"autoRemoveUsers"`
 }
 
 type TokenData struct {
@@ -477,8 +477,8 @@ func initManagerRouter(router *gin.Engine) {
 			userData = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
 				ExpiryByGroup:  user.ExpiresGroup,
 				Groups:         grps,
 				Username:       user.Username,
@@ -490,8 +490,8 @@ func initManagerRouter(router *gin.Engine) {
 				GitHubUsername: user.GitHubUsername,
 				Username:       user.Username,
 				ExpiryByGroup:  user.ExpiresGroup,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
 				UserGroup:      userGrpData,
 				Groups:         grps,
 			}
@@ -622,12 +622,12 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/manager/group/create", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Name            string `json:"name" bson:"name"`
+			Name            string `json:"name" bson:"name" binding:"required"`
 			DateExpires     string `json:"dateExpires" bson:"dateExpires"`
 			Notify          bool   `json:"notify" bson:"notify"`
 			Expires         bool   `json:"doesExpire" bson:"doesExpire"`
 			AutoDelete      bool   `json:"autoDelete" bson:"autoDelete"`
-			GitRepo         string `json:"gitRepo" bson:"gitRepo"`
+			GitRepo         string `json:"gitRepo" bson:"gitRepo" binding:"required"`
 			GitOwner        string `json:"gitOwner" bson:"gitOwner"`
 			IsOwn           bool   `json:"isOwn" bson:"isOwn"`
 			AutoRemoveUsers bool   `json:"autoRemoveUsers" bson:"autoRemoveUsers"`
@@ -644,16 +644,28 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05.000Z", requestBody.DateExpires)
 
 		if requestBody.Expires {
 			if err != nil || dateExpiresTime.Before(time.Now()) {
-				c.JSON(400, gin.H{
-					"message": "Invalid date",
-				})
-				fmt.Println(err)
+				if err != nil {
+					fmt.Println(err)
+					c.JSON(400, gin.H{
+						"message": "Invalid date",
+					})
+				} else {
+					fmt.Println("Date must be in the future")
+					c.JSON(400, gin.H{
+						"message": "Date must be in the future",
+					})
+				}
 				return
 			}
+		}
+
+		if !requestBody.Expires {
+			//set time to 0
+			dateExpiresTime = time.Time{}
 		}
 
 		//check repo
@@ -681,10 +693,12 @@ func initManagerRouter(router *gin.Engine) {
 			AutoDelete:      requestBody.AutoDelete,
 			Notify:          requestBody.Notify,
 			NotifiedExpired: false,
+			NotifiedDeleted: false,
 			Expires:         requestBody.Expires,
 			Belongs:         c.MustGet("userIdPrimitive").(primitive.ObjectID),
 			GitHubRepo:      requestBody.GitRepo,
 			GitHubOwner:     owner,
+			AutoRemoveUsers: requestBody.AutoRemoveUsers,
 		})
 
 		if err != nil {
@@ -717,13 +731,13 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/manager/token/create", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Name        string `json:"name" bson:"name"`
-			UserGroup   string `json:"userGroup" bson:"userGroup"`
+			Name        string `json:"name" bson:"name" binding:"required"`
+			UserGroup   string `json:"userGroup" bson:"userGroup" binding:"required"`
 			DirectAdd   bool   `json:"directAdd" bson:"directAdd"`
 			AutoDelete  bool   `json:"autoDelete" bson:"autoDelete"`
 			Notify      bool   `json:"notify" bson:"notify"`
-			DateExpires string `json:"dateExpires" bson:"dateExpires"`
-			Count       string `json:"count" bson:"count"`
+			DateExpires string `json:"dateExpires" bson:"dateExpires" binding:"required"`
+			Count       string `json:"count" bson:"count" binding:"required"`
 		}
 
 		err := c.BindJSON(&requestBody)
@@ -772,13 +786,20 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05.000Z", requestBody.DateExpires)
 
 		if err != nil || dateExpiresTime.Before(time.Now()) {
-			c.JSON(400, gin.H{
-				"message": "Invalid date",
-			})
-			fmt.Println(err)
+			if err != nil {
+				fmt.Println(err)
+				c.JSON(400, gin.H{
+					"message": "Invalid date",
+				})
+			} else {
+				fmt.Println("Date must be in the future")
+				c.JSON(400, gin.H{
+					"message": "Date must be in the future",
+				})
+			}
 			return
 		}
 
@@ -798,6 +819,7 @@ func initManagerRouter(router *gin.Engine) {
 			DirectAdd:               requestBody.DirectAdd,
 			Used:                    0,
 			Belongs:                 c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			SuperUser:               false,
 		})
 
 		if err != nil {
@@ -942,9 +964,9 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/tk", func(c *gin.Context) {
 		var requestBody struct {
-			Token          string `json:"token" bson:"token"`
-			GitHubUsername string `json:"gitUsername" bson:"gitUsername"`
-			Username       string `json:"username" bson:"username"`
+			Token          string `json:"token" bson:"token" binding:"required"`
+			GitHubUsername string `json:"gitUsername" bson:"gitUsername" binding:"required"`
+			Username       string `json:"username" bson:"username" binding:"required"`
 		}
 
 		err := c.BindJSON(&requestBody)
@@ -1123,6 +1145,18 @@ func initManagerRouter(router *gin.Engine) {
 			_, err = database.MongoDB.Collection("token").DeleteOne(c, bson.M{
 				"_id": tk.ID,
 			})
+
+			database.MongoDB.Collection("notification").InsertOne(c, models.Notification{
+				ID:           primitive.NewObjectID(),
+				Belongs:      creator.ID,
+				Notification: "Token " + tk.Name + " has reached it's usage limit and was therefore deleted!",
+				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+				Title:        "Token " + tk.Name + " deleted",
+				UserGroup:    primitive.NilObjectID,
+				GitHubUser:   primitive.NilObjectID,
+				Token:        primitive.NilObjectID,
+				Style:        "info",
+			})
 		} else {
 			_, err = database.MongoDB.Collection("token").UpdateOne(c, bson.M{
 				"_id": tk.ID,
@@ -1155,9 +1189,9 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/manager/gitusr/create", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Username    string `json:"username" bson:"username"`
-			GitUsername string `json:"gitUsername" bson:"gitUsername"`
-			UserGroup   string `json:"userGroup" bson:"userGroup"`
+			Username    string `json:"username" bson:"username" binding:"required"`
+			GitUsername string `json:"gitUsername" bson:"gitUsername" binding:"required"`
+			UserGroup   string `json:"userGroup" bson:"userGroup" binding:"required"`
 			ExpireGroup bool   `json:"expireGroup" bson:"expireGroup"`
 			Expires     bool   `json:"expires" bson:"expires"`
 			DateExpires string `json:"dateExpires" bson:"dateExpires"`
@@ -1233,7 +1267,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05.000Z", requestBody.DateExpires)
 
 		if requestBody.Expires && !requestBody.ExpireGroup {
 			if err != nil || dateExpiresTime.Before(time.Now()) {
@@ -1247,6 +1281,11 @@ func initManagerRouter(router *gin.Engine) {
 				}
 				return
 			}
+		}
+
+		if !requestBody.Expires && !requestBody.ExpireGroup {
+			//set time to 0
+			dateExpiresTime = time.Time{}
 		}
 
 		//create gitusr
@@ -1374,9 +1413,9 @@ func initManagerRouter(router *gin.Engine) {
 	router.POST("/manager/user/create", middleware.SuperUser(), func(c *gin.Context) {
 		var requestBody struct {
 			SuperUser   bool   `json:"superUser" bson:"superUser"`
-			DateExpires string `json:"dateExpires" bson:"dateExpires"`
-			Name        string `json:"name" bson:"name"`
-			Count       string `json:"count" bson:"count"`
+			DateExpires string `json:"dateExpires" bson:"dateExpires""`
+			Name        string `json:"name" bson:"name" binding:"required"`
+			Count       string `json:"count" bson:"count" binding:"required"`
 		}
 
 		err := c.BindJSON(&requestBody)
@@ -1389,16 +1428,19 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05.000Z", requestBody.DateExpires)
 
 		if err != nil || dateExpiresTime.Before(time.Now()) {
-			c.JSON(400, gin.H{
-				"message": "Invalid date",
-			})
 			if err != nil {
 				fmt.Println(err)
+				c.JSON(400, gin.H{
+					"message": "Invalid date",
+				})
 			} else {
-				fmt.Println("Date is before now")
+				fmt.Println("Date must be in the future")
+				c.JSON(400, gin.H{
+					"message": "Date must be in the future",
+				})
 			}
 			return
 		}
@@ -1430,6 +1472,7 @@ func initManagerRouter(router *gin.Engine) {
 			DirectAdd:               false,
 			Used:                    0,
 			Belongs:                 c.MustGet("userIdPrimitive").(primitive.ObjectID),
+			UserGroup:               primitive.NilObjectID,
 		})
 
 		if err != nil {
@@ -1447,8 +1490,9 @@ func initManagerRouter(router *gin.Engine) {
 	})
 
 	router.POST("/manager/repoexists", middleware.LoginToken(), func(c *gin.Context) {
+		//mark all as required
 		var requestBody struct {
-			GitRepo  string `json:"gitRepo" bson:"gitRepo"`
+			GitRepo  string `json:"gitRepo" bson:"gitRepo" binding:"required"`
 			GitOwner string `json:"gitOwner" bson:"gitOwner"`
 			IsOwn    bool   `json:"isOwn" bson:"isOwn"`
 		}
@@ -2067,7 +2111,7 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/profile/update/email", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Email string `json:"email" bson:"email"`
+			Email string `json:"email" bson:"email" binding:"required"`
 		}
 
 		usr := c.MustGet("user").(models.User)
@@ -2130,7 +2174,7 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/profile/update/username", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Username string `json:"username" bson:"username"`
+			Username string `json:"username" bson:"username" binding:"required"`
 		}
 
 		usr := c.MustGet("user").(models.User)
@@ -2193,8 +2237,8 @@ func initManagerRouter(router *gin.Engine) {
 	//updates gitUsername and gitToken
 	router.POST("/profile/update/git", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			GitUsername string `json:"gitUsername" bson:"gitUsername"`
-			GitToken    string `json:"gitToken" bson:"gitToken"`
+			GitUsername string `json:"gitUsername" bson:"gitUsername" binding:"required"`
+			GitToken    string `json:"gitToken" bson:"gitToken" binding:"required"`
 		}
 
 		usr := c.MustGet("user").(models.User)
@@ -2261,7 +2305,7 @@ func initManagerRouter(router *gin.Engine) {
 
 	router.POST("/profile/update/password", middleware.LoginToken(), func(c *gin.Context) {
 		var requestBody struct {
-			Password string `json:"password" bson:"password"`
+			Password string `json:"password" bson:"password" binding:"required"`
 		}
 
 		usr := c.MustGet("user").(models.User)

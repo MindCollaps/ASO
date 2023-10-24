@@ -79,22 +79,24 @@
             <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=git'">Back</button>
         </div>
         <div class="bg-body-secondary rounded-3 shadow p-4">
-            <h2>Username: {{.Username}}</h2>
+            <h1>Username: {{.Username}}</h1>
             <h2>Git Username: {{.GitHubUsername}}</h2>
             <h2>User ID: {{.ID}}</h2>
             <h2>Created: {{.DateCreated}}</h2>
+            <hr>
             {{if .ExpiryByGroup}}
                 {{if .UserGroup.Name}}
                     {{if .UserGroup.IsExpired}}
-                        <h3>Expires by group: <a class="text-decoration-none text-danger">Expired</a></h3>
-                    {{else}}<h3>Expires by group: <a
-                                class="text-decoration-none text-warning">{{.UserGroup.DateExpires}}</a></h3>{{end}}
-                {{else}}{{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
-                </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                        <h2>Expires by group: <a class="text-decoration-none text-danger">Expired</a></h2>
+                    {{else}}<h2>Expires by group: <a
+                                class="text-decoration-none text-warning">{{.UserGroup.DateExpires}}</a></h2>{{end}}
+                {{else}}{{if .IsExpired}}<h2>Expires: <a class="text-decoration-none text-danger">Expired</a>
+                </h2>{{else}}<h2>Expires: {{.DateExpires}}</h2>{{end}}
                 {{end}}{{else}}
-                {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a></h3>{{else}}<h3>
-                    Expires: {{.DateExpires}}</h3>{{end}}{{end}}
+                {{if .IsExpired}}<h2>Expires: <a class="text-decoration-none text-danger">Expired</a></h2>{{else}}<h2>
+                    Expires: {{.DateExpires}}</h2>{{end}}{{end}}
             <h2>Expiry by Group: {{.ExpiryByGroup}}</h2>
+            <hr>
             <h2>Group:</h2>
             {{if .UserGroup.Name}}
             <div class="column container bg-body-tertiary rounded-3 shadow p-3">
