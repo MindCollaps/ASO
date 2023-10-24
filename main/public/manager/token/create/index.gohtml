@@ -43,19 +43,23 @@
                         {{range .Groups}}
                             <div class="d-flex flex-row justify-content-between align-items-center p-3">
                                 <p class="mb-0">{{.Name}}</p>
-                                <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a>
+                                <a target="_blank"
+                                   href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
+                                    /{{.GitHubRepo}}</a>
                                 <p class="mb-0">Created: {{.Date}}</p>
                                 <button v-if="userGroup == '{{.ID}}'" class="btn btn-danger" @click="select('')">
                                     <span class="material-icons align-middle fs-5">close</span>
                                 </button>
                                 <button v-if="userGroup != '{{.ID}}'" class="btn btn-primary"
-                                        @click="select('{{.ID}}')"><span class="material-icons align-middle fs-5">check</span>
+                                        @click="select('{{.ID}}')"><span
+                                            class="material-icons align-middle fs-5">check</span>
                                 </button>
                             </div>
                         {{end}}
                     {{else}}
                         <p>No User Groups</p>
-                        <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">Create User Group
+                        <button class="btn btn-primary" onclick="window.location.href = '/manager/group/create'">Create
+                            User Group
                         </button>
                     {{end}}
                 </div>
@@ -66,7 +70,7 @@
                 <div id="emailHelp" class="form-text">How many times can this token be used</div>
             </div>
             <div class="mb-4 form-floating">
-                <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
+                <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires" step="60">
                 <label for="dateExpires">Expiry</label>
                 <div id="emailHelp" class="form-text">When will this token no longer be usable?</div>
             </div>
@@ -89,8 +93,27 @@
             name: "",
             userGroup: "",
             directAdd: true,
-            dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            dateExpires: "",
             times: 1
+        },
+        created: function () {
+            var date = new Date(Date.now() + 5 * 60000);
+
+            //format date
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = date.getDate();
+
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+
+            if (month < 10) month = "0" + month;
+            if (day < 10) day = "0" + day;
+
+            if (hour < 10) hour = "0" + hour;
+            if (minute < 10) minute = "0" + minute;
+
+            this.dateExpires = year + "-" + month + "-" + day + "T" + hour + ":" + minute;
         },
         methods: {
             submit: async function () {

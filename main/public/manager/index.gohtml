@@ -27,16 +27,16 @@
 <body class="vw-100 vh-100">
 <div id="manager" class="h-100 w-100">
     <div class="row h-100 w-100" v-if="!loading">
-        <div class="d-flex flex-column bg-body-tertiary h-100" style="width: 12%">
-            <div class="d-flex justify-content-center mt-4">
+        <div class="d-flex flex-column bg-body-tertiary h-100 sidebar-animation" style="width: 12%">
+            <div class="d-flex justify-content-center mt-4 mb-3">
                 <a href="/manager"
-                   class="d-flex align-items-center justify-content-center fs-4 fw-bold text-white text-decoration-none">
+                   class="d-flex align-items-center justify-content-center fs-4 fw-bold text-white text-decoration-none logo-animation">
                     <img class="w-50" src="/favicon.ico" alt="ASO Icon">
                 </a>
             </div>
             <hr>
-            <ul class="nav nav-pills flex-column mb-auto align-items-center p-2">
-                <li>
+            <ul class="nav nav-pills d-flex flex-column mb-5 h-100 align-items-center p-2 gap-2">
+                <li class="list-animation">
                     <button @click="href('git')" data-bs-toggle="tab" id="git-user-tab"
                             data-bs-target="#git-user-tab-pane"
                             type="button" role="tab" aria-controls="git-user-tab-pane" aria-selected="true"
@@ -46,7 +46,7 @@
                         <span class="align-middle">Members</span>
                     </button>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item list-animation">
                     <button @click="href('group')" data-bs-toggle="tab" id="user-group-tab"
                             data-bs-target="#user-group-tab-pane" type="button" role="tab"
                             aria-controls="user-group-tab-pane" aria-selected="true" class="nav-link"
@@ -55,7 +55,7 @@
                         <span class="align-middle">Groups</span>
                     </button>
                 </li>
-                <li>
+                <li class="list-animation">
                     <button @click="href('token')" data-bs-toggle="tab" id="token-tab" data-bs-target="#token-tab-pane"
                             type="button" role="tab" aria-controls="token-tab-pane" aria-selected="true"
                             class="nav-link"
@@ -65,7 +65,7 @@
                     </button>
                 </li>
                 {{if .SuperUser}}
-                    <li>
+                    <li class="list-animation">
                         <button @click="href('user')" data-bs-toggle="tab" id="user-tab" data-bs-target="#user-tab-pane"
                                 type="button" role="tab" aria-controls="user-tab-pane" aria-selected="true"
                                 class="nav-link"
@@ -77,7 +77,7 @@
                 {{end}}
             </ul>
             <hr>
-            <div class="d-flex flex-row align-items-center p-3 w-100">
+            <div class="d-flex flex-row align-items-center p-3 w-100 drop-animation">
                 <div class="dropdown">
                     <a href="#" class="d-flex overflow-x-hidden align-items-center text-white text-decoration-none"
                        data-bs-toggle="dropdown" aria-expanded="false">
@@ -104,7 +104,7 @@
                 <span v-if="newNotifications > 0" class="bg-warning notification d-inline-block rounded-circle ms-2" style="height: 15px; width: 15px; opacity: 0"></span>
             </div>
         </div>
-        <div class="container col p-5 h-100" style="width: 80%;">
+        <div class="container col p-5 h-100 pane-animation" style="width: 80%;">
             <div class="tab-content h-100" id="v-pills-tabContent">
                 <div class="tab-pane fade h-100" id="git-user-tab-pane" role="tabpanel" aria-labelledby="git-user-tab"
                      tabindex="0">
@@ -256,40 +256,44 @@
                             {{if .Notifications}}
                                 {{range .Notifications}}
                                     <div id="id-{{.ID}}" class="w-75 d-flex flex-row align-items-center justify-content-center rounded-3 shadow p-3 mb-3 list-group-item
-                                        {{if eq .Style "danger"}} list-group-item-danger{{else}}{{if eq .Style "warning"}} list-group-item-warning{{else}}{{if eq .Style "success"}} list-group-item-success{{end}}{{end}}{{end}}">
-                                        <div class="column w-100">
+                                        {{if eq .Style "danger"}} list-group-item-danger{{else}}{{if eq .Style "warning"}} list-group-item-warning{{else}}{{if eq .Style "success"}} list-group-item-success{{else}}{{if eq .Style "info"}} list-group-item-info{{end}}{{end}}{{end}}{{end}}">
+                                        <div class="column w-100 p-3">
                                             <h3 class="text-white">{{.Title}}</h3>
                                             <p>{{.Notification}}</p>
                                             {{if .UserGroup}}
-                                                <div>
+                                                <div class="text-white p-2 bg-body-secondary shadow rounded-2 d-flex flex-row align-items-center gap-3">
                                                     <button class="btn btn-secondary"
                                                             @click="infoGroup('{{.UserGroup}}')"><span
                                                                 class="material-icons align-middle fs-5">info</span>
                                                     </button>
+                                                    View Group
                                                 </div>
                                             {{end}}
                                             {{if .Token}}
-                                                <div>
+                                                <div class="text-white p-2 bg-body-secondary shadow rounded-2 d-flex flex-row align-items-center gap-3">
                                                     <button class="btn btn-secondary"
                                                             @click="infoToken('{{.Token}}')"><span
                                                                 class="material-icons align-middle fs-5">info</span>
                                                     </button>
+                                                    View Token
                                                 </div>
                                             {{end}}
                                             {{if .GitHubUser}}
-                                                <div>
-                                                    <button class="btn btn-secondary"
+                                                <div class="text-white p-2 bg-body-secondary shadow rounded-2 d-flex flex-row align-items-center gap-3">
+                                                    <button class="btn btn-primary"
                                                             @click="infoGUser('{{.GitHubUser}}')"><span
                                                                 class="material-icons align-middle fs-5">info</span>
                                                     </button>
+                                                    View Git User
                                                 </div>
                                             {{end}}
                                             {{if .Profile}}
-                                                <div>
-                                                    <button class="btn btn-secondary"
+                                                <div class="text-white p-2 bg-body-secondary shadow rounded-2 d-flex flex-row align-items-center gap-3">
+                                                    <button class="btn btn-primary"
                                                             @click="window.location.href ='/profile'"><span
                                                                 class="material-icons align-middle fs-5">person</span>
                                                     </button>
+                                                    Go to Profile
                                                 </div>
                                             {{end}}
                                         </div>
@@ -495,14 +499,88 @@
 
             this.href(a)
 
+            setTimeout(() => {
+                //this.animation()
+            }, 100)
+
             if(this.newNotifications > 0){
                 //wait for dom to load
                 setTimeout(() => {
                     this.notificationAnimation()
-                }, 100)
+                }, 500)
             }
         },
         methods: {
+            animation: function(){
+                console.log("animation")
+                anime({
+                    targets: '.sidebar-animation',
+                    translateX: [
+                        { value: -1000, duration: 0 },
+                        { value: 0, duration: 1000 },
+                    ],
+                    opacity: [
+                        { value: 0, duration: 0 },
+                        { value: 1, duration: 1000 },
+                    ],
+                    easing: 'easeOutExpo'
+                })
+
+                anime({
+                    targets: '.list-animation',
+                    translateX: [
+                        { value: 200, duration: 0 },
+                        { value: 0, duration: 1000 },
+                    ],
+                    opacity: [
+                        { value: 0, duration: 0 },
+                        { value: 1, duration: 1000 },
+                    ],
+                    delay: anime.stagger(100, {start: 500})
+                })
+
+                anime({
+                    targets: '.logo-animation',
+                    translateY: [
+                        { value: -50, duration: 0 },
+                        { value: 0, duration: 1000 },
+                    ],
+                    opacity: [
+                        { value: 0, duration: 0 },
+                        { value: 1, duration: 1000 },
+                    ],
+                    delay: 750,
+                    easing: 'easeOutExpo'
+                })
+
+                anime({
+                    targets: '.drop-animation',
+                    translateY: [
+                        { value: -50, duration: 0 },
+                        { value: 0, duration: 1000 },
+                    ],
+                    opacity: [
+                        { value: 0, duration: 0 },
+                        { value: 1, duration: 1000 },
+                    ],
+                    delay: 750,
+                    easing: 'easeOutExpo'
+                })
+
+                anime({
+                    targets: '.pane-animation',
+                    translateX: [
+                        { value: -30, duration: 0 },
+                        { value: 0, duration: 1000 },
+                    ],
+                    opacity: [
+                        { value: 0, duration: 0 },
+                        { value: 1, duration: 1000 },
+                    ],
+                    delay: 750,
+                    easing: 'easeOutExpo'
+                })
+            },
             notificationAnimation: function (){
                 anime({
                     delay: 0,

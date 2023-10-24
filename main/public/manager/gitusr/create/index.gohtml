@@ -43,12 +43,12 @@
            </div>
            <div class="mb-4 mt-4">
                <h2>User Group</h2>
-               <div class="container column container bg-body-tertiary rounded-3 shadow p-3" id="userGroup">
+               <div class="container d-flex flex-column container bg-body-tertiary rounded-3 shadow p-3 gap-2" id="userGroup">
                    {{if .Groups}}
                        {{range .Groups}}
-                           <div class="row">
-                               <p class="col">{{.Name}}</p>
-                               <p class="col">Created: {{.Date}}</p>
+                           <div class="d-flex flex-row align-items-center justify-content-center">
+                               <p class="col m-0">{{.Name}}</p>
+                               <p class="col m-0">Created: {{.Date}}</p>
                                <button v-if="userGroup == '{{.ID}}'" class="btn btn-danger col" @click="select('')">
                                    Unselect
                                </button>
@@ -95,7 +95,29 @@
             gitusername: "",
             expiregroup: true,
             expire: true,
-            dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            dateExpires: "",
+        },
+        created: function(){
+            var date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 3);
+
+            date.setHours(1);
+            date.setMinutes(0);
+
+            //format date
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = date.getDate();
+
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+
+            if (month < 10) month = "0" + month;
+            if (day < 10) day = "0" + day;
+
+            if (hour < 10) hour = "0" + hour;
+            if (minute < 10) minute = "0" + minute;
+
+            this.dateExpires = year + "-" + month + "-" + day + "T" + hour + ":" + minute;
         },
         methods: {
             submit: async function () {

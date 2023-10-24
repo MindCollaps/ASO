@@ -46,8 +46,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 			usrDt = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
 				Username:       user.Username,
 				IsExpired:      expired,
 				ExpiryByGroup:  user.ExpiresGroup,
@@ -57,8 +57,8 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 			usrDt = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
 				UserGroup:      userGroupModalToData(userGroup),
 				Username:       user.Username,
 				IsExpired:      expired,
@@ -79,14 +79,15 @@ func userGroupModalToData(group models.UserGroup) UserGroupData {
 	var g = UserGroupData{
 		ID:          group.ID.Hex(),
 		Name:        group.Name,
-		Date:        group.Date.Time().Format("2006-01-02 15:04:05"),
-		DateExpires: group.DateExpires.Time().Format("2006-01-02 15:04:05"),
+		Date:        group.Date.Time().Format("2006-01-02 15:04"),
+		DateExpires: group.DateExpires.Time().Format("2006-01-02 15:04"),
 		Expires:     group.Expires,
 		AutoDelete:  group.AutoDelete,
 		Notify:      group.Notify,
 		GitHubRepo:  group.GitHubRepo,
 		GitHubOwner: group.GitHubOwner,
 		IsExpired:   expired,
+		AutoRemove:  group.AutoRemoveUsers,
 	}
 
 	if g.DateExpires == "0001-01-01 01:00:00" {
@@ -102,8 +103,8 @@ func tokenModalToData(token models.Token) TokenData {
 		Name:        token.Name,
 		Count:       token.Count,
 		Token:       token.Token,
-		DateCreated: token.DateCreated.Time().Format("2006-01-02 15:04:05"),
-		DateExpires: token.DateExpires.Time().Format("2006-01-02 15:04:05"),
+		DateCreated: token.DateCreated.Time().Format("2006-01-02 15:04"),
+		DateExpires: token.DateExpires.Time().Format("2006-01-02 15:04"),
 		DirectAdd:   token.DirectAdd,
 		Used:        token.Used,
 		IsExpired:   expired,
@@ -111,7 +112,7 @@ func tokenModalToData(token models.Token) TokenData {
 }
 
 func notificationModalToData(notification models.Notification) NotificationData {
-	dateCreated := notification.DateCreated.Time().Format("2006-01-02 15:04:05")
+	dateCreated := notification.DateCreated.Time().Format("2006-01-02 15:04")
 	data := NotificationData{
 		ID:           notification.ID.Hex(),
 		Notification: notification.Notification,
@@ -253,7 +254,7 @@ func fetchAllNotifications(c *gin.Context) ([]NotificationData, error) {
 }
 
 func userModalToData(user models.User) UserData {
-	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04:05")
+	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04")
 
 	return UserData{
 		ID:             user.ID.Hex(),
@@ -319,6 +320,7 @@ type UserGroupData struct {
 	GitHubRepo  string        `json:"githubRepo" bson:"githubRepo"`
 	GitHubOwner string        `json:"githubOwner" bson:"githubOwner"`
 	IsExpired   bool          `json:"isExpired" bson:"isExpired"`
+	AutoRemove  bool          `json:"autoRemove" bson:"autoRemove"`
 }
 
 type TokenData struct {
@@ -475,8 +477,8 @@ func initManagerRouter(router *gin.Engine) {
 			userData = GitUserData{
 				ID:             user.ID.Hex(),
 				GitHubUsername: user.GitHubUsername,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
 				ExpiryByGroup:  user.ExpiresGroup,
 				Groups:         grps,
 				Username:       user.Username,
@@ -488,8 +490,8 @@ func initManagerRouter(router *gin.Engine) {
 				GitHubUsername: user.GitHubUsername,
 				Username:       user.Username,
 				ExpiryByGroup:  user.ExpiresGroup,
-				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04:05"),
-				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04:05"),
+				DateCreated:    user.DateCreated.Time().Format("2006-01-02 15:04"),
+				DateExpires:    user.DateExpires.Time().Format("2006-01-02 15:04"),
 				UserGroup:      userGrpData,
 				Groups:         grps,
 			}
@@ -642,7 +644,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
 
 		if requestBody.Expires {
 			if err != nil || dateExpiresTime.Before(time.Now()) {
@@ -770,7 +772,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
 
 		if err != nil || dateExpiresTime.Before(time.Now()) {
 			c.JSON(400, gin.H{
@@ -1231,7 +1233,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
 
 		if requestBody.Expires && !requestBody.ExpireGroup {
 			if err != nil || dateExpiresTime.Before(time.Now()) {
@@ -1387,7 +1389,7 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//parse expire date
-		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05", requestBody.DateExpires)
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04", requestBody.DateExpires)
 
 		if err != nil || dateExpiresTime.Before(time.Now()) {
 			c.JSON(400, gin.H{

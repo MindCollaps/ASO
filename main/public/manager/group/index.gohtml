@@ -36,6 +36,7 @@
             {{else}}
                 <h2>Expires: Never</h2>
             {{end}}
+            <h2>Auto Remove Users: {{.AutoRemove}}</h2>
             <h2>Group Members:</h2>
             <ul class="d-flex flex-column container gap-3 bg-body-tertiary rounded-3 shadow p-3 h-50 overflow-auto">
                 {{if .Members}}

@@ -74,14 +74,17 @@
             <div class="mb-4 form-check">
                 <input type="checkbox" v-model="autoRemove" class="form-check-input" id="autoRemove">
                 <label class="form-check-label" for="autoRemove">Auto Remove</label>
-                <div id="emailHelp" class="form-text">Weather this group triggers the remove event on the members, when the expiry date is reached</div>
+                <div id="emailHelp" class="form-text">Weather this group removes all the users from the repo, but not from this group</div>
             </div>
             <div class="mb-4 form-check">
                 <input type="checkbox" v-model="autoDelete" class="form-check-input" id="autoDelete">
                 <label class="form-check-label" for="autoDelete">Auto Delete</label>
-                <div id="emailHelp" class="form-text">Weather this group deletes itself when the expiry date is reached</div>
+                <div id="emailHelp" class="form-text">Weather this group deletes itself and all users in it when the expiry date is reached</div>
             </div>
-            <div class="mb-4 d-flex justify-content-center">
+            <div v-if="!autoRemove && autoDelete" class="bg-danger-subtle rounded-3 shadow p-4">
+                <p class="m-0">Selecting Auto Delete but <b>not</b> Auto Remove will delete the group and all users in it, but not remove them from the repository!</p>
+            </div>
+            <div class="mt-4 d-flex justify-content-center">
                 <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
             </div>
         </div>
@@ -94,7 +97,7 @@
         delimiters: ['${', '}'],
         data: {
             name: "",
-            dateExpires: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            dateExpires: "",
             doesExpire: true,
             notify: true,
             autoDelete: true,
@@ -102,6 +105,29 @@
             gitOwner: "",
             gitName: "",
             autoRemove: true
+        },
+        created: function (){
+            //time in 3 months from now at 01:00
+            var date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12 * 3 );
+
+            date.setHours(1);
+            date.setMinutes(0);
+
+            //format date
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = date.getDate();
+
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+
+            if (month < 10) month = "0" + month;
+            if (day < 10) day = "0" + day;
+
+            if (hour < 10) hour = "0" + hour;
+            if (minute < 10) minute = "0" + minute;
+
+            this.dateExpires = year + "-" + month + "-" + day + "T" + hour + ":" + minute;
         },
         methods: {
             submit: async function () {

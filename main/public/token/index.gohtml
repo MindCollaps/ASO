@@ -26,13 +26,16 @@
 </head>
 <body>
 
-<div id="token-manager" class="container p-5" style="width: 100%; height: 100%">
-    <button class="btn btn-danger" onclick="window.location.href = '/manager?a=token'">Back</button>
-    <div id="qrcode" style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%"></div>
-    <div class="input-group mt-5">
-        <input id="inputfield" type="text" class="form-control" aria-label="Uri" aria-describedby="Link">
-        <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" @click="copy()"><span class="material-icons">content_copy</span></button>
+<div id="token-manager" class="vh-100">
+    <div  class="container d-flex flex-column align-items-center justify-content-center">
+        <div class="p-3 align-self-start"><button class="btn btn-danger" onclick="window.location.href = '/manager?a=token'">Back</button></div>
+        <div class="d-flex align-items-center justify-content-center flex-row p-3 mb-2"><div class="fs-3">${noToken}</div><div class="fs-1"><b>{{.Token}}</b></div></div>
+        <div id="qrcode" style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%"></div>
+        <div class="input-group mt-4">
+            <input id="inputfield" type="text" class="form-control" aria-label="Uri" aria-describedby="Link">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" @click="copy()"><span class="material-icons">content_copy</span></button>
+            </div>
         </div>
     </div>
 </div>
@@ -45,6 +48,7 @@
         },
         data: {
             token: document.location.origin + "/tk/{{ .Token }}",
+            noToken: document.location.origin + "/tk/"
         },
         methods: {
             copy: function () {
@@ -56,8 +60,8 @@
 
     new QRCode(document.getElementById("qrcode"), {
         text: main.token,
-        width: 256*2,
-        height: 256*2,
+        width: 600,
+        height: 600,
         colorDark: "#000000",
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
