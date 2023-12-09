@@ -34,7 +34,7 @@ func checkSoonExpireGroups() {
 		"notifiedExpired": false,
 		"notifiedDeleted": false,
 		"dateExpires": bson.M{
-			"$gte": time.Now().Add(time.Hour * 24 * 30 * -1),
+			"$lte": time.Now().Add(time.Hour * 24 * 30 * -1),
 		},
 	})
 

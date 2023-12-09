@@ -263,15 +263,10 @@ func fetchAllUsers(c *gin.Context) ([]UserData, error) {
 }
 
 func fetchAllNotifications(c *gin.Context) ([]NotificationData, error) {
-	belongBson := bson.M{
+	cur, err := database.MongoDB.Collection("notification").Find(c, bson.M{
 		"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-	}
+	})
 
-	if c.MustGet("user").(models.User).IsSuperUser {
-		belongBson = bson.M{}
-	}
-
-	cur, err := database.MongoDB.Collection("notification").Find(c, belongBson)
 	if err != nil {
 		return nil, err
 	}
