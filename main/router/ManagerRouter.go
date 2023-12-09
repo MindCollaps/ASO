@@ -18,9 +18,18 @@ import (
 )
 
 func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
-	cur, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+	//check if admin
+	isSuperUser := c.MustGet("user").(models.User).IsSuperUser
+
+	belongsBson := bson.M{
 		"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-	})
+	}
+
+	if isSuperUser {
+		belongsBson = bson.M{}
+	}
+
+	cur, err := database.MongoDB.Collection("gitUser").Find(c, belongsBson)
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +42,13 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 
 		//get userGroup
 		var userGroup models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     user.UserGroup,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&userGroup)
+		addedBson := bson.M{
+			"_id": user.UserGroup,
+		}
+		if !isSuperUser {
+			addedBson["belongs"] = belongsBson["belongs"]
+		}
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&userGroup)
 
 		var usrDt GitUserData
 
@@ -140,9 +152,15 @@ func notificationModalToData(notification models.Notification) NotificationData 
 }
 
 func fetchAllGroups(c *gin.Context) ([]UserGroupData, error) {
-	cur, err := database.MongoDB.Collection("userGroup").Find(c, bson.M{
+	belonBson := bson.M{
 		"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-	})
+	}
+
+	if c.MustGet("user").(models.User).IsSuperUser {
+		belonBson = bson.M{}
+	}
+
+	cur, err := database.MongoDB.Collection("userGroup").Find(c, belonBson)
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +179,15 @@ func fetchAllGroups(c *gin.Context) ([]UserGroupData, error) {
 }
 
 func fetchAllTokens(c *gin.Context) ([]TokenData, error) {
-	cur, err := database.MongoDB.Collection("token").Find(c, bson.M{
+	belonBson := bson.M{
 		"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-	})
+	}
+
+	if c.MustGet("user").(models.User).IsSuperUser {
+		belonBson = bson.M{}
+	}
+
+	cur, err := database.MongoDB.Collection("token").Find(c, belonBson)
 	if err != nil {
 		return nil, err
 	}
@@ -176,10 +200,13 @@ func fetchAllTokens(c *gin.Context) ([]TokenData, error) {
 
 		//get userGroup
 		var userGroup models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     token.UserGroup,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&userGroup)
+		addedBson := bson.M{
+			"_id": token.UserGroup,
+		}
+		if !c.MustGet("user").(models.User).IsSuperUser {
+			addedBson["belongs"] = belonBson["belongs"]
+		}
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&userGroup)
 
 		grpErr := false
 		if err != nil {
@@ -188,10 +215,14 @@ func fetchAllTokens(c *gin.Context) ([]TokenData, error) {
 
 		//get createdBy
 		var createdBy models.User
-		err = database.MongoDB.Collection("gitusr").FindOne(c, bson.M{
-			"_id":     token.CreatedBy,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&createdBy)
+		addedBson = bson.M{
+			"_id": token.CreatedBy,
+		}
+
+		if !c.MustGet("user").(models.User).IsSuperUser {
+			addedBson["belongs"] = belonBson["belongs"]
+		}
+		err = database.MongoDB.Collection("gitusr").FindOne(c, addedBson).Decode(&createdBy)
 
 		createdByErr := false
 		if err != nil {
@@ -232,9 +263,15 @@ func fetchAllUsers(c *gin.Context) ([]UserData, error) {
 }
 
 func fetchAllNotifications(c *gin.Context) ([]NotificationData, error) {
-	cur, err := database.MongoDB.Collection("notification").Find(c, bson.M{
+	belongBson := bson.M{
 		"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-	})
+	}
+
+	if c.MustGet("user").(models.User).IsSuperUser {
+		belongBson = bson.M{}
+	}
+
+	cur, err := database.MongoDB.Collection("notification").Find(c, belongBson)
 	if err != nil {
 		return nil, err
 	}
@@ -443,10 +480,14 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		var user models.GitHubUser
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&user)
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !usr.IsSuperUser {
+			addedBson["belongs"] = c.MustGet("userIdPrimitive").(primitive.ObjectID)
+		}
+		err = database.MongoDB.Collection("gitUser").FindOne(c, addedBson).Decode(&user)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -456,11 +497,15 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//fetch gitusr group from gitusr
+		addedBson = bson.M{
+			"_id": user.UserGroup,
+		}
+
+		if !usr.IsSuperUser {
+			addedBson["belongs"] = c.MustGet("userIdPrimitive").(primitive.ObjectID)
+		}
 		var userGroup models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     user.UserGroup,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&userGroup)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&userGroup)
 
 		//fetch all groups
 		grps, err := fetchAllGroups(c)
@@ -531,11 +576,15 @@ func initManagerRouter(router *gin.Engine) {
 
 		usr := c.MustGet("user").(models.User)
 
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !usr.IsSuperUser {
+			addedBson["belongs"] = c.MustGet("userIdPrimitive").(primitive.ObjectID)
+		}
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -760,11 +809,16 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//check if exists
+		addedBson := bson.M{
+			"_id": grp,
+		}
+
+		if !c.MustGet("user").(models.User).IsSuperUser {
+			addedBson["belongs"] = c.MustGet("userIdPrimitive").(primitive.ObjectID)
+		}
+
 		var userGroup models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     grp,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&userGroup)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&userGroup)
 
 		//parse count
 		count, err := strconv.Atoi(requestBody.Count)
@@ -840,11 +894,15 @@ func initManagerRouter(router *gin.Engine) {
 		token := c.Param("tk")
 
 		//check if token exists
+		addedBson := bson.M{
+			"token": token,
+		}
+
+		if !c.MustGet("user").(models.User).IsSuperUser {
+			addedBson["belongs"] = c.MustGet("userIdPrimitive").(primitive.ObjectID)
+		}
 		var tk models.Token
-		err := database.MongoDB.Collection("token").FindOne(c, bson.M{
-			"token":   token,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&tk)
+		err := database.MongoDB.Collection("token").FindOne(c, addedBson).Decode(&tk)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -901,12 +959,16 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//find token
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !c.MustGet("user").(models.User).IsSuperUser {
+			addedBson["belongs"] = c.MustGet("userIdPrimitive").(primitive.ObjectID)
+		}
 
 		var token models.Token
-		err = database.MongoDB.Collection("token").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&token)
+		err = database.MongoDB.Collection("token").FindOne(c, addedBson).Decode(&token)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1597,12 +1659,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1612,10 +1678,15 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//get all users from repo group
-		users, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+		addedBson = bson.M{
 			"userGroup": group.ID,
-			"belongs":   user.ID,
-		})
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
+		users, err := database.MongoDB.Collection("gitUser").Find(c, addedBson)
 
 		if err != nil {
 			c.JSON(500, gin.H{
@@ -1672,12 +1743,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1695,10 +1770,15 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//remove all users from repo
-		users, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+		addedBson = bson.M{
 			"userGroup": group.ID,
-			"belongs":   user.ID,
-		})
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
+		users, err := database.MongoDB.Collection("gitUser").Find(c, addedBson)
 
 		if err != nil {
 			c.JSON(500, gin.H{
@@ -1754,12 +1834,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1780,12 +1864,17 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		var gitUser models.GitHubUser
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+		addedBson = bson.M{
 			"_id":       useridd,
 			"userGroup": group.ID,
-			"belongs":   user.ID,
-		}).Decode(&gitUser)
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, addedBson).Decode(&gitUser)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1829,12 +1918,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1855,12 +1948,17 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		var gitUser models.GitHubUser
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+		addedBson = bson.M{
 			"_id":       useridd,
 			"userGroup": group.ID,
-			"belongs":   user.ID,
-		}).Decode(&gitUser)
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, addedBson).Decode(&gitUser)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1907,12 +2005,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -1922,10 +2024,15 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//remove all users from repo
-		users, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+		addedBson = bson.M{
 			"userGroup": group.ID,
-			"belongs":   user.ID,
-		})
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
+		users, err := database.MongoDB.Collection("gitUser").Find(c, addedBson)
 
 		if err != nil {
 			c.JSON(500, gin.H{
@@ -1977,12 +2084,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -2003,12 +2114,17 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		var gitUser models.GitHubUser
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
+		addedBson = bson.M{
 			"_id":       useridd,
 			"userGroup": group.ID,
-			"belongs":   user.ID,
-		}).Decode(&gitUser)
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
+		var gitUser models.GitHubUser
+		err = database.MongoDB.Collection("gitUser").FindOne(c, addedBson).Decode(&gitUser)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -2042,12 +2158,16 @@ func initManagerRouter(router *gin.Engine) {
 		user := c.MustGet("user").(models.User)
 
 		//find group
+		addedBson := bson.M{
+			"_id": idd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
 
 		var group models.UserGroup
-		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
-			"_id":     idd,
-			"belongs": user.ID,
-		}).Decode(&group)
+		err = database.MongoDB.Collection("userGroup").FindOne(c, addedBson).Decode(&group)
 
 		if err != nil {
 			c.JSON(404, gin.H{
@@ -2068,11 +2188,16 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
+		addedBson = bson.M{
+			"_id": useridd,
+		}
+
+		if !user.IsSuperUser {
+			addedBson["belongs"] = user.ID
+		}
+
 		var gitUser models.GitHubUser
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
-			"_id":     useridd,
-			"belongs": user.ID,
-		}).Decode(&gitUser)
+		err = database.MongoDB.Collection("gitUser").FindOne(c, addedBson).Decode(&gitUser)
 
 		if err != nil {
 			c.JSON(404, gin.H{

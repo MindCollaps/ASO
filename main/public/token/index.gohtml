@@ -27,14 +27,21 @@
 <body>
 
 <div id="token-manager" class="vh-100">
-    <div  class="container d-flex flex-column align-items-center justify-content-center">
-        <div class="p-3 align-self-start"><button class="btn btn-danger" onclick="window.location.href = '/manager?a=token'">Back</button></div>
-        <div class="d-flex align-items-center justify-content-center flex-row p-3 mb-2"><div class="fs-3">${noToken}</div><div class="fs-1"><b>{{.Token}}</b></div></div>
-        <div id="qrcode" style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%"></div>
+    <div class="container d-flex flex-column align-items-center justify-content-center">
+        <div class="p-3 align-self-start">
+            <button class="btn btn-danger" onclick="window.location.href = '/manager?a=token'">Back</button>
+        </div>
+        <div class="d-flex align-items-center justify-content-center flex-row p-3 mb-2">
+            <div class="fs-3">${noToken}</div>
+            <div class="fs-1"><b>{{.Token}}</b></div>
+        </div>
+        <div id="qrcode"
+             style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%"></div>
         <div class="input-group mt-4">
             <input id="inputfield" type="text" class="form-control" aria-label="Uri" aria-describedby="Link">
             <div class="input-group-append">
-                <button class="btn btn-outline-secondary" type="button" @click="copy()"><span class="material-icons">content_copy</span></button>
+                <button class="btn btn-outline-secondary" type="button" @click="copy()"><span class="material-icons">content_copy</span>
+                </button>
             </div>
         </div>
     </div>
@@ -43,7 +50,7 @@
     var main = new Vue({
         el: '#token-manager',
         delimiters: ['${', '}'],
-        created: function() {
+        created: function () {
             document.getElementById("inputfield").setAttribute("value", this.token);
         },
         data: {

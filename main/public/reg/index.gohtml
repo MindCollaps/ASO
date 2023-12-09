@@ -33,7 +33,8 @@
                     <input v-model="username" type="text" class="form-control" id="username"
                            placeholder="ASO">
                     <label for="username">Username</label>
-                    <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only upper
+                    <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long,
+                        contains only upper
                         and lower case characters, . and _ (but not at the end)
                     </div>
                 </div>
@@ -41,7 +42,8 @@
                     <input v-model="email" type="email" class="form-control" id="email"
                            placeholder="ASO">
                     <label for="email">E-Mail</label>
-                    <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is looked up
+                    <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email
+                        is looked up
                         for validation.
                     </div>
                 </div>
@@ -49,7 +51,8 @@
                     <input v-model="password1" type="password" class="form-control" id="password"
                            placeholder="Password" @keyup.enter="register()">
                     <label for="password">Password</label>
-                    <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only upper
+                    <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long,
+                        contains only upper
                         and lower case characters, numbers, and special characters . _ ! ? # - *
                     </div>
                 </div>
@@ -62,12 +65,14 @@
                     <button @click="register()" class="btn btn-primary align-center">Register</button>
                 </div>
                 <div class="toast-container position-fixed bottom-0 end-0 p-3">
-                    <div id="theToast" class="toast text-bg-warning align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div id="theToast" class="toast text-bg-warning align-items-center border-0" role="alert"
+                         aria-live="assertive" aria-atomic="true">
                         <div class="d-flex">
                             <div class="toast-body">
                                 ${error}
                             </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                    aria-label="Close"></button>
                         </div>
                     </div>
                 </div>
@@ -138,7 +143,7 @@
                         document.getElementById("password").classList.remove("is-invalid");
                     }
 
-                    if (data.field == null){
+                    if (data.field == null) {
                         alert(data.message)
                     }
 

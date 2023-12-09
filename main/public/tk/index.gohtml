@@ -39,14 +39,23 @@
                     <h1>Register</h1>
                     <div class="container">
                         <div class="form-floating mb-4">
-                            <input v-model="username" type="text" class="form-control" id="username" placeholder="Noah Till">
+                            <input v-model="username" type="text" class="form-control" id="username"
+                                   placeholder="Noah Till">
                             <label for="username">Username</label>
-                            <div id="helper" class="form-text">A name to easily identify you in the system. The Username should be: Between 3 and 30 characters long, contains only upper and lower case characters, . and _ (but not at the end)</div>
+                            <div id="helper" class="form-text">A name to easily identify you in the system. The Username
+                                should be: Between 3 and 30 characters long, contains only upper and lower case
+                                characters, . and _ (but not at the end)
+                            </div>
                         </div>
                         <div class="form-floating mb-4">
-                            <input v-model="gitUsername" type="text" class="form-control" id="gitUsername" placeholder="MindCollaps" @keyup.enter="submit()">
+                            <input v-model="gitUsername" type="text" class="form-control" id="gitUsername"
+                                   placeholder="MindCollaps" @keyup.enter="submit()">
                             <label for="gitUsername">GitHub Username</label>
-                            <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile. The Username should be: Between 3 and 30 characters long, contains only upper and lower case characters, . and _ (but not at the end)</div>
+                            <div id="helper" class="form-text">The name of your github account. Click <a
+                                        href="https://github.com/settings/profile" target="_blank">here</a> to see your
+                                profile. The Username should be: Between 3 and 30 characters long, contains only upper
+                                and lower case characters, . and _ (but not at the end)
+                            </div>
                         </div>
                         <div class="mb-4 d-flex justify-content-center">
                             <button @click="submit()" class="btn btn-primary align-center">Submit</button>
@@ -54,13 +63,15 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-center align-items-center flex-column h-100 w-100" v-if="done && !failed">
+            <div class="d-flex justify-content-center align-items-center flex-column h-100 w-100"
+                 v-if="done && !failed">
                 <div class="d-flex flex-column align-items-center justify-content-center h-100">
                     <h1>Success</h1>
                     <p>You can now close this window.</p>
                 </div>
             </div>
-            <div class="d-flex justify-content-center align-items-center flex-column h-100 w-100" v-if="!done && failed">
+            <div class="d-flex justify-content-center align-items-center flex-column h-100 w-100"
+                 v-if="!done && failed">
                 <div class="d-flex align-items-center justify-content-center h-100">
                     <h1>${message]</h1>
                 </div>
@@ -104,7 +115,7 @@
                 if (response.status !== 200) {
                     let data = await response.json();
 
-                    if (data.tokenError){
+                    if (data.tokenError) {
                         this.message = data.message;
                         this.failed = true;
                         return

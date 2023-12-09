@@ -46,7 +46,8 @@
                 <input v-model="gitOwner" type="text" class="form-control" id="repoOwner"
                        placeholder="MindCollaps">
                 <label for="repoOwner">Repository owner</label>
-                <div id="emailHelp" class="form-text">The name of the repository owner. github.com/<b>name</b>/project</div>
+                <div id="emailHelp" class="form-text">The name of the repository owner. github.com/<b>name</b>/project
+                </div>
             </div>
             <div class="input-group mb-4">
                 <div class="form-floating">
@@ -64,25 +65,34 @@
             <div class="mb-4 form-check">
                 <input type="checkbox" v-model="doesExpire" class="form-check-input" id="doesExpire">
                 <label class="form-check-label" for="doesExpire">Expires</label>
-                <div id="emailHelp" class="form-text">Does this group expire and is therefor deleted automatically?</div>
+                <div id="emailHelp" class="form-text">Does this group expire and is therefor deleted automatically?
+                </div>
             </div>
             <div v-if="doesExpire" class="mb-4 form-floating">
                 <input v-model="dateExpires" type="datetime-local" class="form-control" id="dateExpires">
                 <label for="dateExpires">Expiry</label>
-                <div id="emailHelp" class="form-text">The date this group expires and is therefor deleted automatically (when Auto Delete is selected)</div>
+                <div id="emailHelp" class="form-text">The date this group expires and is therefor deleted automatically
+                    (when Auto Delete is selected)
+                </div>
             </div>
             <div class="mb-4 form-check">
                 <input type="checkbox" v-model="autoRemove" class="form-check-input" id="autoRemove">
                 <label class="form-check-label" for="autoRemove">Auto Remove</label>
-                <div id="emailHelp" class="form-text">Weather this group removes all the users from the repo, but not from this group</div>
+                <div id="emailHelp" class="form-text">Weather this group removes all the users from the repo, but not
+                    from this group
+                </div>
             </div>
             <div class="mb-4 form-check">
                 <input type="checkbox" v-model="autoDelete" class="form-check-input" id="autoDelete">
                 <label class="form-check-label" for="autoDelete">Auto Delete</label>
-                <div id="emailHelp" class="form-text">Weather this group deletes itself and all users in it when the expiry date is reached</div>
+                <div id="emailHelp" class="form-text">Weather this group deletes itself and all users in it when the
+                    expiry date is reached
+                </div>
             </div>
             <div v-if="!autoRemove && autoDelete" class="bg-danger-subtle rounded-3 shadow p-4">
-                <p class="m-0">Selecting Auto Delete but <b>not</b> Auto Remove will delete the group and all users in it, but not remove them from the repository! This results in deleting all git user related data and therefor loosing track of who is in your repository</p>
+                <p class="m-0">Selecting Auto Delete but <b>not</b> Auto Remove will delete the group and all users in
+                    it, but not remove them from the repository! This results in deleting all git user related data and
+                    therefor loosing track of who is in your repository</p>
             </div>
             <div class="mt-4 d-flex justify-content-center">
                 <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
@@ -106,9 +116,9 @@
             gitName: "",
             autoRemove: true
         },
-        created: function (){
+        created: function () {
             //time in 3 months from now at 01:00
-            var date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12 * 3 );
+            var date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12 * 3);
 
             date.setHours(1);
             date.setMinutes(0);
@@ -161,7 +171,7 @@
                     location.href = "/manager?a=group";
                 }
             },
-            checkRepo: async function (){
+            checkRepo: async function () {
                 let response = await fetch('/manager/repoexists', {
                     method: 'POST',
                     headers: {

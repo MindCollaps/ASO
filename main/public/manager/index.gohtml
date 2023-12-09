@@ -22,7 +22,9 @@
     <!-- Vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
     <!-- Anime JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha512-z4OUqw38qNLpn1libAN9BsoDx6nbNFio5lA6CuTp9NlK83b89hgyCVq+N5FdBJptINztxn1Z3SaKSKUS5UP60Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"
+            integrity="sha512-z4OUqw38qNLpn1libAN9BsoDx6nbNFio5lA6CuTp9NlK83b89hgyCVq+N5FdBJptINztxn1Z3SaKSKUS5UP60Q=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body class="vw-100 vh-100">
 <div id="manager" class="h-100 w-100">
@@ -85,8 +87,11 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                         <li>
-                            <a @click="href('notification')" class="dropdown-item d-flex align-items-center" href="#"><span
-                                        class="material-icons align-middle fs-5 me-1">notifications</span>Notifications<span class="badge bg-secondary ms-1" v-if="newNotifications > 0">${newNotifications}</span></a>
+                            <a @click="href('notification')" class="dropdown-item d-flex align-items-center"
+                               href="#"><span
+                                        class="material-icons align-middle fs-5 me-1">notifications</span>Notifications<span
+                                        class="badge bg-secondary ms-1"
+                                        v-if="newNotifications > 0">${newNotifications}</span></a>
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center" href="/profile"><span
@@ -101,7 +106,8 @@
                     </ul>
                 </div>
                 <span class="dropdown-toggle ms-2"></span>
-                <span v-if="newNotifications > 0" class="bg-warning notification d-inline-block rounded-circle ms-2" style="height: 15px; width: 15px; opacity: 0"></span>
+                <span v-if="newNotifications > 0" class="bg-warning notification d-inline-block rounded-circle ms-2"
+                      style="height: 15px; width: 15px; opacity: 0"></span>
             </div>
         </div>
         <div class="container col p-5 h-100 pane-animation" style="width: 80%;">
@@ -172,7 +178,9 @@
                                         <h3>Created: {{.Date}}</h3>
                                         {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
                                         </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
-                                        <h3>Repository: <a target="_blank" href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h3>
+                                        <h3>Repository: <a target="_blank"
+                                                           href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
+                                                /{{.GitHubRepo}}</a></h3>
                                         <h3>Users: {{.Users}}</h3>
                                         <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
                                                     class="material-icons align-middle fs-5">info</span></button>
@@ -296,7 +304,8 @@
                                             {{end}}
                                         </div>
                                         <div>
-                                            <button type="button" class="btn-close" aria-label="Close" @click="dismissNotification('{{.ID}}')"></button>
+                                            <button type="button" class="btn-close" aria-label="Close"
+                                                    @click="dismissNotification('{{.ID}}')"></button>
                                         </div>
                                     </div>
                                 {{end}}
@@ -456,7 +465,7 @@
         },
         delimiters: ['${', '}'],
         created: async function () {
-            if(this.username.length > 11) {
+            if (this.username.length > 11) {
                 this.username = this.username.substring(0, 11) + "..."
             }
 
@@ -501,7 +510,7 @@
                 //this.animation()
             }, 100)
 
-            if(this.newNotifications > 0){
+            if (this.newNotifications > 0) {
                 //wait for dom to load
                 setTimeout(() => {
                     this.notificationAnimation()
@@ -509,17 +518,17 @@
             }
         },
         methods: {
-            animation: function(){
+            animation: function () {
                 console.log("animation")
                 anime({
                     targets: '.sidebar-animation',
                     translateX: [
-                        { value: -1000, duration: 0 },
-                        { value: 0, duration: 1000 },
+                        {value: -1000, duration: 0},
+                        {value: 0, duration: 1000},
                     ],
                     opacity: [
-                        { value: 0, duration: 0 },
-                        { value: 1, duration: 1000 },
+                        {value: 0, duration: 0},
+                        {value: 1, duration: 1000},
                     ],
                     easing: 'easeOutExpo'
                 })
@@ -527,12 +536,12 @@
                 anime({
                     targets: '.list-animation',
                     translateX: [
-                        { value: 200, duration: 0 },
-                        { value: 0, duration: 1000 },
+                        {value: 200, duration: 0},
+                        {value: 0, duration: 1000},
                     ],
                     opacity: [
-                        { value: 0, duration: 0 },
-                        { value: 1, duration: 1000 },
+                        {value: 0, duration: 0},
+                        {value: 1, duration: 1000},
                     ],
                     delay: anime.stagger(100, {start: 500})
                 })
@@ -540,12 +549,12 @@
                 anime({
                     targets: '.logo-animation',
                     translateY: [
-                        { value: -50, duration: 0 },
-                        { value: 0, duration: 1000 },
+                        {value: -50, duration: 0},
+                        {value: 0, duration: 1000},
                     ],
                     opacity: [
-                        { value: 0, duration: 0 },
-                        { value: 1, duration: 1000 },
+                        {value: 0, duration: 0},
+                        {value: 1, duration: 1000},
                     ],
                     delay: 750,
                     easing: 'easeOutExpo'
@@ -554,12 +563,12 @@
                 anime({
                     targets: '.drop-animation',
                     translateY: [
-                        { value: -50, duration: 0 },
-                        { value: 0, duration: 1000 },
+                        {value: -50, duration: 0},
+                        {value: 0, duration: 1000},
                     ],
                     opacity: [
-                        { value: 0, duration: 0 },
-                        { value: 1, duration: 1000 },
+                        {value: 0, duration: 0},
+                        {value: 1, duration: 1000},
                     ],
                     delay: 750,
                     easing: 'easeOutExpo'
@@ -568,24 +577,24 @@
                 anime({
                     targets: '.pane-animation',
                     translateX: [
-                        { value: -30, duration: 0 },
-                        { value: 0, duration: 1000 },
+                        {value: -30, duration: 0},
+                        {value: 0, duration: 1000},
                     ],
                     opacity: [
-                        { value: 0, duration: 0 },
-                        { value: 1, duration: 1000 },
+                        {value: 0, duration: 0},
+                        {value: 1, duration: 1000},
                     ],
                     delay: 750,
                     easing: 'easeOutExpo'
                 })
             },
-            notificationAnimation: function (){
+            notificationAnimation: function () {
                 anime({
                     delay: 0,
                     targets: '.notification',
                     opacity: [
-                        { value: 0, duration: 0 },
-                        { value: 1, duration: 1000 },
+                        {value: 0, duration: 0},
+                        {value: 1, duration: 1000},
                     ],
                 })
 
@@ -593,8 +602,8 @@
                     endDelay: 1800,
                     targets: '.notification',
                     translateY: [
-                        { value: -10, duration: 200 },
-                        { value: 0, duration: 200 },
+                        {value: -10, duration: 200},
+                        {value: 0, duration: 200},
                     ],
                     loop: true,
                     easing: 'easeOutBack',
@@ -789,7 +798,7 @@
             setLoadingText: async function (text) {
                 this.loadingText = text
             },
-            dismissNotification: async function(id){
+            dismissNotification: async function (id) {
                 let res = await fetch("/manager/notification/" + id, {
                     method: "DELETE"
                 }).then((res) => {
@@ -800,7 +809,7 @@
                     alert("Error dismissing notification")
                 } else {
                     document.getElementById("id-" + id).remove()
-                    this.newNotifications --
+                    this.newNotifications--
                 }
             },
             loadingFirst: async function (first) {

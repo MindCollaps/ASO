@@ -20,7 +20,9 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet">
     <!-- Anime JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha512-z4OUqw38qNLpn1libAN9BsoDx6nbNFio5lA6CuTp9NlK83b89hgyCVq+N5FdBJptINztxn1Z3SaKSKUS5UP60Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"
+            integrity="sha512-z4OUqw38qNLpn1libAN9BsoDx6nbNFio5lA6CuTp9NlK83b89hgyCVq+N5FdBJptINztxn1Z3SaKSKUS5UP60Q=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <div class="vh-100">
@@ -29,7 +31,7 @@
             <div class="d-flex flex-column ">
                 <div class="d-flex justify-content-center align-items-center">
                     <img class="me-2 theimage" style="width: 10vh" src="/favicon.ico" alt="ASO Icon">
-                    <div class="text-white mb-0 me-4 fs-2 welcome">Welcome to </div>
+                    <div class="text-white mb-0 me-4 fs-2 welcome">Welcome to</div>
                     <div class="aso me-2 position-relative text-white fs-1">ASO</div>
                     <div class="ist me-2 position-relative text-white fs-5">IST</div>
                     <div class="das position-relative text-white fs-5">DAS</div>
@@ -48,17 +50,17 @@
         anime({
             targets: '.aso',
             scaleX: [
-                { value: [1,1.15], duration: 2000 },
-                { value: [1.15,1], duration: 2000 },
+                {value: [1, 1.15], duration: 2000},
+                {value: [1.15, 1], duration: 2000},
             ],
             scaleY: [
-                { value: [1, 1.15], duration: 2000 },
-                { value: [1.15,1], duration: 2000 },
+                {value: [1, 1.15], duration: 2000},
+                {value: [1.15, 1], duration: 2000},
             ],
             easing: 'easeInOutQuad',
             loop: true
         })
-    }, 4000 )
+    }, 4000)
 
 
     var tl = anime.timeline();
@@ -66,20 +68,20 @@
     tl.add({
         targets: '.welcome',
         opacity: [
-            { value: 0, duration: 0 },
-            { value: 1, duration: 1000 },
+            {value: 0, duration: 0},
+            {value: 1, duration: 1000},
         ],
         translateX: [
-            { value: 20, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: 20, duration: 0},
+            {value: 0, duration: 1000},
         ],
         translateY: [
-            { value: 40, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: 40, duration: 0},
+            {value: 0, duration: 1000},
         ],
         rotation: [
-            { value: -43, duration: 1000 },
-            { value: 30, duration: 1000 },
+            {value: -43, duration: 1000},
+            {value: 30, duration: 1000},
         ],
         easing: 'easeInOutQuad',
         loop: false
@@ -88,22 +90,22 @@
     tl.add({
         targets: '.aso',
         opacity: [
-            { value: 0, duration: 0 },
-            { value: 1, duration: 100 },
+            {value: 0, duration: 0},
+            {value: 1, duration: 100},
         ],
         translateX: [
-            { value: 250, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: 250, duration: 0},
+            {value: 0, duration: 1000},
         ],
         translateY: [
-            { value: 40, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: 40, duration: 0},
+            {value: 0, duration: 1000},
         ],
         scaleX: [
-            { value: [1.75,1], duration: 200 },
+            {value: [1.75, 1], duration: 200},
         ],
         scaleY: [
-            { value: [1.75, 1], duration: 200 },
+            {value: [1.75, 1], duration: 200},
         ],
         easing: 'easeOutElastic(.1, 1)',
         loop: false
@@ -112,26 +114,26 @@
     tl.add({
         targets: '.ist',
         opacity: [
-            { value: 0, duration: 0 },
-            { value: 1, duration: 100 },
+            {value: 0, duration: 0},
+            {value: 1, duration: 100},
         ],
         translateX: [
-            { value: -250, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: -250, duration: 0},
+            {value: 0, duration: 1000},
         ],
         translateY: [
-            { value: 40, duration: 0 },
-            { value: -20, duration: 1000 },
+            {value: 40, duration: 0},
+            {value: -20, duration: 1000},
         ],
         scaleX: [
-            { value: [1.75,1], duration: 200 },
+            {value: [1.75, 1], duration: 200},
         ],
         scaleY: [
-            { value: [1.75, 1], duration: 200 },
+            {value: [1.75, 1], duration: 200},
         ],
         rotate: [
-            { value: 412, duration: 0 },
-            { value: -29, duration: 1000 },
+            {value: 412, duration: 0},
+            {value: -29, duration: 1000},
         ],
         easing: 'easeOutElastic(.2, .5)',
         loop: false
@@ -140,26 +142,26 @@
     tl.add({
         targets: '.das',
         opacity: [
-            { value: 0, duration: 0 },
-            { value: 1, duration: 100 },
+            {value: 0, duration: 0},
+            {value: 1, duration: 100},
         ],
         translateX: [
-            { value: -250, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: -250, duration: 0},
+            {value: 0, duration: 1000},
         ],
         translateY: [
-            { value: 40, duration: 0 },
-            { value: -6, duration: 1000 },
+            {value: 40, duration: 0},
+            {value: -6, duration: 1000},
         ],
         scaleX: [
-            { value: [1.75,1], duration: 200 },
+            {value: [1.75, 1], duration: 200},
         ],
         scaleY: [
-            { value: [1.75, 1], duration: 200 },
+            {value: [1.75, 1], duration: 200},
         ],
         rotate: [
-            { value: -423, duration: 0 },
-            { value: 32, duration: 1000 },
+            {value: -423, duration: 0},
+            {value: 32, duration: 1000},
         ],
         easing: 'easeOutElastic(.2, .5)',
         loop: false
@@ -168,18 +170,18 @@
     tl.add({
         targets: '.thebtn',
         opacity: [
-            { value: 0, duration: 0 },
-            { value: 1, duration: 1000 },
+            {value: 0, duration: 0},
+            {value: 1, duration: 1000},
         ],
         scaleX: [
-            { value: [0,1], duration: 200 },
+            {value: [0, 1], duration: 200},
         ],
         scaleY: [
-            { value: [0, 1], duration: 200 },
+            {value: [0, 1], duration: 200},
         ],
         translateY: [
-            { value: 40, duration: 0 },
-            { value: 0, duration: 1000 },
+            {value: 40, duration: 0},
+            {value: 0, duration: 1000},
         ],
         easing: 'easeOutElastic(.2, .5)',
         loop: false
@@ -188,18 +190,18 @@
     tl.add({
         targets: '.theimage',
         opacity: [
-            { value: 0, duration: 0 },
-            { value: 1, duration: 1000 },
+            {value: 0, duration: 0},
+            {value: 1, duration: 1000},
         ],
         scaleX: [
-            { value: [0,1], duration: 200 },
+            {value: [0, 1], duration: 200},
         ],
         scaleY: [
-            { value: [0, 1], duration: 200 },
+            {value: [0, 1], duration: 200},
         ],
         translateY: [
-            { value: -40, duration: 0 },
-            { value: 0, duration: 500 },
+            {value: -40, duration: 0},
+            {value: 0, duration: 500},
         ],
     }, 2700)
 </script>

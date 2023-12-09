@@ -31,15 +31,15 @@
             <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=token'">Back</button>
         </div>
         <div class="bg-body-secondary rounded-3 shadow p-4">
-                <h1>Token Name: {{.Name}}</h1>
-                <h2>Token ID: {{.ID}}</h2>
-                <h2>Created: {{.DateCreated}}</h2>
-                <h2>Expires: {{.DateExpires}}</h2>
-                <h2>Count: {{.Count}}</h2>
-                <h2>Used: {{.Used}}</h2>
-                <br>
-                <h1>Management</h1>
-                <button class="btn btn-danger" @click="deleteToken()">Delete</button>
+            <h1>Token Name: {{.Name}}</h1>
+            <h2>Token ID: {{.ID}}</h2>
+            <h2>Created: {{.DateCreated}}</h2>
+            <h2>Expires: {{.DateExpires}}</h2>
+            <h2>Count: {{.Count}}</h2>
+            <h2>Used: {{.Used}}</h2>
+            <br>
+            <h1>Management</h1>
+            <button class="btn btn-danger" @click="deleteToken()">Delete</button>
         </div>
     </div>
 </div>

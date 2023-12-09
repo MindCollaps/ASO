@@ -31,14 +31,14 @@
             <button class="btn btn-danger pl-2 h-50" onclick="window.location.href = '/manager?a=user'">Back</button>
         </div>
         <div class="bg-body-secondary rounded-3 shadow p-4">
-                <h1>Username: {{.Username}}</h1>
-                <h2>User ID: {{.ID}}</h2>
-                <h2>Email: {{.Email}}</h2>
-                <h2>Created: {{.DateCreated}}</h2>
-                <h2>Git Username: {{.GitHubUsername}}</h2>
-                <br>
-                <h1>Management</h1>
-                <button class="btn btn-danger" @click="deleteUser()">Delete User</button>
+            <h1>Username: {{.Username}}</h1>
+            <h2>User ID: {{.ID}}</h2>
+            <h2>Email: {{.Email}}</h2>
+            <h2>Created: {{.DateCreated}}</h2>
+            <h2>Git Username: {{.GitHubUsername}}</h2>
+            <br>
+            <h1>Management</h1>
+            <button class="btn btn-danger" @click="deleteUser()">Delete User</button>
         </div>
     </div>
 </div>

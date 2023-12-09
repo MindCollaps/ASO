@@ -39,7 +39,8 @@
                 </div>
                 <button class="btn btn-primary" type="button" @click="updateUsername()">Update</button>
             </div>
-            <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only upper
+            <div id="helper" class="form-text">The Username should be: Between 3 and 30 characters long, contains only
+                upper
                 and lower case characters, . and _ (but not at the end)
             </div>
         </div>
@@ -52,7 +53,8 @@
                 </div>
                 <button class="btn btn-primary" type="button" @click="updateEmail()">Update</button>
             </div>
-            <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is looked up
+            <div id="helper" class="form-text">The Email should be: Between 5 and 50 characters long. The Email is
+                looked up
                 for validation.
             </div>
         </div>
@@ -62,7 +64,8 @@
             <input v-model="password2" type="password" class="form-control" id="password2"
                    placeholder="Password">
             <label for="password2">Password</label>
-            <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only upper
+            <div id="helper" class="form-text">The Password should be: Between 8 and 50 characters long, contains only
+                upper
                 and lower case characters, numbers, and special characters . _ ! ? # - *
             </div>
         </div>
@@ -80,13 +83,19 @@
             <input v-model="gitHubUsername" type="text" class="form-control" id="gitUsername"
                    placeholder="MindCollaps" @keyup.enter="updateGitUsername()">
             <label for="gitUsername">Git Username</label>
-            <div id="helper" class="form-text">The name of your github account. Click <a href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.</div>
+            <div id="helper" class="form-text">The name of your github account. Click <a
+                        href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.
+            </div>
         </div>
         <div class="form-floating mb-4">
             <input v-model="gitHubToken" type="text" class="form-control" id="token"
                    placeholder="example@example.ex" @keyup.enter="updateToken()">
             <label for="token">Token</label>
-            <div id="helper" class="form-text">Your GitHub Token. Click <a href="https://github.com/settings/tokens" target="_blank">here</a> to see generate one. Make sure the expiry date is either set to <q>No expiration</q> or the time you want to use this tool. Also select the scope repo!</div>
+            <div id="helper" class="form-text">Your GitHub Token. Click <a href="https://github.com/settings/tokens"
+                                                                           target="_blank">here</a> to see generate one.
+                Make sure the expiry date is either set to <q>No expiration</q> or the time you want to use this tool.
+                Also select the scope repo!
+            </div>
         </div>
         <button class="btn btn-primary" type="button" @click="updateGit()">Update Git</button>
     </div>

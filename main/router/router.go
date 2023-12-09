@@ -339,8 +339,7 @@ func InitRouter() {
 			c.Redirect(http.StatusTemporaryRedirect, "/manager")
 			return
 		} else {
-			template := template.Must(template.ParseFiles("main/public/login/index.gohtml", "main/templates/template.gohtml"))
-			template.Execute(c.Writer, nil)
+
 		}
 	})
 
