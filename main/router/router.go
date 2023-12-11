@@ -339,7 +339,8 @@ func InitRouter() {
 			c.Redirect(http.StatusTemporaryRedirect, "/manager")
 			return
 		} else {
-
+			template := template.Must(template.ParseFiles("main/public/login/index.gohtml", "main/templates/template.gohtml"))
+			template.Execute(c.Writer, nil)
 		}
 	})
 
@@ -381,19 +382,6 @@ func InitRouter() {
 			}
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-		}
-	})
-
-	// Seite zur Eingabe des Tokens und Hinzufügen des Benutzernamens zum Repo
-	router.GET("/token", func(c *gin.Context) {
-		token := c.Query("token")
-		if token == "" {
-			c.JSON(400, gin.H{
-				"message": "Please provide a token",
-			})
-			return
-		} else {
-
 		}
 	})
 
