@@ -982,7 +982,6 @@ func initManagerRouter(router *gin.Engine) {
 		token := c.Param("tk")
 
 		//check if token exists
-
 		var tk models.Token
 		err := database.MongoDB.Collection("token").FindOne(c, bson.M{
 			"token": token,

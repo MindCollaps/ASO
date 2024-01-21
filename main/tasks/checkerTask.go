@@ -18,11 +18,125 @@ func initCheckerTasks() {
 		checkGitUsers()
 		checkGroups()
 		checkSoonExpireGroups()
+		checkUserGitState()
 	})
 
 	if err != nil {
 		fmt.Println("Failed to start checker task")
 		fmt.Println(err)
+	}
+}
+
+func checkUserGitState() {
+	curr, err := database.MongoDB.Collection("githubUser").Find(context.Background(), bson.M{
+		"userGroup": bson.M{
+			"$ne": primitive.NilObjectID,
+		},
+		"addedToRepo": false,
+	})
+
+	if err != nil {
+		fmt.Println("Failed to get users")
+		fmt.Println(err)
+		return
+	}
+
+	var users []models.GitHubUser
+	err = curr.All(context.Background(), &users)
+
+	if err != nil {
+		fmt.Println("Failed to parse users")
+		fmt.Println(err)
+		return
+	}
+
+	cachedAdmins := map[string]models.User{}
+	cachedGroups := map[string]models.UserGroup{}
+
+	for _, user := range users {
+		grp := cachedGroups[user.UserGroup.Hex()]
+		if grp.ID == primitive.NilObjectID {
+			err = database.MongoDB.Collection("userGroup").FindOne(context.Background(), bson.M{
+				"_id": user.UserGroup,
+			}).Decode(&grp)
+
+			if err != nil {
+				fmt.Println("Failed to get group")
+				fmt.Println(err)
+				continue
+			}
+
+			cachedGroups[user.UserGroup.Hex()] = grp
+		}
+
+		admin := cachedAdmins[grp.Belongs.Hex()]
+		if admin.ID == primitive.NilObjectID {
+			err = database.MongoDB.Collection("user").FindOne(context.Background(), bson.M{
+				"_id": grp.Belongs,
+			}).Decode(&admin)
+
+			if err != nil {
+				fmt.Println("Failed to get admin")
+				fmt.Println(err)
+				continue
+			}
+
+			cachedAdmins[grp.Belongs.Hex()] = admin
+		}
+
+		if git.CheckIfUserIsColabo(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
+			_, err = database.MongoDB.Collection("githubUser").UpdateOne(context.Background(), bson.M{
+				"_id": user.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"addedToRepo": true,
+				},
+			})
+
+			if err != nil {
+				fmt.Println("Failed to update user")
+				fmt.Println(err)
+				continue
+			}
+
+			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+				ID:           primitive.NewObjectID(),
+				Belongs:      user.Belongs,
+				Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
+				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+				Title:        "User added to repo",
+				UserGroup:    grp.ID,
+				GitHubUser:   user.ID,
+				Token:        primitive.NilObjectID,
+				Style:        "success",
+			})
+		} else if git.CheckIfUserIsPendingInvite(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
+			_, err = database.MongoDB.Collection("githubUser").UpdateOne(context.Background(), bson.M{
+				"_id": user.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"addedToRepo": true,
+				},
+			})
+
+			if err != nil {
+				fmt.Println("Failed to update user")
+				fmt.Println(err)
+				continue
+			}
+
+			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+				ID:           primitive.NewObjectID(),
+				Belongs:      user.Belongs,
+				Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
+				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+				Title:        "User added to repo",
+				UserGroup:    grp.ID,
+				GitHubUser:   user.ID,
+				Token:        primitive.NilObjectID,
+				Style:        "success",
+			})
+		}
 	}
 }
 

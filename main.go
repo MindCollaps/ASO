@@ -17,7 +17,6 @@ func main() {
 		log.Println("No .env file found")
 		log.Println("Please create .env file with the following content:")
 		log.Println("MONGODB_URI=mongodb://localhost:27017")
-		log.Println("GITHUB_TOKEN=<your github token>")
 		return
 	}
 
