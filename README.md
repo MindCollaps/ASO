@@ -47,7 +47,7 @@ PORT=<server port> (optional default port: 8080)
 2. **Run the install Script**:<br>
    Execute the install.sh script to install ASOServer as a systemd service.
    ```shell
-   sudo ./install.sh
+   sudo chmod +x ./install.sh && sudo ./install.sh
    ```
    This script can also update your service if you have already installed it.
 

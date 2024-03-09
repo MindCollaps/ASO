@@ -42,7 +42,7 @@ func InitRouter(fs embed.FS) {
 	files = fs
 	router := gin.Default()
 
-	router.StaticFile("/favicon.ico", "main/public/static/favicon.png")
+	router.StaticFileFS("/favicon.ico", "main/public/static/favicon.png", http.FS(files))
 
 	initRoutes(router)
 	initManagerRouter(router)
