@@ -47,7 +47,8 @@ if [ ! -f "$SERVER_BINARY" ]; then
 fi
 
 if systemctl is-active --quiet aso-server; then
-    read -pr "The ASO Server service is currently running. Do you want to stop it to update? (y/n): " choice
+    echo -n "The ASO Server service is currently running. Do you want to stop it to update? (y/n): "
+    read -r choice
     case "$choice" in
       y|Y )
           systemctl stop aso-server
@@ -62,6 +63,7 @@ if systemctl is-active --quiet aso-server; then
           ;;
     esac
 fi
+
 
 # Create System directory's if it doesn't exist
 mkdir -p "$SYSTEM_ETC_DIR"
