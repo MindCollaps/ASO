@@ -7,12 +7,21 @@ import (
 	"ASOServer/main/logChopper"
 	"ASOServer/main/router"
 	"ASOServer/main/tasks"
+	"embed"
 	"flag"
 	"github.com/joho/godotenv"
 	"log"
 )
 
+//go:embed main/public/*
+var Files embed.FS
+
 func main() {
+	_, err := Files.ReadDir("main/public")
+	if err != nil {
+		log.Println("Failed to read public files - this is likely a problem during compilation. Exiting...")
+		return
+	}
 	// command line arguments
 	flag.BoolVar(&env.UNIX, "unix", false, "Run the server in unix mode")
 	flag.Parse()
@@ -35,7 +44,7 @@ func main() {
 		return
 	}
 
-	err := crypt.KeySetup()
+	err = crypt.KeySetup()
 	if err != nil {
 		log.Println("Failed to setup keys")
 		return
@@ -51,5 +60,5 @@ func main() {
 
 	tasks.StartRepeatingTasks()
 
-	router.InitRouter()
+	router.InitRouter(Files)
 }

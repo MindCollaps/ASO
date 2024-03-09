@@ -37,6 +37,7 @@ $GO_COMMAND build -o ASOServer
 SERVER_BINARY="ASOServer"
 SYSTEM_BINARY_DIR="/usr/local/sbin/"
 SYSTEM_ETC_DIR="/etc/aso"
+SYSTEM_LOG_DIR="/var/log/aso"
 SYSTEMD_UNIT_FILE="/etc/systemd/system/aso-server.service"
 
 # Check if server binary exists in the current directory
@@ -62,8 +63,9 @@ if systemctl is-active --quiet aso-server; then
     esac
 fi
 
-# Create etc directory if it doesn't exist
+# Create System directory's if it doesn't exist
 mkdir -p "$SYSTEM_ETC_DIR"
+mkdir -p "$SYSTEM_LOG_DIR"
 
 # Copy the server binary to the system binary directory
 cp -f "$SERVER_BINARY" "$SYSTEM_BINARY_DIR"

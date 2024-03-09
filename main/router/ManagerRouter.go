@@ -456,7 +456,7 @@ func initManagerRouter(router *gin.Engine) {
 			Notifications: notifications,
 		}
 
-		template := template.Must(template.ParseFiles("main/public/manager/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/index.gohtml"))
 		template.Execute(c.Writer, data)
 	})
 
@@ -553,7 +553,7 @@ func initManagerRouter(router *gin.Engine) {
 			userData.IsInvited = false
 		}
 
-		template := template.Must(template.ParseFiles("main/public/manager/gitusr/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/gitusr/index.gohtml"))
 		template.Execute(c.Writer, userData)
 	})
 
@@ -626,7 +626,7 @@ func initManagerRouter(router *gin.Engine) {
 			groupData.Members = members
 		}
 
-		template := template.Must(template.ParseFiles("main/public/manager/group/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/group/index.gohtml"))
 		template.Execute(c.Writer, groupData)
 	})
 
@@ -660,7 +660,7 @@ func initManagerRouter(router *gin.Engine) {
 	})
 
 	router.GET("/manager/group/create", middleware.LoginToken(), func(c *gin.Context) {
-		template := template.Must(template.ParseFiles("main/public/manager/group/create/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/group/create/index.gohtml"))
 		template.Execute(c.Writer, nil)
 	})
 
@@ -767,7 +767,7 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		template := template.Must(template.ParseFiles("main/public/manager/token/create/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/token/create/index.gohtml"))
 		template.Execute(c.Writer, ManagerCreateTkData{
 			Groups: grps,
 		})
@@ -906,7 +906,7 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		template := template.Must(template.ParseFiles("main/public/token/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/token/index.gohtml"))
 		template.Execute(c.Writer, ManagerTokenData{
 			Token: token,
 		})
@@ -974,7 +974,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		tk := tokenModalToData(token)
 
-		template := template.Must(template.ParseFiles("main/public/manager/token/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/token/index.gohtml"))
 		template.Execute(c.Writer, tk)
 	})
 
@@ -1011,7 +1011,7 @@ func initManagerRouter(router *gin.Engine) {
 			}
 		}
 
-		template := template.Must(template.ParseFiles("main/public/tk/index.gohtml", "main/templates/template.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/tk/index.gohtml", "main/public/templates/template.gohtml"))
 		template.Execute(c.Writer, ManagerTkData{
 			Failed:  failed,
 			Message: message,
@@ -1237,7 +1237,7 @@ func initManagerRouter(router *gin.Engine) {
 			return
 		}
 
-		template := template.Must(template.ParseFiles("main/public/manager/gitusr/create/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/gitusr/create/index.gohtml"))
 		template.Execute(c.Writer, ManagerCreateTkData{
 			Groups: grps,
 		})
@@ -1428,7 +1428,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		usr := userModalToData(user)
 
-		template := template.Must(template.ParseFiles("main/public/manager/user/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/user/index.gohtml"))
 		template.Execute(c.Writer, usr)
 	})
 
@@ -1462,7 +1462,7 @@ func initManagerRouter(router *gin.Engine) {
 	})
 
 	router.GET("/manager/user/create", middleware.SuperUser(), func(c *gin.Context) {
-		template := template.Must(template.ParseFiles("main/public/manager/user/create/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/manager/user/create/index.gohtml"))
 		template.Execute(c.Writer, nil)
 	})
 
@@ -2222,7 +2222,7 @@ func initManagerRouter(router *gin.Engine) {
 
 		userData := userModalToData(user)
 
-		template := template.Must(template.ParseFiles("main/public/profile/index.gohtml", "main/templates/template.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/profile/index.gohtml", "main/public/templates/template.gohtml"))
 		template.Execute(c.Writer, userData)
 	})
 

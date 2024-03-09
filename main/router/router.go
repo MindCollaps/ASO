@@ -5,6 +5,7 @@ import (
 	"ASOServer/main/database"
 	"ASOServer/main/database/models"
 	"ASOServer/main/middleware"
+	"embed"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,6 +20,7 @@ import (
 )
 
 var register = false
+var files embed.FS
 
 func GenerateRandomString(length int) string {
 	// Define the character set for lowercase and uppercase letters
@@ -36,7 +38,8 @@ func GenerateRandomString(length int) string {
 	return string(result)
 }
 
-func InitRouter() {
+func InitRouter(fs embed.FS) {
+	files = fs
 	router := gin.Default()
 
 	router.StaticFile("/favicon.ico", "main/public/static/favicon.png")
@@ -130,7 +133,7 @@ func initRoutes(router *gin.Engine) {
 				c.Redirect(http.StatusTemporaryRedirect, "/manager")
 				return
 			} else {
-				template := template.Must(template.ParseFiles("main/public/homepage/index.gohtml", "main/templates/template.gohtml"))
+				template := template.Must(template.ParseFS(files, "main/public/homepage/index.gohtml", "main/public/templates/template.gohtml"))
 				template.Execute(c.Writer, nil)
 			}
 		}
@@ -171,7 +174,7 @@ func initRoutes(router *gin.Engine) {
 			return
 		}
 
-		template := template.Must(template.ParseFiles("main/public/reg/index.gohtml", "main/templates/template.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/reg/index.gohtml", "main/public/templates/template.gohtml"))
 		template.Execute(c.Writer, nil)
 	})
 
@@ -353,7 +356,7 @@ func initRoutes(router *gin.Engine) {
 			c.Redirect(http.StatusTemporaryRedirect, "/manager")
 			return
 		} else {
-			template := template.Must(template.ParseFiles("main/public/login/index.gohtml", "main/templates/template.gohtml"))
+			template := template.Must(template.ParseFS(files, "main/public/login/index.gohtml", "main/public/templates/template.gohtml"))
 			template.Execute(c.Writer, nil)
 		}
 	})
@@ -424,7 +427,7 @@ func initRoutes(router *gin.Engine) {
 			return
 		}
 
-		template := template.Must(template.ParseFiles("main/public/notification/index.gohtml"))
+		template := template.Must(template.ParseFS(files, "main/public/notification/index.gohtml"))
 		template.Execute(c.Writer, notifications)
 	})
 }
