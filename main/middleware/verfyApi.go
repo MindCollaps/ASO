@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"ASO/main/crypt"
-	"ASO/main/database"
-	"ASO/main/database/models"
+	"ASOServer/main/crypt"
+	"ASOServer/main/database"
+	"ASOServer/main/database/models"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

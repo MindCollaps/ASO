@@ -102,7 +102,7 @@
 </div>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#manager',
         delimiters: ['${', '}'],
         data: {
@@ -118,18 +118,18 @@
         },
         created: function () {
             //time in 3 months from now at 01:00
-            var date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12 * 3);
+            const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12 * 3);
 
             date.setHours(1);
             date.setMinutes(0);
 
             //format date
-            var year = date.getFullYear();
-            var month = date.getMonth() + 1;
-            var day = date.getDate();
+            const year = date.getFullYear();
+            let month = date.getMonth() + 1;
+            let day = date.getDate();
 
-            var hour = date.getHours();
-            var minute = date.getMinutes();
+            let hour = date.getHours();
+            let minute = date.getMinutes();
 
             if (month < 10) month = "0" + month;
             if (day < 10) day = "0" + day;
@@ -141,7 +141,7 @@
         },
         methods: {
             submit: async function () {
-                var date = new Date(this.dateExpires).toISOString();
+                const date = new Date(this.dateExpires).toISOString();
                 console.log(date)
                 let response = await fetch('/manager/group/create', {
                     method: 'POST',
@@ -207,7 +207,7 @@
                 }
             }
         }
-    })
+    });
 </script>
 </body>
 </html>

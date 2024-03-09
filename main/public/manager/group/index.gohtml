@@ -68,13 +68,14 @@
                                 </div>
                                 <div>
                                     {{if .IsCollaborator}}
-                                    <button class="btn btn-danger col" @click="removeFromRepo('{{.ID}}')">Remove from
-                                        Repo
-                                    </button>{{else}}
-                                        {{if .IsInvited}}
-                                        <button class="btn btn-danger col" @click="removeFromRepo('{{.ID}}')">Cancel
-                                            invite
+                                        <button class="btn btn-danger col" @click="removeFromRepo('{{.ID}}')">Remove
+                                            from
+                                            Repo
                                         </button>{{else}}
+                                        {{if .IsInvited}}
+                                            <button class="btn btn-danger col" @click="removeFromRepo('{{.ID}}')">Cancel
+                                                invite
+                                            </button>{{else}}
                                             <button class="btn btn-success col" @click="addToRepo('{{.ID}}')">Add to
                                                 repo
                                             </button>{{end}}{{end}}
@@ -136,7 +137,7 @@
                     if (res.status === 200) {
                         document.location.reload()
                     } else {
-                        var data = res.json()
+                        const data = res.json();
                         alert("Error removing user from group\n" + data.message)
                     }
                 })
@@ -176,7 +177,7 @@
                 });
                 if (res.status === 200) {
                     //reload page
-                    var data = await res.json()
+                    const data = await res.json();
                     if (data.problems.length > 0) {
                         alert("Users removed from git repo, but some users had problems:\n" + data.problems)
                     } else {
@@ -199,7 +200,7 @@
                 });
                 if (res.status === 200) {
                     //reload page
-                    var data = await res.json()
+                    const data = await res.json();
                     if (data.problems.length > 0) {
                         alert("Users added to git repo, but some users had problems:\n" + data.problems)
                     } else {
@@ -216,7 +217,7 @@
                     return
                 }
 
-                var res = await fetch('/manager/git/{{.ID}}/remove/' + id, {
+                const res = await fetch('/manager/git/{{.ID}}/remove/' + id, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -228,12 +229,12 @@
                 if (res.status === 200) {
                     window.location.reload();
                 } else {
-                    var data = await res.json()
+                    const data = await res.json();
                     alert("Error removing user from repo\n" + data.message)
                 }
             },
             addToRepo: async function (id) {
-                var res = await fetch('/manager/git/{{.ID}}/add/' + id, {
+                const res = await fetch('/manager/git/{{.ID}}/add/' + id, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -245,7 +246,7 @@
                 if (res.status === 200) {
                     window.location.reload();
                 } else {
-                    var data = await res.json()
+                    const data = await res.json();
                     alert("Error adding user to repo\n" + data.message)
                 }
             },

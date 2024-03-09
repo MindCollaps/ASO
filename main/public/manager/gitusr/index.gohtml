@@ -188,7 +188,7 @@
                 })
             },
             addToGroup: async function () {
-                var res = await fetch('/manager/group/' + this.group + '/add/' + this.user, {
+                const res = await fetch('/manager/group/' + this.group + '/add/' + this.user, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -200,7 +200,7 @@
                 if (res.status === 200) {
                     window.location.reload();
                 } else {
-                    var data = await res.json()
+                    const data = await res.json();
                     alert("Error adding user to group\n" + data.message)
                 }
             },
@@ -209,7 +209,7 @@
                     return
                 }
 
-                var res = await fetch('/manager/git/' + this.group + '/remove/' + this.user, {
+                const res = await fetch('/manager/git/' + this.group + '/remove/' + this.user, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -221,12 +221,12 @@
                 if (res.status === 200) {
                     window.location.reload();
                 } else {
-                    var data = await res.json()
+                    const data = await res.json();
                     alert("Error removing user from repo\n" + data.message)
                 }
             },
             addToRepo: async function () {
-                var res = await fetch('/manager/git/' + this.group + '/add/' + this.user, {
+                const res = await fetch('/manager/git/' + this.group + '/add/' + this.user, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -238,7 +238,7 @@
                 if (res.status === 200) {
                     window.location.reload();
                 } else {
-                    var data = await res.json()
+                    const data = await res.json();
                     alert("Error adding user to repo\n" + data.message)
                 }
             },

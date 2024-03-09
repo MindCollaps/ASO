@@ -27,6 +27,18 @@ func InitDatabase() bool {
 		panic(err)
 	}
 
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal("Failed to connect to MongoDB")
+		return false
+	}
+
+	dbName := os.Getenv("MONGODB_DB")
+	if dbName == "" {
+		log.Fatal("You must set your 'MONGODB_DB' environmental variable.")
+		return false
+	}
+
 	MongoDB = client.Database("ASO")
 	return true
 }

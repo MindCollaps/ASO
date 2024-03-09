@@ -1,17 +1,17 @@
 package router
 
 import (
-	"ASO/main/crypt"
-	"ASO/main/database"
-	"ASO/main/database/models"
-	"ASO/main/git"
-	"ASO/main/middleware"
-	"fmt"
+	"ASOServer/main/crypt"
+	"ASOServer/main/database"
+	"ASOServer/main/database/models"
+	"ASOServer/main/git"
+	"ASOServer/main/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/softbrewery/gojoi/pkg/joi"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"strconv"
 	"text/template"
 	"time"
@@ -585,7 +585,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(404, gin.H{
 				"message": "User group not found",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -683,7 +683,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -693,12 +693,12 @@ func initManagerRouter(router *gin.Engine) {
 		if requestBody.Expires {
 			if err != nil || dateExpiresTime.Before(time.Now()) {
 				if err != nil {
-					fmt.Println(err)
+					log.Println(err)
 					c.JSON(400, gin.H{
 						"message": "Invalid date",
 					})
 				} else {
-					fmt.Println("Date must be in the future")
+					log.Println("Date must be in the future")
 					c.JSON(400, gin.H{
 						"message": "Date must be in the future",
 					})
@@ -749,7 +749,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when creating group",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -789,7 +789,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -799,7 +799,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid gitusr group id",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -821,7 +821,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid count",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 		//check count
@@ -830,7 +830,7 @@ func initManagerRouter(router *gin.Engine) {
 				"message": "Invalid count",
 			})
 
-			fmt.Println("Invalid count")
+			log.Println("Invalid count")
 			return
 		}
 
@@ -839,12 +839,12 @@ func initManagerRouter(router *gin.Engine) {
 
 		if err != nil || dateExpiresTime.Before(time.Now()) {
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				c.JSON(400, gin.H{
 					"message": "Invalid date",
 				})
 			} else {
-				fmt.Println("Date must be in the future")
+				log.Println("Date must be in the future")
 				c.JSON(400, gin.H{
 					"message": "Date must be in the future",
 				})
@@ -875,7 +875,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when creating token",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1030,7 +1030,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1042,7 +1042,7 @@ func initManagerRouter(router *gin.Engine) {
 				"field":   "username",
 			})
 
-			fmt.Println("Invalid username")
+			log.Println("Invalid username")
 			return
 		}
 
@@ -1053,7 +1053,7 @@ func initManagerRouter(router *gin.Engine) {
 				"field":   "gitUsername",
 			})
 
-			fmt.Println("Invalid github username")
+			log.Println("Invalid github username")
 			return
 		}
 
@@ -1073,7 +1073,7 @@ func initManagerRouter(router *gin.Engine) {
 				"tokenError": true,
 			})
 
-			fmt.Println("Token not found")
+			log.Println("Token not found")
 			return
 		}
 
@@ -1082,7 +1082,7 @@ func initManagerRouter(router *gin.Engine) {
 				"message":    "Token is a user registration token",
 				"tokenError": true,
 			})
-			fmt.Println("Token is a user registration token")
+			log.Println("Token is a user registration token")
 			return
 		}
 
@@ -1092,7 +1092,7 @@ func initManagerRouter(router *gin.Engine) {
 				"message":    "Token is already expired",
 				"tokenError": true,
 			})
-			fmt.Println("Token is already expired")
+			log.Println("Token is already expired")
 			return
 		}
 
@@ -1102,7 +1102,7 @@ func initManagerRouter(router *gin.Engine) {
 				"message":    "Tokens usage limit reached",
 				"tokenError": true,
 			})
-			fmt.Println("Tokens usage limit reached")
+			log.Println("Tokens usage limit reached")
 			return
 		}
 
@@ -1116,7 +1116,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "User already exists in this group",
 			})
-			fmt.Println("User already exists")
+			log.Println("User already exists")
 			return
 		}
 
@@ -1130,7 +1130,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(404, gin.H{
 				"message": "User group not found",
 			})
-			fmt.Println("User group not found")
+			log.Println("User group not found")
 			return
 		}
 
@@ -1144,7 +1144,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Creator not found",
 			})
-			fmt.Println("Creator not found")
+			log.Println("Creator not found")
 			return
 		}
 
@@ -1152,7 +1152,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "User can not be found on github",
 			})
-			fmt.Println("User can not be found on github")
+			log.Println("User can not be found on github")
 			return
 		}
 
@@ -1163,7 +1163,7 @@ func initManagerRouter(router *gin.Engine) {
 				c.JSON(500, gin.H{
 					"message": "Internal server error when adding gitusr to repo",
 				})
-				fmt.Println("Internal server error when adding gitusr to repo")
+				log.Println("Internal server error when adding gitusr to repo")
 				return
 			}
 			isColabo = true
@@ -1189,7 +1189,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when creating gitusr",
 			})
-			fmt.Println("Internal server error when creating gitusr")
+			log.Println("Internal server error when creating gitusr")
 			return
 		}
 
@@ -1258,7 +1258,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1273,7 +1273,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "User already exists",
 			})
-			fmt.Println("User already exists")
+			log.Println("User already exists")
 			return
 		}
 
@@ -1285,7 +1285,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid gitusr group id",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1300,7 +1300,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(404, gin.H{
 				"message": "User group not found",
 			})
-			fmt.Println("User group not found")
+			log.Println("User group not found")
 			return
 		}
 
@@ -1310,7 +1310,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Username is too short",
 			})
-			fmt.Println("Username is too short")
+			log.Println("Username is too short")
 			return
 		}
 
@@ -1318,7 +1318,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Username is too long",
 			})
-			fmt.Println("Username is too long")
+			log.Println("Username is too long")
 			return
 		}
 
@@ -1331,9 +1331,9 @@ func initManagerRouter(router *gin.Engine) {
 					"message": "Invalid date",
 				})
 				if err != nil {
-					fmt.Println(err)
+					log.Println(err)
 				} else {
-					fmt.Println("Invalid date")
+					log.Println("Invalid date")
 				}
 				return
 			}
@@ -1362,7 +1362,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when creating gitusr",
 			})
-			fmt.Println("Internal server error when creating gitusr")
+			log.Println("Internal server error when creating gitusr")
 			return
 		}
 
@@ -1479,7 +1479,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1488,12 +1488,12 @@ func initManagerRouter(router *gin.Engine) {
 
 		if err != nil || dateExpiresTime.Before(time.Now()) {
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				c.JSON(400, gin.H{
 					"message": "Invalid date",
 				})
 			} else {
-				fmt.Println("Date must be in the future")
+				log.Println("Date must be in the future")
 				c.JSON(400, gin.H{
 					"message": "Date must be in the future",
 				})
@@ -1511,7 +1511,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid count",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1535,7 +1535,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when creating token",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1559,7 +1559,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1593,7 +1593,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid user id",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -1696,7 +1696,7 @@ func initManagerRouter(router *gin.Engine) {
 			var gitUser models.GitHubUser
 			err = users.Decode(&gitUser)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 
@@ -1787,7 +1787,7 @@ func initManagerRouter(router *gin.Engine) {
 			var gitUser models.GitHubUser
 			err = users.Decode(&gitUser)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 
@@ -2041,7 +2041,7 @@ func initManagerRouter(router *gin.Engine) {
 			var gitUser models.GitHubUser
 			err = users.Decode(&gitUser)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 
@@ -2240,7 +2240,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2251,7 +2251,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid email",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2265,7 +2265,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Email is already in use",
 			})
-			fmt.Println("Email is already in use")
+			log.Println("Email is already in use")
 			return
 		}
 
@@ -2282,7 +2282,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when updating email",
 			})
-			fmt.Println("Internal server error when updating email")
+			log.Println("Internal server error when updating email")
 			return
 		}
 
@@ -2303,7 +2303,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2313,7 +2313,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid username",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2327,7 +2327,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Username is already in use",
 			})
-			fmt.Println("Username is already in use")
+			log.Println("Username is already in use")
 			return
 		}
 
@@ -2344,7 +2344,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when updating username",
 			})
-			fmt.Println("Internal server error when updating username")
+			log.Println("Internal server error when updating username")
 			return
 		}
 
@@ -2367,7 +2367,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2377,7 +2377,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid gitUsername",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2387,7 +2387,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid gitToken",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2395,7 +2395,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid gitToken or gitUsername",
 			})
-			fmt.Println("Invalid gitToken or gitUsername")
+			log.Println("Invalid gitToken or gitUsername")
 			return
 		}
 
@@ -2413,7 +2413,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when updating gitUsername and gitToken",
 			})
-			fmt.Println("Internal server error when updating gitUsername and gitToken")
+			log.Println("Internal server error when updating gitUsername and gitToken")
 			return
 		}
 
@@ -2434,7 +2434,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid form data",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2444,7 +2444,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid password",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2455,7 +2455,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when hashing password",
 			})
-			fmt.Println("Internal server error when hashing password")
+			log.Println("Internal server error when hashing password")
 			return
 		}
 
@@ -2472,7 +2472,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when updating password",
 			})
-			fmt.Println("Internal server error when updating password")
+			log.Println("Internal server error when updating password")
 			return
 		}
 
@@ -2490,7 +2490,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(400, gin.H{
 				"message": "Invalid notification id",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -2502,7 +2502,7 @@ func initManagerRouter(router *gin.Engine) {
 			c.JSON(500, gin.H{
 				"message": "Internal server error when deleting notification",
 			})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 

@@ -83,7 +83,7 @@
 </div>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#register',
         data: {
             username: '',
@@ -106,7 +106,7 @@
                 }
 
 
-                var res = await fetch('/reg', {
+                const res = await fetch('/reg', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -123,7 +123,7 @@
                 if (res.status === 200) {
                     window.location.href = '/manager';
                 } else {
-                    var data = await res.json();
+                    const data = await res.json();
 
                     if (data.field == 'username') {
                         document.getElementById("username").classList.add("is-invalid");

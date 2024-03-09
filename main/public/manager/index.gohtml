@@ -332,7 +332,7 @@
 </div>
 
 
-<style type="text/css">
+<style>
     @keyframes ldio-uo18igsiuze {
         0% {
             top: 96px;
@@ -393,7 +393,7 @@
 </style>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#manager',
         data: {
             loading: false,
@@ -676,12 +676,12 @@
             },
             infoGroup: async function (id) {
                 //redirect to info group page
-                this.loadingScreen()
+                await this.loadingScreen()
                 document.location.href = "/manager/group/" + id
             },
             infoGUser: async function (id) {
                 //redirect to manage users page
-                this.loadingScreen()
+                await this.loadingScreen()
                 document.location.href = "/manager/gitusr/" + id
             },
             createGitUser: async function () {
@@ -694,7 +694,7 @@
             },
             infoToken: async function (id) {
                 //redirect to info token page
-                this.loadingScreen()
+                await this.loadingScreen()
                 document.location.href = "/manager/token/" + id
             },
             deleteToken: async function (id) {
@@ -741,7 +741,7 @@
             },
             infoUser: async function (id) {
                 //redirect to info user page
-                this.loadingScreen()
+                await this.loadingScreen()
                 document.location.href = "/manager/user/" + id
             },
             createRegisterToken: async function () {
@@ -860,7 +860,7 @@
                 }, 1000)
             }
         }
-    })
+    });
 </script>
 </body>
 </html>

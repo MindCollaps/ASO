@@ -2,12 +2,12 @@ package git
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/go-github/v56/github"
+	"log"
 )
 
-// map of github clients
-var GitHubClients map[string]*github.Client
+// GitHubClients map of GitHub clients
+var HubClients map[string]*github.Client
 
 func CheckUser(username string, token string) bool {
 	gitClient := GetGithubClient(token)
@@ -40,7 +40,7 @@ func CheckRepoExists(owner string, token string, repo string) bool {
 	_, _, err := gitClient.Repositories.Get(c, owner, repo)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 
@@ -59,7 +59,7 @@ func AddUserToRepo(username string, token string, repoName string, owner string)
 	Repo, _, err := gitClient.Repositories.Get(c, owner, repoName)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 
@@ -99,14 +99,14 @@ func CheckIfUserIsColabo(owner string, username string, token string, repo strin
 	_, _, err := gitClient.Repositories.Get(c, owner, repo)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 
 	isCol, _, err := gitClient.Repositories.IsCollaborator(c, owner, repo, username)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 
@@ -119,7 +119,7 @@ func CheckIfUserIsPendingInvite(owner string, username string, token string, rep
 	_, _, err := gitClient.Repositories.Get(c, owner, repo)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 
@@ -131,7 +131,7 @@ func CheckIfUserIsPendingInvite(owner string, username string, token string, rep
 	invites, _, err := gitClient.Repositories.ListInvitations(c, owner, repo, options)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 
@@ -145,28 +145,28 @@ func CheckIfUserIsPendingInvite(owner string, username string, token string, rep
 }
 
 func GetGithubClient(token string) *github.Client {
-	if GitHubClients == nil {
-		GitHubClients = make(map[string]*github.Client)
+	if HubClients == nil {
+		HubClients = make(map[string]*github.Client)
 	}
 
-	if GitHubClients[token] == nil {
-		GitHubClients[token] = github.NewClient(nil).WithAuthToken(token)
-		if GitHubClients[token] == nil {
+	if HubClients[token] == nil {
+		HubClients[token] = github.NewClient(nil).WithAuthToken(token)
+		if HubClients[token] == nil {
 			return nil
 		}
-		return GitHubClients[token]
+		return HubClients[token]
 	}
 
-	return GitHubClients[token]
+	return HubClients[token]
 }
 
 func CheckNewToken(owner string, token string, tokenBefore string) bool {
-	if GitHubClients == nil {
-		GitHubClients = make(map[string]*github.Client)
+	if HubClients == nil {
+		HubClients = make(map[string]*github.Client)
 	}
 
-	if GitHubClients[tokenBefore] != nil {
-		delete(GitHubClients, tokenBefore)
+	if HubClients[tokenBefore] != nil {
+		delete(HubClients, tokenBefore)
 	}
 
 	gitClient := github.NewClient(nil).WithAuthToken(token)
@@ -181,7 +181,7 @@ func CheckNewToken(owner string, token string, tokenBefore string) bool {
 		return false
 	}
 
-	GitHubClients[token] = gitClient
+	HubClients[token] = gitClient
 
 	return true
 }

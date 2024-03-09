@@ -1,11 +1,10 @@
 package router
 
 import (
-	"ASO/main/crypt"
-	"ASO/main/database"
-	"ASO/main/database/models"
-	"ASO/main/middleware"
-	"fmt"
+	"ASOServer/main/crypt"
+	"ASOServer/main/database"
+	"ASOServer/main/database/models"
+	"ASOServer/main/middleware"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -40,6 +39,21 @@ func GenerateRandomString(length int) string {
 func InitRouter() {
 	router := gin.Default()
 
+	router.StaticFile("/favicon.ico", "main/public/static/favicon.png")
+
+	initRoutes(router)
+	initManagerRouter(router)
+
+	//Get port from env
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	router.Run(":" + port)
+}
+
+func initRoutes(router *gin.Engine) {
 	router.GET("/", func(c *gin.Context) {
 		if !register {
 			//check if the regauth coockie exists
@@ -129,7 +143,7 @@ func InitRouter() {
 			if err != nil {
 				c.SetCookie("regauth", "", -1, "/", "", false, true)
 				c.Redirect(http.StatusTemporaryRedirect, "/")
-				fmt.Println(err)
+				log.Println(err)
 				return
 			}
 			token := jwt["token"]
@@ -142,7 +156,7 @@ func InitRouter() {
 			if err != nil {
 				c.SetCookie("regauth", "", -1, "/", "", false, true)
 				c.Redirect(http.StatusTemporaryRedirect, "/")
-				fmt.Println(err)
+				log.Println(err)
 				return
 			}
 
@@ -167,7 +181,7 @@ func InitRouter() {
 		jwt, err := crypt.ParseJwt(regAuth)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -179,7 +193,7 @@ func InitRouter() {
 
 		if err := c.ShouldBindJSON(&requestBody); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -191,46 +205,46 @@ func InitRouter() {
 
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
 		//check date
 		if token.DateExpires.Time().Before(time.Now()) {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			fmt.Println("Token expired")
+			log.Println("Token expired")
 			return
 		}
 
 		if !token.IsUserRegistrationToken {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			fmt.Println("Token is not a user registration token")
+			log.Println("Token is not a user registration token")
 			return
 		}
 
 		//check count
 		if token.Used >= token.Count {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			fmt.Println("Token count exceeded")
+			log.Println("Token count exceeded")
 			return
 		}
 
 		//joi validation
 		if err := UsernameSchema.Validate(requestBody.Username); err != nil {
 			c.JSON(400, gin.H{"error": err.Error(), "message": "Username invalid", "field": "username"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
 		if err := PasswordSchema.Validate(requestBody.Password); err != nil {
 			c.JSON(400, gin.H{"error": err.Error(), "message": "Password invalid", "field": "password"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
 		if err := EmailSchema.Validate(requestBody.Email); err != nil {
 			c.JSON(400, gin.H{"error": err.Error(), "message": "Email invalid", "field": "email"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -245,7 +259,7 @@ func InitRouter() {
 		if err == nil {
 			// User with the same username already exists
 			c.JSON(http.StatusConflict, gin.H{"message": "Username already exists"})
-			fmt.Println("Username already exists")
+			log.Println("Username already exists")
 			return
 		}
 
@@ -254,12 +268,12 @@ func InitRouter() {
 		if err == nil {
 			// User with the same email already exists
 			c.JSON(http.StatusConflict, gin.H{"message": "Email already exists"})
-			fmt.Println("Email already exists")
+			log.Println("Email already exists")
 			return
 		} else if err != mongo.ErrNoDocuments {
 			// Handle other database query errors
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -267,7 +281,7 @@ func InitRouter() {
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -287,7 +301,7 @@ func InitRouter() {
 		if err != nil {
 			// Handle database insertion error
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -390,18 +404,6 @@ func InitRouter() {
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 		return
 	})
-
-	router.StaticFile("/favicon.ico", "main/public/static/favicon.png")
-
-	initManagerRouter(router)
-
-	//Get port from env
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	router.Run(":" + port)
 
 	router.GET("/notification", middleware.LoginToken(), func(c *gin.Context) {
 		var notifications []models.Notification

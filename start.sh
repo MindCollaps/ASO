@@ -1,6 +1,0 @@
-echo building server...
-/usr/local/go/bin/go build
-echo server built!
-echo starting server...
-screen -AdmS aso ./ASO
-echo server started!

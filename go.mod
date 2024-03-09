@@ -1,16 +1,16 @@
-module ASO
+module ASOServer
 
 go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/go-co-op/gocron v1.35.2
-	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/go-co-op/gocron v1.37.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-github/v56 v56.0.1-0.20231012000239-16e695dadf7a
 	github.com/joho/godotenv v1.5.1
 	github.com/softbrewery/gojoi v0.0.0-20180423202125-34d5e1054ec7
-	go.mongodb.org/mongo-driver v1.12.1
-	golang.org/x/crypto v0.14.0
+	go.mongodb.org/mongo-driver v1.14.0
+	golang.org/x/crypto v0.21.0
 )
 
 require (
@@ -25,7 +25,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/uuid v1.3.1 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
@@ -47,10 +47,10 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -49,7 +49,7 @@
             <div class="mb-4 form-check">
                 <input type="checkbox" v-model="superUser" class="form-check-input" id="superUser">
                 <label class="form-check-label" for="superUser">Super User</label>
-                <div id="helper" class="form-text">Will the user be able to have super user privileges?</div>
+                <div id="helper" class="form-text">Will the user be able to have superuser privileges?</div>
             </div>
             <div class="mb-4 d-flex justify-content-center">
                 <button @click="submit()" class="btn btn-success p-3 pt-1 pb-1 align-center fs-4">Submit</button>
@@ -59,7 +59,7 @@
 </div>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#token-manager',
         data: {
             superUser: false,
@@ -68,15 +68,15 @@
             name: ""
         },
         created: function () {
-            var date = new Date(Date.now() + 5 * 60000);
+            const date = new Date(Date.now() + 5 * 60000);
 
             //format date
-            var year = date.getFullYear();
-            var month = date.getMonth() + 1;
-            var day = date.getDate();
+            const year = date.getFullYear();
+            let month = date.getMonth() + 1;
+            let day = date.getDate();
 
-            var hour = date.getHours();
-            var minute = date.getMinutes();
+            let hour = date.getHours();
+            let minute = date.getMinutes();
 
             if (month < 10) month = "0" + month;
             if (day < 10) day = "0" + day;
@@ -88,7 +88,7 @@
         },
         methods: {
             submit: async function () {
-                var date = new Date(this.dateExpires).toISOString();
+                const date = new Date(this.dateExpires).toISOString();
                 let response = await fetch('/manager/user/create', {
                     method: 'POST',
                     headers: {

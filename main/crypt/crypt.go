@@ -1,12 +1,12 @@
 package crypt
 
 import (
+	"ASOServer/main/env"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -16,11 +16,19 @@ import (
 	"time"
 )
 
-const rsaKeyPath = "rsa_private_key.pem"
+const rsaKeyName = "rsa_private_key.pem"
 
 var rsaKey *rsa.PrivateKey = nil
 
+func getRsaKeyPath() string {
+	rsaKeyPath := rsaKeyName
+	if env.UNIX {
+		rsaKeyPath = "/etc/aso/" + rsaKeyName
+	}
+	return rsaKeyPath
+}
 func KeySetup() error {
+	rsaKeyPath := getRsaKeyPath()
 	// Check if the RSA private key already exists on the file system.
 	if _, err := os.Stat(rsaKeyPath); !os.IsNotExist(err) {
 		// If it exists, load and return the existing key.
@@ -29,7 +37,7 @@ func KeySetup() error {
 			return err
 		}
 
-		fmt.Println("RSA key loaded successfully")
+		log.Println("RSA key loaded successfully")
 		rsaKey = rsky
 		return nil
 	}
@@ -54,11 +62,12 @@ func KeySetup() error {
 
 	rsaKey = privateKey
 
-	fmt.Println("RSA key generated successfully")
+	log.Println("RSA key generated successfully")
 	return nil
 }
 
 func loadRS256Key() (*rsa.PrivateKey, error) {
+	rsaKeyPath := getRsaKeyPath()
 	// Read the private key from the file system.
 	keyBytes, err := ioutil.ReadFile(rsaKeyPath)
 	if err != nil {
@@ -125,7 +134,7 @@ func getDateNow() int64 {
 func ParseJwt(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, errors.New("unexpected signing method")
 		}
 		return rsaKey.Public(), nil
 	})

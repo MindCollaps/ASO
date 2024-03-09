@@ -4,7 +4,7 @@ ASO (Arnold's Super Organizer) is a powerful program designed to help you effici
 or user groups within your GitHub projects. Whether you're an educator managing a class project or an organization with
 multiple collaborators, ASO simplifies group management and enhances your workflow.
 
-## Features
+## 👾 Features
 
 - **Create User Groups**: ASO allows you to create user groups for your GitHub project. Each user group can have an
   optional expiration date, ensuring that users are automatically removed from the project when the specified date is
@@ -23,7 +23,7 @@ multiple collaborators, ASO simplifies group management and enhances your workfl
   of generating one yourself.\
   If you already have an RSA key, you can simply replace the existing key with your own under `./rsa_private_key.pem`
 
-## Getting Started
+## 🚀 Getting Started
 
 To run ASO, make sure you have the following prerequisites:
 
@@ -33,28 +33,66 @@ To run ASO, make sure you have the following prerequisites:
 
 ```shell
 MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=ASO
 PORT=<server port> (optional default port: 8080)
 ```
 
-## How to Use ASO
+## 💻 Automatic Setup
 
-1. **Clone the Repository**: Begin by cloning the ASO repository to your local machine.
-
+1. **Clone the Repository**:<br>
+   Begin by cloning the ASO repository to your local machine.
    ```shell
    git clone https://github.com/MindCollaps/ASO
    ```
-2. **Set Up Environment Variables**: Create an .env file in the root directory and add your MongoDB URI and the optional
-   PORT, as mentioned in the prerequisites.
-3. **Compile the Program**: Build the program using the following command in the ASO directory:
+2. **Run the install Script**:<br>
+   Execute the install.sh script to install ASOServer as a systemd service.
+   ```shell
+   sudo ./install.sh
+   ```
+   This script can also update your service if you have already installed it.
+
+## 🛠️ Manual Setup
+
+1. **Clone the Repository**:<br>
+   Begin by cloning the ASO repository to your local machine.
+   ```shell
+   git clone https://github.com/MindCollaps/ASO
+   ```
+
+2. **Set Up Environment Variables**:<br>
+   Create an .env file in the root directory and add your MongoDB URI and the optional
+   PORT and DB, as mentioned in the prerequisites.
+
+3. **Compile the Program**:<br>
+   Build the program using the following command in the ASO directory:
    ```shell
    go build
    ```
-5. **Run the Program**: Execute the program using the following command:
+
+4. **Run the Program**:<br>
+   Execute the program using the following command:
    ```shell
-   ./ASO
+   ./ASOServer
    ```
 
-## License
+## 🌈 MISC
+
+### 📜 Install Script
+
+The `install.sh` script offers a streamlined solution for installing ASOServer on Unix-based systems as a systemd
+service.
+
+### Command Line Arguments (install.sh)
+
+- ```install.sh --go <path>```: Change go path
+
+### 🔎 Where to find stuff
+
+- **Binary** : ```/usr/local/sbin/ASOServer```
+- **Config and Keys** : ```/etc/aso/```
+- **Logs** : ```/var/log/aso/aso.log```
+
+## 🧑‍⚖️ License
 
 ASO is an open-source project released under the MIT License.
 

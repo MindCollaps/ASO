@@ -1,13 +1,13 @@
 package tasks
 
 import (
-	"ASO/main/database"
-	"ASO/main/database/models"
-	"ASO/main/git"
+	"ASOServer/main/database"
+	"ASOServer/main/database/models"
+	"ASOServer/main/git"
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
 	"strconv"
 	"time"
 )
@@ -22,12 +22,13 @@ func initCheckerTasks() {
 	})
 
 	if err != nil {
-		fmt.Println("Failed to start checker task")
-		fmt.Println(err)
+		log.Println("Failed to start checker task")
+		log.Println(err)
 	}
 }
 
 func checkUserGitState() {
+	log.Println("Checking user git state")
 	curr, err := database.MongoDB.Collection("githubUser").Find(context.Background(), bson.M{
 		"userGroup": bson.M{
 			"$ne": primitive.NilObjectID,
@@ -36,8 +37,8 @@ func checkUserGitState() {
 	})
 
 	if err != nil {
-		fmt.Println("Failed to get users")
-		fmt.Println(err)
+		log.Println("Failed to get users")
+		log.Println(err)
 		return
 	}
 
@@ -45,8 +46,8 @@ func checkUserGitState() {
 	err = curr.All(context.Background(), &users)
 
 	if err != nil {
-		fmt.Println("Failed to parse users")
-		fmt.Println(err)
+		log.Println("Failed to parse users")
+		log.Println(err)
 		return
 	}
 
@@ -61,8 +62,8 @@ func checkUserGitState() {
 			}).Decode(&grp)
 
 			if err != nil {
-				fmt.Println("Failed to get group")
-				fmt.Println(err)
+				log.Println("Failed to get group")
+				log.Println(err)
 				continue
 			}
 
@@ -76,8 +77,8 @@ func checkUserGitState() {
 			}).Decode(&admin)
 
 			if err != nil {
-				fmt.Println("Failed to get admin")
-				fmt.Println(err)
+				log.Println("Failed to get admin")
+				log.Println(err)
 				continue
 			}
 
@@ -94,8 +95,8 @@ func checkUserGitState() {
 			})
 
 			if err != nil {
-				fmt.Println("Failed to update user")
-				fmt.Println(err)
+				log.Println("Failed to update user")
+				log.Println(err)
 				continue
 			}
 
@@ -120,8 +121,8 @@ func checkUserGitState() {
 			})
 
 			if err != nil {
-				fmt.Println("Failed to update user")
-				fmt.Println(err)
+				log.Println("Failed to update user")
+				log.Println(err)
 				continue
 			}
 
@@ -141,7 +142,7 @@ func checkUserGitState() {
 }
 
 func checkSoonExpireGroups() {
-	fmt.Println("Checking soon expire groups")
+	log.Println("Checking soon expire groups")
 	cur, err := database.MongoDB.Collection("userGroup").Find(context.Background(), bson.M{
 		"expires":         true,
 		"notify":          true,
@@ -153,20 +154,20 @@ func checkSoonExpireGroups() {
 	})
 
 	if err != nil {
-		fmt.Println("Failed to get groups")
-		fmt.Println(err)
+		log.Println("Failed to get groups")
+		log.Println(err)
 	}
 
 	var groups []models.UserGroup
 	err = cur.All(context.Background(), &groups)
 
 	if err != nil {
-		fmt.Println("!!Failed to parse groups!!")
-		fmt.Println(err)
+		log.Println("!!Failed to parse groups!!")
+		log.Println(err)
 	}
 
 	for _, group := range groups {
-		fmt.Println("Group soon expired: " + group.Name)
+		log.Println("Group soon expired: " + group.Name)
 
 		//get days till expire
 		toTime := group.DateExpires.Time()
@@ -203,7 +204,7 @@ func checkSoonExpireGroups() {
 }
 
 func checkTokens() {
-	fmt.Println("Checking tokens")
+	log.Println("Checking tokens")
 	cur, err := database.MongoDB.Collection("token").Find(context.Background(), bson.M{
 		"$or": []bson.M{
 			{
@@ -220,20 +221,20 @@ func checkTokens() {
 	})
 
 	if err != nil {
-		fmt.Println("Failed to get tokens")
-		fmt.Println(err)
+		log.Println("Failed to get tokens")
+		log.Println(err)
 	}
 
 	var tokens []models.Token
 	err = cur.All(context.Background(), &tokens)
 
 	if err != nil {
-		fmt.Println("!!Failed to parse tokens!!")
-		fmt.Println(err)
+		log.Println("!!Failed to parse tokens!!")
+		log.Println(err)
 	}
 
 	for _, token := range tokens {
-		fmt.Println("Token expired: " + token.Name)
+		log.Println("Token expired: " + token.Name)
 
 		//get creator
 		var creator models.User
@@ -244,8 +245,8 @@ func checkTokens() {
 			}).Decode(&creator)
 
 			if err != nil {
-				fmt.Println("Failed to get creator")
-				fmt.Println(err)
+				log.Println("Failed to get creator")
+				log.Println(err)
 				continue
 			}
 		}
@@ -255,8 +256,8 @@ func checkTokens() {
 		})
 
 		if err != nil {
-			fmt.Println("Failed to delete token " + token.Name)
-			fmt.Println(err)
+			log.Println("Failed to delete token " + token.Name)
+			log.Println(err)
 			continue
 		}
 
@@ -277,7 +278,7 @@ func checkTokens() {
 }
 
 func checkGitUsers() {
-	fmt.Println("Checking git users")
+	log.Println("Checking git users")
 	cur, err := database.MongoDB.Collection("githubUser").Find(context.Background(), bson.M{
 		"expires":      true,
 		"expiresGroup": false,
@@ -287,20 +288,20 @@ func checkGitUsers() {
 	})
 
 	if err != nil {
-		fmt.Println("Failed to get users")
-		fmt.Println(err)
+		log.Println("Failed to get users")
+		log.Println(err)
 	}
 
 	var users []models.GitHubUser
 	err = cur.All(context.Background(), &users)
 
 	if err != nil {
-		fmt.Println("!!Failed to parse users!!")
-		fmt.Println(err)
+		log.Println("!!Failed to parse users!!")
+		log.Println(err)
 	}
 
 	for _, user := range users {
-		fmt.Println("User expired: " + user.Username)
+		log.Println("User expired: " + user.Username)
 
 		//get creator
 		var creator models.User
@@ -310,8 +311,8 @@ func checkGitUsers() {
 		}).Decode(&creator)
 
 		if err != nil {
-			fmt.Println("Failed to get creator")
-			fmt.Println(err)
+			log.Println("Failed to get creator")
+			log.Println(err)
 			continue
 		}
 
@@ -328,7 +329,7 @@ func checkGitUsers() {
 		if err == nil {
 			if user.AddedToRepo {
 				if !git.RemoveUserFromRepo(creator.GitHubUsername, user.GitHubUsername, creator.GitHubToken, user.UserGroup.Hex()) {
-					fmt.Println("Failed to remove user " + user.Username + " from repo " + user.UserGroup.Hex())
+					log.Println("Failed to remove user " + user.Username + " from repo " + user.UserGroup.Hex())
 					sendErrorNotification("Failed to remove user from repo", "Failed to remove user "+user.Username+" from repo "+group.GitHubRepo, user.Belongs, 1, user.ID)
 					continue
 				}
@@ -342,8 +343,8 @@ func checkGitUsers() {
 		})
 
 		if err != nil {
-			fmt.Println("Failed to delete user " + user.Username)
-			fmt.Println(err)
+			log.Println("Failed to delete user " + user.Username)
+			log.Println(err)
 			continue
 		}
 
@@ -372,7 +373,7 @@ func checkGitUsers() {
 }
 
 func checkGroups() {
-	fmt.Println("Checking groups")
+	log.Println("Checking groups")
 	cur, err := database.MongoDB.Collection("userGroup").Find(context.Background(), bson.M{
 		"expires":         true,
 		"notifiedDeleted": false,
@@ -382,20 +383,20 @@ func checkGroups() {
 	})
 
 	if err != nil {
-		fmt.Println("Failed to get groups")
-		fmt.Println(err)
+		log.Println("Failed to get groups")
+		log.Println(err)
 	}
 
 	var groups []models.UserGroup
 	err = cur.All(context.Background(), &groups)
 
 	if err != nil {
-		fmt.Println("!!Failed to parse groups!!")
-		fmt.Println(err)
+		log.Println("!!Failed to parse groups!!")
+		log.Println(err)
 	}
 
 	for _, group := range groups {
-		fmt.Println("Group expired: " + group.Name)
+		log.Println("Group expired: " + group.Name)
 
 		//get users in group
 		cur, err := database.MongoDB.Collection("gitUser").Find(context.Background(), bson.M{
@@ -403,8 +404,8 @@ func checkGroups() {
 		})
 
 		if err != nil {
-			fmt.Println("Failed to get users")
-			fmt.Println(err)
+			log.Println("Failed to get users")
+			log.Println(err)
 			continue
 		}
 
@@ -412,8 +413,8 @@ func checkGroups() {
 		err = cur.All(context.Background(), &users)
 
 		if err != nil {
-			fmt.Println("Failed to parse users")
-			fmt.Println(err)
+			log.Println("Failed to parse users")
+			log.Println(err)
 			continue
 		}
 
@@ -425,8 +426,8 @@ func checkGroups() {
 		}).Decode(&creator)
 
 		if err != nil {
-			fmt.Println("Failed to get creator")
-			fmt.Println(err)
+			log.Println("Failed to get creator")
+			log.Println(err)
 			continue
 		}
 
@@ -437,7 +438,7 @@ func checkGroups() {
 				if user.ExpiresGroup && (group.AutoDelete || group.AutoRemoveUsers) {
 					if user.AddedToRepo && group.AutoRemoveUsers {
 						if !git.RemoveUserFromRepo(group.GitHubOwner, user.GitHubUsername, creator.GitHubToken, group.GitHubRepo) {
-							fmt.Println("Failed to remove user " + user.Username + " from repo " + group.GitHubRepo)
+							log.Println("Failed to remove user " + user.Username + " from repo " + group.GitHubRepo)
 							sendErrorNotification("Failed to remove user from repo", "Failed to remove user "+user.Username+" from repo "+group.GitHubRepo, user.Belongs, 1, user.ID)
 							continue
 						}
@@ -489,7 +490,7 @@ func checkGroups() {
 			}
 
 			if len(skipped) > 0 {
-				repoRemoveText += ", skipped " + fmt.Sprintf("%d", len(skipped)) + " users because they are not expired by group"
+				repoRemoveText += ", skipped " + strconv.Itoa(len(skipped)) + " users because they are not expired by group"
 			}
 
 			_, err = database.MongoDB.Collection("userGroup").DeleteOne(context.Background(), bson.M{
@@ -497,15 +498,15 @@ func checkGroups() {
 			})
 
 			if err != nil {
-				fmt.Println("Failed to delete group " + group.Name)
-				fmt.Println(err)
+				log.Println("Failed to delete group " + group.Name)
+				log.Println(err)
 				continue
 			}
 
 			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
 				ID:           primitive.NewObjectID(),
 				Belongs:      group.Belongs,
-				Notification: "Group " + group.Name + " has been deleted! " + fmt.Sprintf("%d", len(users)-len(skipped)) + " users have been removed from the group" + repoRemoveText + "!",
+				Notification: "Group " + group.Name + " has been deleted! " + strconv.Itoa(len(users)-len(skipped)) + " users have been removed from the group" + repoRemoveText + "!",
 				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
 				Title:        "Group " + group.Name + " triggered Auto Delete",
 				UserGroup:    primitive.NilObjectID,
@@ -517,13 +518,13 @@ func checkGroups() {
 			repoRemoveText := ""
 
 			if len(skipped) > 0 {
-				repoRemoveText += ", skipped " + fmt.Sprintf("%d", len(skipped)) + " users because they are not expired by group"
+				repoRemoveText += ", skipped " + strconv.Itoa(len(skipped)) + " users because they are not expired by group"
 			}
 
 			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
 				ID:           primitive.NewObjectID(),
 				Belongs:      group.Belongs,
-				Notification: "Group " + group.Name + " has triggered auto remove on " + fmt.Sprintf("%d", len(users)-len(skipped)) + " users. They have been removed from repo " + group.GitHubRepo + repoRemoveText + "!",
+				Notification: "Group " + group.Name + " has triggered auto remove on " + strconv.Itoa(len(users)-len(skipped)) + " users. They have been removed from repo " + group.GitHubRepo + repoRemoveText + "!",
 				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
 				Title:        "Group " + group.Name + " has triggered Auto Remove",
 				UserGroup:    group.ID,

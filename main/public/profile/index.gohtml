@@ -83,7 +83,7 @@
             <input v-model="gitHubUsername" type="text" class="form-control" id="gitUsername"
                    placeholder="MindCollaps" @keyup.enter="updateGitUsername()">
             <label for="gitUsername">Git Username</label>
-            <div id="helper" class="form-text">The name of your github account. Click <a
+            <div id="helper" class="form-text">The name of your GitHub account. Click <a
                         href="https://github.com/settings/profile" target="_blank">here</a> to see your profile.
             </div>
         </div>
@@ -103,7 +103,7 @@
 </div>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#register',
         data: {
             username: '{{.Username}}',
@@ -148,7 +148,7 @@
                 });
 
                 if (res.status !== 200) {
-                    var data = await res.json();
+                    const data = await res.json();
                     alert('Error updating password ' + data.message);
                     document.getElementById('password1').setAttribute('value', '');
                     document.getElementById('password2').setAttribute('value', '');
@@ -176,7 +176,7 @@
                 });
 
                 if (res.status !== 200) {
-                    var data = await res.json();
+                    const data = await res.json();
                     alert('Error updating username ' + data.message);
 
                 } else {
@@ -197,7 +197,7 @@
                 });
 
                 if (res.status !== 200) {
-                    var data = await res.json();
+                    const data = await res.json();
                     alert('Error updating email ' + data.message);
 
                 } else {
@@ -219,7 +219,7 @@
                 });
 
                 if (res.status !== 200) {
-                    var data = await res.json();
+                    const data = await res.json();
                     alert('Error updating git ' + data.message);
                     document.getElementById('gitUsername').classList.add('is-invalid');
                     document.getElementById('gitUsername').classList.remove('is-valid');

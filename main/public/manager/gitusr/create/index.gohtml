@@ -92,7 +92,7 @@
 </div>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#token-manager',
         data: {
             username: "",
@@ -103,18 +103,18 @@
             dateExpires: "",
         },
         created: function () {
-            var date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 3);
+            const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 3);
 
             date.setHours(1);
             date.setMinutes(0);
 
             //format date
-            var year = date.getFullYear();
-            var month = date.getMonth() + 1;
-            var day = date.getDate();
+            const year = date.getFullYear();
+            let month = date.getMonth() + 1;
+            let day = date.getDate();
 
-            var hour = date.getHours();
-            var minute = date.getMinutes();
+            let hour = date.getHours();
+            let minute = date.getMinutes();
 
             if (month < 10) month = "0" + month;
             if (day < 10) day = "0" + day;
@@ -126,7 +126,7 @@
         },
         methods: {
             submit: async function () {
-                var date = new Date(this.dateExpires).toISOString();
+                const date = new Date(this.dateExpires).toISOString();
                 let response = await fetch('/manager/gitusr/create', {
                     method: 'POST',
                     headers: {

@@ -51,7 +51,7 @@
                             <input v-model="gitUsername" type="text" class="form-control" id="gitUsername"
                                    placeholder="MindCollaps" @keyup.enter="submit()">
                             <label for="gitUsername">GitHub Username</label>
-                            <div id="helper" class="form-text">The name of your github account. Click <a
+                            <div id="helper" class="form-text">The name of your GitHub account. Click <a
                                         href="https://github.com/settings/profile" target="_blank">here</a> to see your
                                 profile. The Username should be: Between 3 and 30 characters long, contains only upper
                                 and lower case characters, . and _ (but not at the end)
@@ -82,7 +82,7 @@
 </div>
 
 <script>
-    var main = new Vue({
+    const main = new Vue({
         el: '#token-manager',
         data: {
             username: "",
