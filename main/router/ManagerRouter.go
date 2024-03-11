@@ -64,6 +64,7 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 				IsExpired:      expired,
 				ExpiryByGroup:  user.ExpiresGroup,
 				AddedToRepo:    user.AddedToRepo,
+				Expires:        user.Expires,
 			}
 		} else {
 			usrDt = GitUserData{
@@ -76,6 +77,7 @@ func fetchAllGitUsers(c *gin.Context) ([]GitUserData, error) {
 				IsExpired:      expired,
 				ExpiryByGroup:  user.ExpiresGroup,
 				AddedToRepo:    user.AddedToRepo,
+				Expires:        user.Expires,
 			}
 		}
 		if usrDt.DateExpires == "0001-01-01 01:00:00" {
@@ -285,6 +287,24 @@ func fetchAllNotifications(c *gin.Context) ([]NotificationData, error) {
 	return notifications, nil
 }
 
+func fetchGroupById(c *gin.Context, id string) (UserGroupData, error) {
+	idd, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserGroupData{}, err
+	}
+
+	var group models.UserGroup
+	err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+		"_id": idd,
+	}).Decode(&group)
+
+	if err != nil {
+		return UserGroupData{}, err
+	}
+
+	return userGroupModalToData(group), nil
+}
+
 func userModalToData(user models.User) UserData {
 	dateCreated := user.DateCreated.Time().Format("2006-01-02 15:04:05")
 
@@ -333,6 +353,7 @@ type GitUserData struct {
 	ExpiryByGroup  bool            `json:"expiryByGroup" bson:"expiryByGroup"`
 	UserGroup      UserGroupData   `json:"userGroup" bson:"userGroup"`
 	Groups         []UserGroupData `json:"groups" bson:"groups"`
+	Expires        bool            `json:"expires" bson:"expires"`
 	IsCollaborator bool            `json:"isCollaborator" bson:"isCollaborator"`
 	IsInvited      bool            `json:"isInvited" bson:"isInvited"`
 	IsExpired      bool            `json:"isExpired" bson:"isExpired"`
@@ -755,6 +776,106 @@ func initManagerRouter(router *gin.Engine) {
 
 		c.JSON(200, gin.H{
 			"message": "Group created",
+		})
+	})
+
+	router.GET("/manager/group/edit/:id", middleware.LoginToken(), func(c *gin.Context) {
+		grp, err := fetchGroupById(c, c.Param("id"))
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when fetching group",
+			})
+			return
+		}
+
+		template := template.Must(template.ParseFS(files, "main/public/manager/group/edit/index.gohtml"))
+		template.Execute(c.Writer, grp)
+	})
+
+	router.POST("/manager/group/edit/:id", middleware.LoginToken(), func(c *gin.Context) {
+		var requestBody struct {
+			Name            string `json:"name" bson:"name" binding:"required"`
+			DateExpires     string `json:"dateExpires" bson:"dateExpires"`
+			Notify          bool   `json:"notify" bson:"notify"`
+			Expires         bool   `json:"doesExpire" bson:"doesExpire"`
+			AutoDelete      bool   `json:"autoDelete" bson:"autoDelete"`
+			GitRepo         string `json:"gitRepo" bson:"gitRepo" binding:"required"`
+			GitOwner        string `json:"gitOwner" bson:"gitOwner"`
+			AutoRemoveUsers bool   `json:"autoRemoveUsers" bson:"autoRemoveUsers"`
+		}
+
+		//check id
+		idd, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid gitusr group id",
+			})
+			log.Println(err)
+			return
+		}
+
+		//get from body
+		err = c.BindJSON(&requestBody)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid form data",
+			})
+			log.Println(err)
+			return
+		}
+
+		//parse expire date
+		dateExpiresTime, err := time.Parse("2006-01-02T15:04:05.000Z", requestBody.DateExpires)
+
+		if requestBody.Expires {
+			if err != nil || dateExpiresTime.Before(time.Now()) {
+				if err != nil {
+					log.Println(err)
+					c.JSON(400, gin.H{
+						"message": "Invalid date",
+					})
+				} else {
+					log.Println("Date must be in the future")
+					c.JSON(400, gin.H{
+						"message": "Date must be in the future",
+					})
+				}
+				return
+			}
+		}
+
+		if !requestBody.Expires {
+			//set time to 0
+			dateExpiresTime = time.Time{}
+		}
+
+		//create group
+		_, err = database.MongoDB.Collection("userGroup").UpdateOne(c, gin.H{
+			"_id": idd,
+		},
+			gin.H{
+				"$set": gin.H{
+					"name":            requestBody.Name,
+					"dateExpires":     primitive.NewDateTimeFromTime(dateExpiresTime),
+					"autoDelete":      requestBody.AutoDelete,
+					"notify":          requestBody.Notify,
+					"expires":         requestBody.Expires,
+					"autoRemoveUsers": requestBody.AutoRemoveUsers,
+					"gitHubRepo":      requestBody.GitRepo,
+					"gitHubOwner":     requestBody.GitOwner,
+				},
+			})
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"message": "Internal server error when updating group",
+			})
+			log.Println(err)
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "Group updated",
 		})
 	})
 

@@ -80,7 +80,7 @@
         <hr class="mt-5 mb-5">
         <h2>GitHub</h2>
         <div class="form-floating mb-4">
-            <input v-model="gitHubUsername" type="text" class="form-control" id="gitUsername"
+            <input v-model="gitHubUsername" type="text" class="form-control {{if .Username}}is-valid{{end}}" id="gitUsername"
                    placeholder="MindCollaps" @keyup.enter="updateGitUsername()">
             <label for="gitUsername">Git Username</label>
             <div id="helper" class="form-text">The name of your GitHub account. Click <a
@@ -88,7 +88,7 @@
             </div>
         </div>
         <div class="form-floating mb-4">
-            <input v-model="gitHubToken" type="text" class="form-control" id="token"
+            <input v-model="gitHubToken" type="text" class="form-control {{if .Token}}is-valid{{end}}" id="token"
                    placeholder="example@example.ex" @keyup.enter="updateToken()">
             <label for="token">Token</label>
             <div id="helper" class="form-text">Your GitHub Token. Click <a href="https://github.com/settings/tokens"

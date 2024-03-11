@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Define paths
+SERVER_BINARY="ASOServer"
+SYSTEM_BINARY_DIR="/usr/local/sbin/"
+SYSTEM_ETC_DIR="/etc/aso"
+SYSTEM_LOG_DIR="/var/log/aso"
+SYSTEMD_UNIT_FILE="/etc/systemd/system/aso-server.service"
+
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
     key="$1"
@@ -29,16 +36,14 @@ if [[ -z $(command -v $GO_COMMAND) ]]; then
     exit 1
 fi
 
+filePath="./$SERVER_BINARY"
+
+# Check if the file exists and remove it if it does
+[ -f "$filePath" ] && rm "$filePath"
+
 # Build server binary
 echo "Building server binary..."
-$GO_COMMAND build -o ASOServer
-
-# Define paths
-SERVER_BINARY="ASOServer"
-SYSTEM_BINARY_DIR="/usr/local/sbin/"
-SYSTEM_ETC_DIR="/etc/aso"
-SYSTEM_LOG_DIR="/var/log/aso"
-SYSTEMD_UNIT_FILE="/etc/systemd/system/aso-server.service"
+$GO_COMMAND build -o $SERVER_BINARY
 
 # Check if server binary exists in the current directory
 if [ ! -f "$SERVER_BINARY" ]; then

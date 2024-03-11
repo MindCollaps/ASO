@@ -106,8 +106,9 @@
                     </ul>
                 </div>
                 <span class="dropdown-toggle ms-2"></span>
-                <span v-if="newNotifications > 0" class="bg-warning notification d-inline-block rounded-circle ms-2"
-                      style="height: 15px; width: 15px; opacity: 0"></span>
+                <span v-if="newNotifications > 0"
+                      class="material-icons bg-warning notification d-inline-block rounded-circle ms-2 d-flex align-items-center justify-content-center"
+                      style="height: 19px; width: 19px; opacity: 0; color: rgba(var(--bs-tertiary-bg-rgb)); font-size: 15px">notifications</span>
             </div>
         </div>
         <div class="container col p-5 h-100 pane-animation" style="width: 80%;">
@@ -125,36 +126,48 @@
                                         <h1>{{.GitHubUsername}}</h1>
                                         <h3>Created: {{.DateCreated}}</h3>
                                         {{if .ExpiryByGroup}}
-                                            {{if .UserGroup.Name}}
-                                                {{if .UserGroup.IsExpired}}
-                                                    <h3>Expires by group: <a class="text-decoration-none text-danger">Expired</a>
-                                                    </h3>
-                                                {{else}}<h3>Expires by group: <a
-                                                            class="text-decoration-none text-warning">{{.UserGroup.DateExpires}}</a>
-                                                </h3>{{end}}
-                                            {{else}}{{if .IsExpired}}<h3>Expires: <a
-                                                        class="text-decoration-none text-danger">Expired</a>
-                                            </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
-                                            {{end}}{{else}}
-                                            {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
-                                            </h3>{{else}}<h3>
-                                                Expires: {{.DateExpires}}</h3>{{end}}{{end}}
-                                        <div class="d-flex flex-column bg-body-tertiary rounded-3 p-3">
-                                            {{if .UserGroup.Name}}
-                                                <h3>Group: {{.UserGroup.Name}}</h3>
-                                                <h3>Repository: <a target="_blank"
-                                                                   href="https://github.com/{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}">{{.UserGroup.GitHubOwner}}
-                                                        /{{.UserGroup.GitHubRepo}}</a></h3>
-                                            {{else}}
-                                                <h3>Group: None</h3>
+                                        {{if .UserGroup.Name}}
+                                        {{if .UserGroup.IsExpired}}
+                                        {{if .UserGroup.Expires}}
+                                        <h3>Expires by group: <a class="text-decoration-none text-danger">Expired</a>
+                                        </h3>
+                                        {{else}}
+                                        <h3>Expires by group: <a class="text-decoration-none text-warning">Group does
+                                                not expire</a>
                                             {{end}}
-                                        </div>
-                                        <button class="btn btn-secondary mb-3 mt-4" @click="infoGUser('{{.ID}}')"><span
-                                                    class="material-icons align-middle fs-5">info</span></button>
-                                        <button class="btn btn-danger mb-3 mt-4"
-                                                @click="deleteGUser('{{.ID}}')"><span
-                                                    class="material-icons align-middle fs-5">delete</span>
-                                        </button>
+                                            {{else}}<h3>Expires by group: <a
+                                                        class="text-decoration-none text-warning">{{.UserGroup.DateExpires}}</a>
+                                            </h3>{{end}}
+                                            {{else}}
+                                                {{if .IsExpired}}<h3>Expires: <a
+                                                            class="text-decoration-none text-danger">Expired</a>
+                                                </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                                            {{end}}{{else}}
+                                                {{if .IsExpired}}{{if .Expires}}<h3>Expires: <a
+                                                            class="text-decoration-none text-danger">Expired</a>
+                                                </h3>{{else}}<h3>Expires: <a class="text-decoration-none text-warning">Does
+                                                        not expire</a></h3>{{end}}{{else}}<h3>
+                                                    Expires: {{.DateExpires}}</h3>{{end}}{{end}}
+                                            <div class="d-flex flex-column bg-body-tertiary rounded-3 p-3">
+                                                {{if .UserGroup.Name}}
+                                                    <h3>Group: {{.UserGroup.Name}}</h3>
+                                                    <h3>Repository: <a target="_blank"
+                                                                       href="https://github.com/{{.UserGroup.GitHubOwner}}/{{.UserGroup.GitHubRepo}}">{{.UserGroup.GitHubOwner}}
+                                                            /{{.UserGroup.GitHubRepo}}</a></h3>
+                                                {{else}}
+                                                    <h3>Group: None</h3>
+                                                {{end}}
+                                            </div>
+                                            <div class="text-end">
+                                                <button class="btn btn-secondary mb-3 mt-4"
+                                                        @click="infoGUser('{{.ID}}')"><span
+                                                            class="material-icons align-middle fs-5">info</span>
+                                                </button>
+                                                <button class="btn btn-danger mb-3 mt-4"
+                                                        @click="deleteGUser('{{.ID}}')"><span
+                                                            class="material-icons align-middle fs-5">delete</span>
+                                                </button>
+                                            </div>
                                     </div>
                                 {{end}}
                             {{else}}
@@ -173,20 +186,38 @@
                         <div class="d-flex align-items-center flex-column overflow-auto">
                             {{if .Groups}}
                                 {{range .Groups}}
-                                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3">
-                                        <h1>{{.Name}}</h1>
-                                        <h3>Created: {{.Date}}</h3>
-                                        {{if .IsExpired}}<h3>Expires: <a class="text-decoration-none text-danger">Expired</a>
-                                        </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
-                                        <h3>Repository: <a target="_blank"
-                                                           href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
-                                                /{{.GitHubRepo}}</a></h3>
-                                        <h3>Users: {{.Users}}</h3>
-                                        <button class="btn btn-secondary mb-3 mt-4" @click="infoGroup('{{.ID}}')"><span
-                                                    class="material-icons align-middle fs-5">info</span></button>
-                                        <button class="btn btn-danger mb-3 mt-4" @click="deleteGroup('{{.ID}}')"><span
-                                                    class="material-icons align-middle fs-5">delete</span>
-                                        </button>
+                                    <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3 d-flex flex-row">
+                                        <div class="h-100" style="width: 90%">
+                                            <h1>{{.Name}}</h1>
+                                            <h3>Created: {{.Date}}</h3>
+                                            {{if .IsExpired}}{{if .Expires}}<h3>Expires: <a
+                                                        class="text-decoration-none text-danger">Expired</a>
+                                            </h3>{{else}}<h3>Expires: <a class="text-decoration-none text-warning">Does
+                                                    not expire</a></h3>{{end}}
+                                            </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                                            <h3>Repository: <a target="_blank"
+                                                               href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
+                                                    /{{.GitHubRepo}}</a></h3>
+                                            <h3>Users: {{.Users}}</h3>
+                                        </div>
+                                        <div class="h-100 d-flex">
+                                            <div class="h-100 d-flex flex-column justify-content-between">
+                                                <div class="d-flex flex-row gap-2">
+                                                    <button class="btn btn-secondary"
+                                                            @click="infoGroup('{{.ID}}')"><span
+                                                                class="material-icons align-middle fs-5">info</span>
+                                                    </button>
+                                                    <button class="btn btn-success" @click="editGroup('{{.ID}}')">
+                                                        <span class="material-icons align-middle fs-5">settings</span>
+                                                    </button>
+                                                </div>
+                                                <div class="text-end">
+                                                    <button class="btn btn-danger" @click="deleteGroup('{{.ID}}')"><span
+                                                                class="material-icons align-middle fs-5">delete</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 {{end}}
                             {{else}}
@@ -203,20 +234,35 @@
                     <div class="d-flex justify-content-center align-items-center flex-column gap-4 overflow-auto">
                         {{if .Tokens}}
                             {{range .Tokens}}
-                                <div class="w-75 column bg-body-secondary rounded-3 shadow p-3">
-                                    <h1>{{.Name}}</h1>
-                                    <h3>Created: {{.DateCreated}}</h3>
-                                    {{if .IsExpired}}<h3>Expires: <a
-                                                class="text-decoration-none text-danger">Expired</a>
-                                    </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
-                                    <h3>Used: {{.Used}}</h3>
-                                    <button class="btn btn-secondary mb-3 mt-4" @click="infoToken('{{.ID}}')"><span
-                                                class="material-icons align-middle fs-5">info</span></button>
-                                    <button class="btn btn-secondary mb-3 mt-4" @click="qrToken('{{.Token}}')"><span
-                                                class="material-icons align-middle fs-5">qr_code_scanner</span></button>
-                                    <button class="btn btn-danger mb-3 mt-4"
-                                            @click="deleteToken('{{.ID}}')">Delete
-                                    </button>
+                                <div class="w-75 column bg-body-secondary rounded-3 shadow p-3 mb-3 d-flex flex-row">
+                                    <div class="h-100" style="width: 90%">
+                                        <h1>{{.Name}}</h1>
+                                        <h3>Created: {{.DateCreated}}</h3>
+                                        {{if .IsExpired}}<h3>Expires: <a
+                                                    class="text-decoration-none text-danger">Expired</a>
+                                        </h3>{{else}}<h3>Expires: {{.DateExpires}}</h3>{{end}}
+                                        <h3>Used: {{.Used}}</h3>
+                                    </div>
+                                    <div class="d-flex">
+                                        <div class="h-100 d-flex flex-column justify-content-between">
+                                            <div class="d-flex flex-row gap-2">
+                                                <button class="btn btn-secondary"
+                                                        @click="infoToken('{{.ID}}')"><span
+                                                            class="material-icons align-middle fs-5">info</span>
+                                                </button>
+                                                <button class="btn btn-success"
+                                                        @click="qrToken('{{.Token}}')"><span
+                                                            class="material-icons align-middle fs-5">qr_code_scanner</span>
+                                                </button>
+                                            </div>
+                                            <div class="text-end">
+                                                <button class="btn btn-danger"
+                                                        @click="deleteToken('{{.ID}}')"><span
+                                                            class="material-icons align-middle fs-5">delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             {{end}}
                         {{else}}
@@ -743,6 +789,11 @@
                 //redirect to info user page
                 await this.loadingScreen()
                 document.location.href = "/manager/user/" + id
+            },
+            editGroup: async function (id) {
+                //redirect to edit group page
+                await this.loadingScreen()
+                document.location.href = "/manager/group/edit/" + id
             },
             createRegisterToken: async function () {
                 //redirect to create register token page

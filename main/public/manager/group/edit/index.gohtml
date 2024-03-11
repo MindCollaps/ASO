@@ -37,12 +37,7 @@
                 <label for="floatingInput">Name</label>
                 <div id="emailHelp" class="form-text">A name to identify the group in the system</div>
             </div>
-            <div class="mb-4 form-check">
-                <input type="checkbox" v-model="gitOwn" class="form-check-input" id="own">
-                <label class="form-check-label" for="own">Own Repo</label>
-                <div id="emailHelp" class="form-text">Does this repo belong to you? github.com/<b>name</b>/project</div>
-            </div>
-            <div v-if="!gitOwn" class="form-floating mb-4">
+            <div class="form-floating mb-4">
                 <input v-model="gitOwner" type="text" class="form-control" id="repoOwner"
                        placeholder="MindCollaps">
                 <label for="repoOwner">Repository owner</label>
@@ -106,15 +101,14 @@
         el: '#manager',
         delimiters: ['${', '}'],
         data: {
-            name: "",
-            dateExpires: "",
-            doesExpire: true,
-            notify: true,
-            autoDelete: true,
-            gitOwn: true,
-            gitOwner: "",
-            gitName: "",
-            autoRemove: true
+            name: "{{.Name}}",
+            dateExpires: "{{.DateExpires}}",
+            doesExpire: {{.Expires}},
+            notify: {{.Notify}},
+            autoDelete: {{.AutoDelete}},
+            gitOwner: "{{.GitHubOwner}}",
+            gitName: "{{.GitHubRepo}}",
+            autoRemove: {{.AutoRemoveUsers}}
         },
         created: function () {
             //time in 3 months from now at 01:00
@@ -150,7 +144,7 @@
                     alert("Repository name is required");
                     return;
                 }
-                if (!this.gitOwn && this.gitOwner === "") {
+                if (this.gitOwner === "") {
                     alert("Repository owner is required");
                     return;
                 }
@@ -162,7 +156,7 @@
 
                 const date = new Date(this.dateExpires).toISOString();
                 console.log(date)
-                let response = await fetch('/manager/group/create', {
+                let response = await fetch('/manager/group/edit/{{.ID}}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -173,7 +167,6 @@
                         doesExpire: this.doesExpire,
                         notify: this.notify,
                         autoDelete: this.autoDelete,
-                        isOwn: this.gitOwn,
                         gitOwner: this.gitOwner,
                         gitRepo: this.gitName,
                         autoRemoveUsers: this.autoRemove
@@ -184,9 +177,9 @@
                 //send info if it fails
                 if (response.status !== 200) {
                     let data = await response.json();
-                    alert("Failed to create group " + data.message);
+                    alert("Failed to update group " + data.message);
                 } else {
-                    alert("Group created");
+                    alert("Group updated successfully!");
                     location.href = "/manager?a=group";
                 }
             },
@@ -199,7 +192,7 @@
                     body: JSON.stringify({
                         gitOwner: this.gitOwner,
                         gitRepo: this.gitName,
-                        isOwn: this.gitOwn
+                        isOwn: false
                     })
                 }).then((res) => {
                     return res;

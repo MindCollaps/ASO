@@ -107,11 +107,11 @@
             <hr>
             <div class="column container bg-body-tertiary rounded-3 shadow p-3">
                 <h3>Group</h3>
+                <button class="btn btn-success"  @click="editGroup()"><span class="material-icons align-middle fs-5">settings</span></button>
                 <button class="btn btn-danger" @click="removeMembers()" data-bs-toggle="tooltip" data-bs-placement="top"
                         data-bs-title="This removes all group members."><span class="material-icons align-middle fs-5">group_remove</span>
                 </button>
                 <button class="btn btn-danger" @click="deleteGroup()" data-bs-toggle="tooltip" data-bs-placement="top"
-
                         data-bs-title="This deletes the group."><span
                             class="material-icons align-middle fs-5">delete</span></button>
             </div>
@@ -249,6 +249,10 @@
                     const data = await res.json();
                     alert("Error adding user to repo\n" + data.message)
                 }
+            },
+            editGroup: async function () {
+                //redirect to edit group page
+                document.location.href = "/manager/group/edit/{{.ID}}"
             },
         },
     });
