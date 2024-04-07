@@ -85,10 +85,20 @@ func RemoveUserFromRepo(repoOwner string, usernameToBeRemoved string, gitToken s
 	_, err = gitClient.Repositories.RemoveCollaborator(c, repoOwner, Repo.GetName(), usernameToBeRemoved)
 
 	if err != nil {
-		return false
-	}
+		inv, _, err := gitClient.Repositories.ListInvitations(c, repoOwner, Repo.GetName(), nil)
 
-	//TODO if all fails, try to remove the invite
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+
+		for _, invite := range inv {
+			if invite.GetInvitee().GetLogin() == usernameToBeRemoved {
+				gitClient.Repositories.DeleteInvitation(c, repoOwner, Repo.GetName(), invite.GetID())
+				return true
+			}
+		}
+	}
 
 	return true
 }
@@ -184,4 +194,28 @@ func CheckNewToken(owner string, token string, tokenBefore string) bool {
 	HubClients[token] = gitClient
 
 	return true
+}
+
+func GetColabosFromRepo(token string, owner string, repo string) []*github.User {
+	c := context.Background()
+	gitClient := GetGithubClient(token)
+	_, _, err := gitClient.Repositories.Get(c, owner, repo)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	options := &github.ListCollaboratorsOptions{
+		Affiliation: "all",
+	}
+
+	collaborators, _, err := gitClient.Repositories.ListCollaborators(c, owner, repo, options)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	return collaborators
 }

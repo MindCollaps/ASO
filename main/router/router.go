@@ -50,7 +50,8 @@ func InitRouter(fs embed.FS) {
 	//Get port from env
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		log.Println("No PORT environment variable found, defaulting to 7778")
+		port = "7778"
 	}
 
 	router.Run(":" + port)

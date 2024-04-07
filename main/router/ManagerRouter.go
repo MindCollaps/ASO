@@ -6,6 +6,7 @@ import (
 	"ASOServer/main/database/models"
 	"ASOServer/main/git"
 	"ASOServer/main/middleware"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/softbrewery/gojoi/pkg/joi"
 	"go.mongodb.org/mongo-driver/bson"
@@ -568,6 +569,24 @@ func initManagerRouter(router *gin.Engine) {
 				userData.IsInvited = false
 			} else {
 				userData.IsInvited = git.CheckIfUserIsPendingInvite(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+				if !userData.IsInvited {
+					userData.IsCollaborator = git.CheckIfUserIsColabo(userGroup.GitHubOwner, user.GitHubUsername, usr.GitHubToken, userGroup.GitHubRepo)
+
+					if userData.IsCollaborator {
+						//add user to group
+						_, err = database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+							"_id": user.ID,
+						}, bson.M{
+							"$set": bson.M{
+								"addedToRepo": true,
+							},
+						})
+
+						if err != nil {
+							log.Println(err)
+						}
+					}
+				}
 			}
 		} else {
 			userData.IsCollaborator = false
@@ -631,6 +650,24 @@ func initManagerRouter(router *gin.Engine) {
 						user.IsInvited = false
 					} else {
 						user.IsInvited = git.CheckIfUserIsPendingInvite(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
+						if !user.IsInvited {
+							user.IsCollaborator = git.CheckIfUserIsColabo(group.GitHubOwner, user.GitHubUsername, usr.GitHubToken, group.GitHubRepo)
+
+							if user.IsCollaborator {
+								//add user to group
+								_, err = database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+									"_id": users[i].ID,
+								}, bson.M{
+									"$set": bson.M{
+										"addedToRepo": true,
+									},
+								})
+
+								if err != nil {
+									log.Println(err)
+								}
+							}
+						}
 					}
 				} else {
 					user.IsCollaborator = false
@@ -1287,7 +1324,6 @@ func initManagerRouter(router *gin.Engine) {
 				log.Println("Internal server error when adding gitusr to repo")
 				return
 			}
-			isColabo = true
 		} else {
 			isColabo = git.CheckIfUserIsColabo(userGroup.GitHubOwner, requestBody.GitHubUsername, creator.GitHubToken, userGroup.GitHubRepo)
 		}
@@ -1382,23 +1418,6 @@ func initManagerRouter(router *gin.Engine) {
 			log.Println(err)
 			return
 		}
-
-		//check if gitusr exists
-		var user models.GitHubUser
-		err = database.MongoDB.Collection("gitUser").FindOne(c, bson.M{
-			"githubUsername": requestBody.GitUsername,
-			"belongs":        c.MustGet("userIdPrimitive").(primitive.ObjectID),
-		}).Decode(&user)
-
-		if err == nil {
-			c.JSON(400, gin.H{
-				"message": "User already exists",
-			})
-			log.Println("User already exists")
-			return
-		}
-
-		//check if gitusr exists by email skip
 
 		//check if gitusr group exists
 		grp, err := primitive.ObjectIDFromHex(requestBody.UserGroup)
@@ -1999,25 +2018,26 @@ func initManagerRouter(router *gin.Engine) {
 		}
 
 		//remove user from repo
-		if gitUser.AddedToRepo {
-			if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
-				c.JSON(400, gin.H{
-					"message": "The user could not be removed from the repo",
-				})
-				return
-			}
-
-			database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
-				"_id": gitUser.ID,
-			}, bson.M{
-				"$set": bson.M{
-					"addedToRepo": false,
-				},
-			}, options.Update())
+		if !git.RemoveUserFromRepo(group.GitHubOwner, gitUser.GitHubUsername, user.GitHubToken, group.GitHubRepo) {
+			c.JSON(400, gin.H{
+				"message": "The user could not be removed from the repo",
+			})
+			return
 		}
+
+		database.MongoDB.Collection("gitUser").UpdateOne(c, bson.M{
+			"_id": gitUser.ID,
+		}, bson.M{
+			"$set": bson.M{
+				"addedToRepo": false,
+			},
+		}, options.Update())
+		c.JSON(200, gin.H{
+			"message": "User removed from repo",
+		})
 	})
 
-	//manager/git/" + {{.ID}} +"/add/ {{.UserID}} to add a user to a repo
+	//manager/git/" + {{.ID}} +"/add/ {{.UserID}} to add a user to a repo - sents a invite first
 	router.GET("/manager/git/:id/add/:userid", middleware.LoginToken(), func(c *gin.Context) {
 		id := c.Param("id")
 		idd, err := primitive.ObjectIDFromHex(id)
@@ -2094,8 +2114,7 @@ func initManagerRouter(router *gin.Engine) {
 			"_id": gitUser.ID,
 		}, bson.M{
 			"$set": bson.M{
-				"addedToRepo": true,
-				"userGroup":   group.ID,
+				"userGroup": group.ID,
 			},
 		}, options.Update())
 
@@ -2104,8 +2123,8 @@ func initManagerRouter(router *gin.Engine) {
 		})
 	})
 
-	///manager/group/" + {{.ID}} +"/removeAll to remove all users from a group
-	router.GET("/manager/group/:id/removeAll", middleware.LoginToken(), func(c *gin.Context) {
+	///manager/group/" + {{.ID}} +"/removeall to remove all users from a group
+	router.GET("/manager/group/:id/removeall", middleware.LoginToken(), func(c *gin.Context) {
 		id := c.Param("id")
 		idd, err := primitive.ObjectIDFromHex(id)
 
@@ -2630,5 +2649,120 @@ func initManagerRouter(router *gin.Engine) {
 		c.JSON(200, gin.H{
 			"message": "Notification deleted",
 		})
+	})
+
+	router.GET("/manager/group/:id/scan", middleware.LoginToken(), func(c *gin.Context) {
+		usr := c.MustGet("user").(models.User)
+
+		//get group from id
+		id := c.Param("id")
+		idd, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid group id",
+			})
+			return
+		}
+
+		var group models.UserGroup
+		err = database.MongoDB.Collection("userGroup").FindOne(c, bson.M{
+			"_id": idd,
+		}).Decode(&group)
+
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "Group not found",
+			})
+			return
+		}
+
+		//check if the user is the owner of the repo
+		if group.GitHubOwner != usr.GitHubUsername {
+			c.JSON(400, gin.H{
+				"message": "You are not the owner of the repo",
+			})
+			return
+		}
+
+		//get all members of repo
+		members := git.GetColabosFromRepo(usr.GitHubToken, group.GitHubOwner, group.GitHubRepo)
+
+		membersInDB := []models.GitHubUser{}
+
+		//get all members in db
+		cur, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
+			"userGroup": group.ID,
+			"belongs":   usr.ID,
+		})
+
+		if err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{
+				"message": "Internal server error when fetching members",
+			})
+		}
+
+		for cur.Next(c) {
+			var member models.GitHubUser
+			err = cur.Decode(&member)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			membersInDB = append(membersInDB, member)
+		}
+
+		type Member struct {
+			Name    string
+			GitName string
+			Url     string
+			Email   string
+		}
+
+		type Data struct {
+			Members   string
+			Repo      string
+			Owner     string
+			GroupName string
+			GroupID   string
+		}
+
+		parse := []Member{}
+
+		for _, member := range members {
+			exists := false
+			for _, memberInDB := range membersInDB {
+				if memberInDB.GitHubUsername == member.GetLogin() {
+					exists = true
+					continue
+				}
+			}
+
+			if exists || member.GetLogin() == group.GitHubOwner {
+				continue
+			}
+
+			parse = append(parse, Member{
+				Name:    member.GetName(),
+				GitName: member.GetLogin(),
+				Url:     member.GetHTMLURL(),
+				Email:   member.GetEmail(),
+			})
+		}
+
+		jsonData, _ := json.Marshal(parse)
+
+		data := Data{
+			Members:   string(jsonData),
+			Repo:      group.GitHubRepo,
+			Owner:     group.GitHubOwner,
+			GroupName: group.Name,
+			GroupID:   group.ID.Hex(),
+		}
+
+		template := template.Must(template.ParseFS(files, "main/public/manager/group/scan/index.gohtml", "main/public/templates/template.gohtml"))
+		template.Execute(c.Writer, data)
 	})
 }

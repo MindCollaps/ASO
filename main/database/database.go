@@ -35,10 +35,10 @@ func InitDatabase() bool {
 
 	dbName := os.Getenv("MONGODB_DB")
 	if dbName == "" {
-		log.Fatal("You must set your 'MONGODB_DB' environmental variable.")
-		return false
+		log.Println("Your 'MONGODB_DB' environmental variable is not set! Default = \"ASO\".")
+		dbName = "ASO"
 	}
 
-	MongoDB = client.Database("ASO")
+	MongoDB = client.Database(dbName)
 	return true
 }

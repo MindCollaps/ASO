@@ -32,8 +32,7 @@
             <h1>Group Name: {{.Name}}</h1>
             <h2>Group ID: {{.ID}}</h2>
             <h2>Repository: <a target="_blank"
-                               href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}
-                    /{{.GitHubRepo}}</a></h2>
+                               href="https://github.com/{{.GitHubOwner}}/{{.GitHubRepo}}">{{.GitHubOwner}}/{{.GitHubRepo}}</a></h2>
             <h2>Created: {{.Date}}</h2>
             <hr>
             <h2>Auto Remove Users: {{.AutoRemoveUsers}}</h2>
@@ -91,6 +90,14 @@
                     <h3>No Members</h3>
                 {{end}}
             </ul>
+            <p class="mb-0 mt-0">Add a user to the group</p>
+            <div>
+                <button class="btn btn-success" @click="addAUser()"><span
+                            class="material-icons align-middle fs-5">add</span></button>
+                <button class="btn btn-warning" @click="scanRepo()"><span
+                            class="material-icons align-middle fs-5">sensor_occupied</span></button>
+            </div>
+            <br>
             <br>
             <h1>Management</h1>
             <div class="column container bg-body-tertiary rounded-3 shadow p-3">
@@ -254,6 +261,31 @@
                 //redirect to edit group page
                 document.location.href = "/manager/group/edit/{{.ID}}"
             },
+            addAUser: async function(){
+                //redirect to add user page
+                document.location.href = "/manager/gitusr/create?grp={{.ID}}"
+            },
+            scanRepo: async function(){
+                //redirect to scan repo page
+                document.location.href = "/manager/group/{{.ID}}/scan"
+            },
+            removeMembers: async function(){
+                if (!confirm("Are you sure you want to remove all members from the group?")) {
+                    return
+                }
+                let res = await fetch("/manager/group/{{.ID}}/removeall", {
+                    method: "GET"
+                }).then((res) => {
+                    return res;
+                });
+                if (res.status === 200) {
+                    //reload page
+                    document.location.reload()
+                } else {
+                    //error
+                    alert("Error removing all members from group")
+                }
+            }
         },
     });
 </script>

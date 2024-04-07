@@ -33,7 +33,6 @@ func checkUserGitState() {
 		"userGroup": bson.M{
 			"$ne": primitive.NilObjectID,
 		},
-		"addedToRepo": false,
 	})
 
 	if err != nil {
@@ -85,58 +84,62 @@ func checkUserGitState() {
 			cachedAdmins[grp.Belongs.Hex()] = admin
 		}
 
-		if git.CheckIfUserIsColabo(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
-			_, err = database.MongoDB.Collection("githubUser").UpdateOne(context.Background(), bson.M{
-				"_id": user.ID,
-			}, bson.M{
-				"$set": bson.M{
-					"addedToRepo": true,
-				},
-			})
+		if user.AddedToRepo {
+			if !git.CheckIfUserIsColabo(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
+				_, err = database.MongoDB.Collection("githubUser").UpdateOne(context.Background(), bson.M{
+					"_id": user.ID,
+				}, bson.M{
+					"$set": bson.M{
+						"addedToRepo": false,
+					},
+				})
 
-			if err != nil {
-				log.Println("Failed to update user")
-				log.Println(err)
-				continue
+				if err != nil {
+					log.Println("Failed to update user")
+					log.Println(err)
+					continue
+				}
+
+				database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+					ID:           primitive.NewObjectID(),
+					Belongs:      user.Belongs,
+					Notification: "User " + user.Username + " has been removed from repo " + grp.GitHubRepo + " by external source",
+					DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+					Title:        "User added to repo",
+					UserGroup:    grp.ID,
+					GitHubUser:   user.ID,
+					Token:        primitive.NilObjectID,
+					Style:        "success",
+				})
 			}
+		} else {
+			if git.CheckIfUserIsColabo(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
+				_, err = database.MongoDB.Collection("githubUser").UpdateOne(context.Background(), bson.M{
+					"_id": user.ID,
+				}, bson.M{
+					"$set": bson.M{
+						"addedToRepo": true,
+					},
+				})
 
-			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
-				ID:           primitive.NewObjectID(),
-				Belongs:      user.Belongs,
-				Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
-				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-				Title:        "User added to repo",
-				UserGroup:    grp.ID,
-				GitHubUser:   user.ID,
-				Token:        primitive.NilObjectID,
-				Style:        "success",
-			})
-		} else if git.CheckIfUserIsPendingInvite(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
-			_, err = database.MongoDB.Collection("githubUser").UpdateOne(context.Background(), bson.M{
-				"_id": user.ID,
-			}, bson.M{
-				"$set": bson.M{
-					"addedToRepo": true,
-				},
-			})
+				if err != nil {
+					log.Println("Failed to update user")
+					log.Println(err)
+					continue
+				}
 
-			if err != nil {
-				log.Println("Failed to update user")
-				log.Println(err)
-				continue
+				database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+					ID:           primitive.NewObjectID(),
+					Belongs:      user.Belongs,
+					Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
+					DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+					Title:        "User added to repo",
+					UserGroup:    grp.ID,
+					GitHubUser:   user.ID,
+					Token:        primitive.NilObjectID,
+					Style:        "success",
+				})
 			}
-
-			database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
-				ID:           primitive.NewObjectID(),
-				Belongs:      user.Belongs,
-				Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
-				DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-				Title:        "User added to repo",
-				UserGroup:    grp.ID,
-				GitHubUser:   user.ID,
-				Token:        primitive.NilObjectID,
-				Style:        "success",
-			})
 		}
 	}
 }

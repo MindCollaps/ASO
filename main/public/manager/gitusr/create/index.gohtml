@@ -44,7 +44,7 @@
             </div>
             <div class="mb-4 mt-4">
                 <h2>User Group</h2>
-                <div class="container d-flex flex-column container bg-body-tertiary rounded-3 shadow p-3 gap-2"
+                <div v-if="!groupSetted" class="container d-flex flex-column container bg-body-tertiary rounded-3 shadow p-3 gap-2"
                      id="userGroup">
                     {{if .Groups}}
                         {{range .Groups}}
@@ -65,6 +65,9 @@
                             User Group
                         </button>
                     {{end}}
+                </div>
+                <div v-if="groupSetted">
+                    <p>The users group is predefined!</p>
                 </div>
             </div>
             <div class="mb-4 form-check">
@@ -101,8 +104,18 @@
             expiregroup: true,
             expire: true,
             dateExpires: "",
+            groupSetted: false,
         },
         created: function () {
+            //get uri parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const group = urlParams.get('grp');
+
+            if (group) {
+                this.userGroup = group;
+                this.groupSetted = true;
+            }
+
             const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 3);
 
             date.setHours(1);
