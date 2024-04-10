@@ -2670,6 +2670,23 @@ func initManagerRouter(router *gin.Engine) {
 			"_id": idd,
 		}).Decode(&group)
 
+		var groupsWithRepo []models.UserGroup
+		cur, err := database.MongoDB.Collection("userGroup").Find(c, bson.M{
+			"gitHubOwner": group.GitHubOwner,
+			"gitHubRepo":  group.GitHubRepo,
+		})
+
+		for cur.Next(c) {
+			var group models.UserGroup
+			err = cur.Decode(&group)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			groupsWithRepo = append(groupsWithRepo, group)
+		}
+
 		if err != nil {
 			c.JSON(404, gin.H{
 				"message": "Group not found",
@@ -2689,11 +2706,11 @@ func initManagerRouter(router *gin.Engine) {
 		members := git.GetColabosFromRepo(usr.GitHubToken, group.GitHubOwner, group.GitHubRepo)
 
 		membersInDB := []models.GitHubUser{}
+		membersInGrpDB := []models.GitHubUser{}
 
 		//get all members in db
-		cur, err := database.MongoDB.Collection("gitUser").Find(c, bson.M{
-			"userGroup": group.ID,
-			"belongs":   usr.ID,
+		cur, err = database.MongoDB.Collection("gitUser").Find(c, bson.M{
+			"belongs": usr.ID,
 		})
 
 		if err != nil {
@@ -2711,7 +2728,23 @@ func initManagerRouter(router *gin.Engine) {
 				continue
 			}
 
+			inGrp := false
+			for _, group := range groupsWithRepo {
+				if member.UserGroup == group.ID {
+					inGrp = true
+					break
+				}
+			}
+
+			if !inGrp {
+				continue
+			}
+
 			membersInDB = append(membersInDB, member)
+
+			if member.UserGroup == group.ID {
+				membersInGrpDB = append(membersInGrpDB, member)
+			}
 		}
 
 		type Member struct {
@@ -2719,47 +2752,73 @@ func initManagerRouter(router *gin.Engine) {
 			GitName string
 			Url     string
 			Email   string
+			Icon    string
 		}
 
 		type Data struct {
-			Members   string
-			Repo      string
-			Owner     string
-			GroupName string
-			GroupID   string
+			Members        string
+			MembersInGroup string
+			Repo           string
+			Owner          string
+			GroupName      string
+			GroupID        string
 		}
 
-		parse := []Member{}
+		membersInGrpParse := []Member{}
+		membersInDbParse := []Member{}
 
 		for _, member := range members {
-			exists := false
+			if member.GetLogin() == group.GitHubOwner {
+				continue
+			}
+
+			existsDb := false
 			for _, memberInDB := range membersInDB {
 				if memberInDB.GitHubUsername == member.GetLogin() {
-					exists = true
+					existsDb = true
 					continue
 				}
 			}
 
-			if exists || member.GetLogin() == group.GitHubOwner {
-				continue
+			existsGrp := false
+			for _, memberInGrpDB := range membersInGrpDB {
+				if memberInGrpDB.GitHubUsername == member.GetLogin() {
+					existsGrp = true
+					continue
+				}
 			}
 
-			parse = append(parse, Member{
-				Name:    member.GetName(),
-				GitName: member.GetLogin(),
-				Url:     member.GetHTMLURL(),
-				Email:   member.GetEmail(),
-			})
+			if !existsGrp {
+				membersInGrpParse = append(membersInGrpParse, Member{
+					Name:    member.GetName(),
+					GitName: member.GetLogin(),
+					Url:     member.GetHTMLURL(),
+					Email:   member.GetEmail(),
+					Icon:    member.GetAvatarURL(),
+				})
+			}
+
+			if !existsDb {
+				membersInDbParse = append(membersInDbParse, Member{
+					Name:    member.GetName(),
+					GitName: member.GetLogin(),
+					Url:     member.GetHTMLURL(),
+					Email:   member.GetEmail(),
+					Icon:    member.GetAvatarURL(),
+				})
+			}
 		}
 
-		jsonData, _ := json.Marshal(parse)
+		jsonData, _ := json.Marshal(membersInDbParse)
+		jsonData2, _ := json.Marshal(membersInGrpParse)
 
 		data := Data{
-			Members:   string(jsonData),
-			Repo:      group.GitHubRepo,
-			Owner:     group.GitHubOwner,
-			GroupName: group.Name,
-			GroupID:   group.ID.Hex(),
+			Members:        string(jsonData),
+			Repo:           group.GitHubRepo,
+			Owner:          group.GitHubOwner,
+			GroupName:      group.Name,
+			GroupID:        group.ID.Hex(),
+			MembersInGroup: string(jsonData2),
 		}
 
 		template := template.Must(template.ParseFS(files, "main/public/manager/group/scan/index.gohtml", "main/public/templates/template.gohtml"))

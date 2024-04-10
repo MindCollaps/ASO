@@ -206,11 +206,29 @@ func GetColabosFromRepo(token string, owner string, repo string) []*github.User 
 		return nil
 	}
 
-	options := &github.ListCollaboratorsOptions{
-		Affiliation: "all",
-	}
+	var collaborators []*github.User
 
-	collaborators, _, err := gitClient.Repositories.ListCollaborators(c, owner, repo, options)
+	pageCount := 0
+
+	for {
+		options := &github.ListCollaboratorsOptions{
+			Affiliation: "all",
+			ListOptions: github.ListOptions{
+				Page:    pageCount,
+				PerPage: 100,
+			},
+		}
+
+		colabo, resposne, err := gitClient.Repositories.ListCollaborators(c, owner, repo, options)
+
+		collaborators = append(collaborators, colabo...)
+
+		if pageCount == resposne.LastPage || err != nil {
+			break
+		}
+
+		pageCount++
+	}
 
 	if err != nil {
 		log.Println(err)

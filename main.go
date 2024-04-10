@@ -28,7 +28,7 @@ func main() {
 
 	logChopper.LogChop()
 
-	log.Println("\n" + env.BANNER + "\nArnolds Super Organiser" + "\nVersion: " + env.VERSION + "\n\n")
+	log.Println("\n" + env.BANNER + "\nArnolds Super Organiser" + "\nVersion: " + env.VERSION)
 
 	envLocation := ".env"
 	if env.UNIX {
