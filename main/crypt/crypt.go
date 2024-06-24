@@ -27,6 +27,7 @@ func getRsaKeyPath() string {
 	}
 	return rsaKeyPath
 }
+
 func KeySetup() error {
 	rsaKeyPath := getRsaKeyPath()
 	// Check if the RSA private key already exists on the file system.

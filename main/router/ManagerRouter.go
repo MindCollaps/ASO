@@ -2747,6 +2747,16 @@ func initManagerRouter(router *gin.Engine) {
 			}
 		}
 
+		//remove duplicated members from membersInDB
+		for i, member := range membersInDB {
+			for _, memberInGrp := range membersInGrpDB {
+				if member.GitHubUsername == memberInGrp.GitHubUsername {
+					membersInDB = append(membersInDB[:i], membersInDB[i+1:]...)
+					break
+				}
+			}
+		}
+
 		type Member struct {
 			Name    string
 			GitName string
