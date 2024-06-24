@@ -12,4 +12,8 @@ WORKDIR /app
 
 COPY --from=builder "/app" .
 
+RUN mkdir /config
+
+VOLUME /config
+
 CMD ["./ASO"]

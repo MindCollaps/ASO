@@ -1,6 +1,7 @@
 package env
 
 var UNIX = false
+var DOCKER = false
 
 const VERSION = "v0.1.2"
 

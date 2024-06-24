@@ -25,6 +25,9 @@ func getRsaKeyPath() string {
 	if env.UNIX {
 		rsaKeyPath = "/etc/aso/" + rsaKeyName
 	}
+	if env.DOCKER {
+		rsaKeyPath = "/config" + rsaKeyName
+	}
 	return rsaKeyPath
 }
 
