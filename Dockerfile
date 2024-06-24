@@ -1,8 +1,9 @@
 FROM golang AS builder
 WORKDIR /source
-RUN apt-get update && apt-get install -y git
-RUN git clone https://github.com/MindCollaps/ASO
-WORKDIR ./ASO
+RUN apt-get update && apt-get install -y curl unzip
+ADD "https://api.github.com/repos/MindCollaps/ASO/commits?per_page=1" latest_commit
+RUN curl -sL "https://github.com/MindCollaps/ASO/archive/main.zip" -o aso.zip && unzip aso.zip
+WORKDIR ./ASO-main
 RUN go mod download
 RUN go build -o /app/ASO
 
