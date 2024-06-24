@@ -16,4 +16,6 @@ RUN mkdir /config
 
 VOLUME /config
 
-CMD ["./ASO"]
+EXPOSE 80
+
+CMD ["./ASO --docker --port 80"]

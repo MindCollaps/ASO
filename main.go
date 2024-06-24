@@ -11,6 +11,7 @@ import (
 	"flag"
 	"github.com/joho/godotenv"
 	"log"
+	"os"
 )
 
 //go:embed main/public/*
@@ -61,12 +62,18 @@ func envSetup() {
 			log.Println("PORT=8080")
 			return
 		}
+
+		if os.Getenv("PORT") != "" && !isFlagPassed("port") {
+			env.PORT = os.Getenv("PORT")
+		}
 	}
 }
 
 func flags() {
 	flag.BoolVar(&env.UNIX, "unix", false, "Run the server in unix mode")
 	flag.BoolVar(&env.DOCKER, "docker", false, "Run the server in docker mode")
+	flag.StringVar(&env.PORT, "port", "8080", "Port to run the server on")
+
 	flag.Parse()
 }
 
@@ -76,4 +83,14 @@ func cryptSetup() {
 		log.Println("Failed to setup keys")
 		return
 	}
+}
+
+func isFlagPassed(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }
