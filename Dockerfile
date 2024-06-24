@@ -6,9 +6,7 @@ WORKDIR ./ASO
 RUN go mod download
 RUN go build -o /app/ASO
 
-FROM alpine
-
-RUN mkdir "/app"
+FROM frolvlad/alpine-glibc
 
 WORKDIR /app
 
@@ -20,4 +18,4 @@ VOLUME /config
 
 EXPOSE 80
 
-CMD ["/app/ASO --docker --port 80"]
+ENTRYPOINT ["/app/ASO", "-docker", "-port", "80"]
