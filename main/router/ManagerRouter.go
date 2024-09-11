@@ -6,6 +6,7 @@ import (
 	"ASOServer/main/database/models"
 	"ASOServer/main/git"
 	"ASOServer/main/middleware"
+	"ASOServer/main/tasks"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/softbrewery/gojoi/pkg/joi"
@@ -914,6 +915,10 @@ func initManagerRouter(router *gin.Engine) {
 		c.JSON(200, gin.H{
 			"message": "Group updated",
 		})
+	})
+
+	router.GET("manager/groups/refresh", middleware.LoginToken(), func(c *gin.Context) {
+		tasks.RefreshGitState()
 	})
 
 	router.GET("/manager/token/create", middleware.LoginToken(), func(c *gin.Context) {

@@ -18,7 +18,7 @@ func initCheckerTasks() {
 		checkGitUsers()
 		checkGroups()
 		checkSoonExpireGroups()
-		checkUserGitState()
+		checkUserGitState(true)
 	})
 
 	if err != nil {
@@ -27,7 +27,7 @@ func initCheckerTasks() {
 	}
 }
 
-func checkUserGitState() {
+func checkUserGitState(notify bool) {
 	log.Println("Checking user git state")
 	curr, err := database.MongoDB.Collection("githubUser").Find(context.Background(), bson.M{
 		"userGroup": bson.M{
@@ -100,17 +100,19 @@ func checkUserGitState() {
 					continue
 				}
 
-				database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
-					ID:           primitive.NewObjectID(),
-					Belongs:      user.Belongs,
-					Notification: "User " + user.Username + " has been removed from repo " + grp.GitHubRepo + " by external source",
-					DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-					Title:        "User added to repo",
-					UserGroup:    grp.ID,
-					GitHubUser:   user.ID,
-					Token:        primitive.NilObjectID,
-					Style:        "success",
-				})
+				if notify {
+					database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+						ID:           primitive.NewObjectID(),
+						Belongs:      user.Belongs,
+						Notification: "User " + user.Username + " has been removed from repo " + grp.GitHubRepo + " by external source",
+						DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+						Title:        "User added to repo",
+						UserGroup:    grp.ID,
+						GitHubUser:   user.ID,
+						Token:        primitive.NilObjectID,
+						Style:        "success",
+					})
+				}
 			}
 		} else {
 			if git.CheckIfUserIsColabo(grp.GitHubOwner, user.GitHubUsername, admin.GitHubToken, grp.GitHubRepo) {
@@ -128,17 +130,19 @@ func checkUserGitState() {
 					continue
 				}
 
-				database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
-					ID:           primitive.NewObjectID(),
-					Belongs:      user.Belongs,
-					Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
-					DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
-					Title:        "User added to repo",
-					UserGroup:    grp.ID,
-					GitHubUser:   user.ID,
-					Token:        primitive.NilObjectID,
-					Style:        "success",
-				})
+				if notify {
+					database.MongoDB.Collection("notification").InsertOne(context.Background(), models.Notification{
+						ID:           primitive.NewObjectID(),
+						Belongs:      user.Belongs,
+						Notification: "User " + user.Username + " has been added to repo " + grp.GitHubRepo + " by external source",
+						DateCreated:  primitive.NewDateTimeFromTime(time.Now()),
+						Title:        "User added to repo",
+						UserGroup:    grp.ID,
+						GitHubUser:   user.ID,
+						Token:        primitive.NilObjectID,
+						Style:        "success",
+					})
+				}
 			}
 		}
 	}
@@ -603,4 +607,8 @@ func sendErrorNotification(title string, notification string, belongs primitive.
 		Token:        token,
 		Style:        "danger",
 	})
+}
+
+func RefreshGitState() {
+	checkUserGitState(false)
 }
