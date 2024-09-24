@@ -660,7 +660,8 @@ func initManagerRouter(router *gin.Engine) {
 									"_id": users[i].ID,
 								}, bson.M{
 									"$set": bson.M{
-										"addedToRepo": true,
+										"addedToRepo":    true,
+										"isCollaborator": true,
 									},
 								})
 
